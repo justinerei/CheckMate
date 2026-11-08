@@ -1,6 +1,6 @@
 .shell { min-height: 100svh; max-width: 1600px; margin: auto; padding: 38px 6vw 28px; display: flex; flex-direction: column; }
 .top, .footer, .cardTop { display: flex; justify-content: space-between; align-items: center; }
-.logo { font-family: var(--font-geist-pixel-square), monospace; font-size: 27px; letter-spacing: -.04em; }
+.logo { font-family: var(--font-geist-pixel-circle), monospace; font-size: 27px; letter-spacing: -.04em; }
 .logo span, .eyebrow span, .dot { color: #ff6a00; }
 .label, .eyebrow, .steps, .cardTop, .footer, .note { font-family: var(--font-geist-mono), monospace; font-size: 10px; letter-spacing: .1em; }
 .label, .footer, .note { color: #96969c; }
@@ -13,7 +13,7 @@
 .steps { border-top: 1px solid #303035; display: flex; gap: 32px; padding-top: 22px; margin-top: 70px; color: #a3a3aa; }
 .card { background: #18181b; border: 1px solid #303036; border-radius: 18px; padding: 32px; max-width: 480px; width: 100%; justify-self: end; }
 .cardTop { color: #a3a3aa; }
-.symbol { font-family: var(--font-geist-pixel-square), monospace; font-size: 43px; color: #ff6a00; margin: 50px 0 24px; }
+.symbol { font-family: var(--font-geist-pixel-circle), monospace; font-size: 43px; color: #ff6a00; margin: 50px 0 24px; }
 .card h2 { font-size: 26px; letter-spacing: -.035em; margin: 0 0 12px; }
 .card p { color: #adadb4; line-height: 1.55; font-size: 14px; }
 .button { border: 0; border-radius: 8px; width: 100%; padding: 16px; background: #f4f4f5; color: #111; display: flex; justify-content: space-between; align-items: center; font-weight: 600; cursor: pointer; margin-top: 36px; }

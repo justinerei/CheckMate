@@ -80,7 +80,7 @@ CheckMate assists the teacher. AI output is fallible, and the teacher reviews an
 
 - Use the [bryl-minimal design language](https://github.com/bryllim/bryl-minimal-design/blob/main/SKILL.md) as a project-wide visual reference: typography-led minimalism, grayscale surfaces, fine borders, generous spacing, restrained motion, and occasional halftone texture.
 - **Project exception:** CheckMate may use an accent color. The approved visual direction uses a restrained orange accent (starting point `#FF6A00`) against a near-black, charcoal, and off-white palette. Use it intentionally for emphasis and review states rather than filling the interface with color; keep status labels and icons clear without relying on color alone.
-- Use pixel or dot-matrix typography for selected display text, statistics, and short labels. Use a highly readable sans-serif for questions, answers, forms, and other sustained reading. The skill's Geist and Geist Pixel font roles are starting points, subject to availability and legibility.
+- Use Geist Pixel Circle for headings and large display text throughout the app, including printable quiz headings. Use a highly readable sans-serif for questions, answers, forms, and other sustained reading. Check printed headings for legibility during the planned photo test.
 - Adapt the reference's narrow editorial layout to the task: submission review needs enough space to view the original paper and editable answers together. Preserve keyboard focus visibility, readable contrast, responsive layouts, and reduced-motion preferences.
 - The dark visual concept is the approved starting direction. If light and system themes are implemented, preserve the same hierarchy and accessible contrast across themes.
 

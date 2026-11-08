@@ -1,0 +1,152 @@
+# CheckMate
+
+CheckMate is a prototype web app for teachers to create standardized quizzes and, eventually, review photographed student papers. Teachers create quizzes in the app; students do not need an account.
+
+The current build supports Google sign-in, a teacher dashboard, quiz drafts, sections and questions, answer keys, essay rubrics, and a printable quiz preview. Photo upload, AI extraction, and grading are still in development. Use sample data while developing.
+
+## Before you start
+
+Install these on your computer:
+
+- **Git**: [git-scm.com](https://git-scm.com/downloads)
+- **Node.js 22.12 or newer in the 22.x line**: [nodejs.org](https://nodejs.org/). Node 22.18 was used during development. Prisma also supports Node 20.19+ in the 20.x line or Node 24+.
+- **PostgreSQL** and, optionally, **pgAdmin**: [postgresql.org/download](https://www.postgresql.org/download/)
+- A Google account and internet access for the Google sign-in setup.
+
+Check your installations in a terminal:
+
+```bash
+git --version
+node --version
+npm --version
+```
+
+The instructions below use Windows PowerShell. On macOS or Linux, use your terminal and replace `Copy-Item` in step 3 with `cp`.
+
+## 1. Clone the repository
+
+Open a terminal in the folder where you want to keep the project:
+
+```powershell
+git clone https://github.com/justinerei/CheckMate.git
+cd CheckMate
+```
+
+All commands below should be run from this `CheckMate` folder.
+
+## 2. Create an empty PostgreSQL database
+
+Make sure the PostgreSQL server is running. In pgAdmin, connect to your local server, right-click **Databases**, choose **Create → Database**, enter `checkmate`, and save.
+
+Use a new, empty local database. You will need your PostgreSQL username, password, and port; the usual local port is `5432`. The password is the one you chose when installing PostgreSQL, not your Google password.
+
+## 3. Set up environment variables
+
+Create a local environment file from the included template:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+On macOS or Linux:
+
+```bash
+cp .env.example .env.local
+```
+
+Open `.env.local` in your editor. It stays on your computer and is ignored by Git. Set these values:
+
+```env
+DATABASE_URL="postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost:5432/checkmate?schema=public"
+GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
+GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
+AUTH_SECRET="YOUR_RANDOM_SECRET"
+AUTH_URL="http://localhost:3000"
+GROQ_API_KEY=
+```
+
+- Replace the database username, password, port, and database name with your own values. If the username or password contains URL characters such as `@`, `:`, `/`, `$`, or `%`, [percent-encode them](https://www.prisma.io/docs/orm/v7/reference/connection-urls#special-characters) in the connection string.
+- Generate a unique `AUTH_SECRET` by running the command below, then paste its output into `.env.local`. Keep it private.
+
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+  ```
+
+- Get the Google values in step 4. Leave `GROQ_API_KEY` empty for now; the photo-checking feature is not implemented yet.
+- Do not commit or share `.env.local`, your database password, Google client secret, or auth secret. If a credential is exposed, replace it.
+
+## 4. Configure Google sign-in
+
+You can create your own local OAuth client, or ask the project owner to arrange an approved development client. Do not post shared credentials in the repository or group chat.
+
+To create your own:
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/) and create a project, or select an existing development project.
+2. Open **Google Auth Platform → Overview** and click **Get started**. Set the app name and contact details, and select **External** for the audience if you are using regular Google accounts.
+3. Under **Audience → Test users**, add the Google account you will use to sign in. While the app is in testing mode, only added test users can sign in.
+4. Under **Clients**, choose **Create client → Web application**.
+5. Add this exact **Authorized redirect URI**:
+
+   ```text
+   http://localhost:3000/api/auth/callback/google
+   ```
+
+6. Create the client. Copy its **Client ID** and **Client secret** into `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in your `.env.local` file, then save the file.
+
+The callback is for local development only. If you use a different port, the redirect URI and `AUTH_URL` must match that port. See the [Auth.js Google provider guide](https://authjs.dev/reference/core/providers/google).
+
+## 5. Install dependencies and apply the migration
+
+```bash
+npm ci
+npx prisma migrate deploy
+npx prisma migrate status
+```
+
+`npm ci` installs the locked dependencies and generates the Prisma client. The migration creates the application tables in the database referenced by `DATABASE_URL`. The status command should say the database schema is up to date.
+
+Do not run `prisma migrate reset` against a database containing data you want to keep: it deletes data.
+
+## 6. Start CheckMate
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000), click **Continue with Google**, and sign in with the test user you added. Keep the terminal running while using the app; press `Ctrl+C` there to stop it.
+
+Each groupmate's local PostgreSQL database starts empty. Cloning the repo does not copy someone else's accounts, quizzes, or student data. Signing in for the first time creates a teacher account in your own local database.
+
+## Useful commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run lint` | Check code style and common errors |
+| `npm test` | Run the automated tests |
+| `npm run build` | Create and check a production build |
+| `npx prisma migrate status` | Check migration status |
+
+## Getting the latest changes
+
+Commit or safely set aside your own changes first, then run:
+
+```bash
+git pull origin main
+npm ci
+npx prisma migrate deploy
+```
+
+Restart the development server afterward. The migration command applies pending migrations; it does not copy another groupmate's local data.
+
+## Troubleshooting
+
+- **Database connection or authentication error:** Check that PostgreSQL is running, the database exists, and `DATABASE_URL` has the correct username, password, host, and port. Percent-encode reserved characters in credentials.
+- **`redirect_uri_mismatch`:** Check that the Google OAuth client has `http://localhost:3000/api/auth/callback/google` exactly, and that the app is running on port 3000.
+- **Google says access is blocked / app is in testing:** Add the signing-in Google account under **Google Auth Platform → Audience → Test users** for the selected project.
+- **Port 3000 is already in use:** Stop the other process, or deliberately configure a different port and update both `AUTH_URL` and the Google redirect URI to match.
+- **Environment changes do not take effect:** Save `.env.local` and restart `npm run dev`.
+- **Prisma client is missing:** Run `npx prisma generate`, then restart the dev server.
+- **Print preview looks different from the paper:** Use a current Chrome, Edge, or Brave browser, check the selected paper size, print at 100% scale, and turn off the browser's headers and footers. Verify the actual print preview before printing.
+
+For an error you cannot resolve, share the error message with the group after removing credentials, connection strings, and other private information.

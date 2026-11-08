@@ -24,6 +24,6 @@
 .footer { border-top: 1px solid #29292e; padding-top: 20px; gap: 20px; }
 .signout { background: transparent; color: #f4f4f5; border: 1px solid #55555c; border-radius: 6px; padding: 10px 14px; cursor: pointer; }
 .dashboard { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 80px 0; }
-.intro h1, .dashboard h1, .card h2 { font-weight: 900; letter-spacing: 0; }
-.logo, .symbol { font-family: var(--font-display); font-variation-settings: "ROND" 100; font-weight: 900; }
+.intro h1, .dashboard h1, .card h2 { font-weight: 500; letter-spacing: 0; }
+.logo, .symbol { font-family: var(--font-display); font-weight: 500; }
 @media (max-width: 760px) { .shell { padding: 25px 22px; } .label { display: none; } .layout { grid-template-columns: 1fr; gap: 48px; padding: 80px 0; } .card { justify-self: stretch; max-width: none; } .steps { margin-top: 40px; gap: 20px; } .footer { flex-wrap: wrap; } }

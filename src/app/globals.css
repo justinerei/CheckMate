@@ -2,6 +2,6 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
 body { background: var(--background); color: var(--foreground); font-family: var(--font-geist-sans), Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); font-weight: 650; font-variation-settings: "ROND" 100; font-synthesis: none; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); font-weight: 900; font-variation-settings: "ROND" 100; font-synthesis: none; }
 button { font: inherit; }
 button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }

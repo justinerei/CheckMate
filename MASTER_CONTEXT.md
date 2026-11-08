@@ -30,6 +30,8 @@ The template should provide adequate space to circle answers and handwrite essay
 
 Teachers create questions and sections in the app. Multiple-choice answers are circled; True/False and identification answers are handwritten in blanks before their question numbers; essays use ruled lines. Identification keys may have multiple accepted answers. Teachers can set section instructions and default points, adjust question points, choose continuous or section-based numbering, and place specific neighboring questions side by side. A4 is the default paper size, with other sizes planned. The first-page header includes name, section, and date; the approved draft centers the title. Page markings must be subtle and tested in photos; their final form is undecided.
 
+Page breaks should be automatic; teachers should not need to add pages manually. The current browser print layout offers subtle quiz-code and page-count labels, which can be turned off for a single-page quiz. The code identifies a quiz, not a specific revision; reprint every page after editing a quiz. Page grouping and completeness remain teacher-confirmed, and the layout and labels must be validated against real printed and photographed papers before relying on OCR.
+
 After submissions exist, questions, choices, and essay rubrics are fixed. Teachers may correct objective answer keys. Such a change must preserve an audit trail and automatically recalculate affected scores, including finalized results, recording before-and-after scores.
 
 ## Submission and Checking Workflow

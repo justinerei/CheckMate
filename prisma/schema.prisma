@@ -171,6 +171,7 @@ model Submission {
   quizId         String
   studentId      String
   teacherId      String
+  expectedPages  Int?
   status         SubmissionStatus   @default(DRAFT)
   objectiveScore Decimal?           @db.Decimal(8, 2)
   essayScore     Decimal?           @db.Decimal(8, 2)

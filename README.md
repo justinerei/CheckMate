@@ -2,7 +2,7 @@
 
 CheckMate is a prototype web app for teachers to create standardized quizzes and, eventually, review photographed student papers. Teachers create quizzes in the app; students do not need an account.
 
-The current build supports Google sign-in, a teacher dashboard, shared student records, quiz drafts, sections and questions, answer keys, essay rubrics, and a printable quiz preview. Photo upload, AI extraction, and grading are still in development. Use sample data while developing.
+The current build supports Google sign-in, a teacher dashboard, shared student records, quiz drafts, sections and questions, answer keys, essay rubrics, a printable quiz preview, and private page-by-page submission photo upload. AI extraction and grading are still in development. Use sample data while developing.
 
 ## Before you start
 
@@ -118,6 +118,10 @@ Open [http://localhost:3000](http://localhost:3000), click **Continue with Googl
 Each groupmate's local PostgreSQL database starts empty. Cloning the repo does not copy someone else's accounts, quizzes, or student data. Signing in for the first time creates a teacher account in your own local database.
 
 On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet.
+
+Open **Submissions** to choose one of your quizzes and linked students. Enter the expected page count, then upload and check each page photo before confirming the paper. The prototype currently accepts JPEG and PNG files, up to 8 MB each and 10 pages per submission. A failed page can be retried without re-uploading successful pages. AI extraction is not implemented yet.
+
+Uploaded photos are stored in the ignored `.private/uploads/` folder, outside `public/`. They are separate from PostgreSQL: back up and restore **both** the database and this private folder together when moving or preparing the demo. Do not commit the folder or put student photos in `public/`. Local data and photos are not shared with groupmates who use separate installations.
 
 ## Useful commands
 

@@ -14,6 +14,7 @@
 .logo, .stats strong, .number { font-family: var(--font-display); font-weight: 500; }
 .welcome h1, .stats strong { font-family: var(--font-display); font-weight: 500; }
 .sectionHeading h2 { font-family: var(--font-geist-sans), Arial, sans-serif; font-weight: 600; font-variation-settings: normal; }
+.navLink { display:flex; align-items:center; gap:14px; min-height:44px; margin-top:6px; padding:12px 13px; border-left:3px solid transparent; border-radius:5px; color:#c5c5cc; font-size:14px; text-decoration:none; }.navLink:hover { background:#202024; color:#fff; }.studentLink { display:inline-block; color:#f4f4f5; padding:8px 0; text-underline-offset:4px; }
 @supports (background-clip: text) or (-webkit-background-clip: text) {
   .welcome h1, .stats strong { background-image: radial-gradient(circle at 4px 4px, #ff9a52 0 3px, transparent 3.4px), linear-gradient(#f4f4f5, #f4f4f5); background-size: 22px 22px, 100% 100%; background-clip: text; -webkit-background-clip: text; color: transparent; }
 }

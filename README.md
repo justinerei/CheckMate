@@ -2,7 +2,7 @@
 
 CheckMate is a prototype web app for teachers to create standardized quizzes and, eventually, review photographed student papers. Teachers create quizzes in the app; students do not need an account.
 
-The current build supports Google sign-in, a teacher dashboard, quiz drafts, sections and questions, answer keys, essay rubrics, and a printable quiz preview. Photo upload, AI extraction, and grading are still in development. Use sample data while developing.
+The current build supports Google sign-in, a teacher dashboard, shared student records, quiz drafts, sections and questions, answer keys, essay rubrics, and a printable quiz preview. Photo upload, AI extraction, and grading are still in development. Use sample data while developing.
 
 ## Before you start
 
@@ -116,6 +116,8 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000), click **Continue with Google**, and sign in with the test user you added. Keep the terminal running while using the app; press `Ctrl+C` there to stop it.
 
 Each groupmate's local PostgreSQL database starts empty. Cloning the repo does not copy someone else's accounts, quizzes, or student data. Signing in for the first time creates a teacher account in your own local database.
+
+On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet.
 
 ## Useful commands
 

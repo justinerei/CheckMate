@@ -2,7 +2,7 @@
 
 CheckMate is a prototype web app for teachers to create standardized quizzes and, eventually, review photographed student papers. Teachers create quizzes in the app; students do not need an account.
 
-The current build supports Google sign-in, a teacher dashboard, shared student records, quiz drafts, sections and questions, answer keys, essay rubrics, a printable quiz preview, and private page-by-page submission photo upload. AI extraction and grading are still in development. Use sample data while developing.
+The current build supports Google sign-in, a teacher dashboard, shared student records, quiz drafts, sections and questions, answer keys, essay rubrics, a printable quiz preview, private page-by-page submission photo upload, and AI-assisted answer review. Automated grading is still in development. Use sample data while developing.
 
 ## Before you start
 
@@ -72,7 +72,7 @@ GROQ_API_KEY=
   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
   ```
 
-- Get the Google values in step 4. Leave `GROQ_API_KEY` empty for now; the photo-checking feature is not implemented yet.
+- Get the Google values in step 4. Add a Groq API key to use answer extraction; the key remains on the server. Optionally set `GROQ_VISION_MODEL` to override the default model `qwen/qwen3.8-27b`.
 - Do not commit or share `.env.local`, your database password, Google client secret, or auth secret. If a credential is exposed, replace it.
 
 ## 4. Configure Google sign-in
@@ -119,7 +119,7 @@ Each groupmate's local PostgreSQL database starts empty. Cloning the repo does n
 
 On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet.
 
-Open **Submissions** to choose one of your quizzes and linked students. Enter the expected page count, then upload and check each page photo before confirming the paper. The prototype currently accepts JPEG and PNG files, up to 8 MB each and 10 pages per submission. A failed page can be retried without re-uploading successful pages. AI extraction is not implemented yet.
+Open **Submissions** to choose one of your quizzes and linked students. Enter the expected page count, then upload and check each page photo before confirming the paper. The prototype currently accepts JPEG and PNG files, up to 8 MB each and 10 pages per submission. Select **Extract answers** to send an individual page photo to Groq, then open **Review answers** to verify and save each response manually. A failed page can be retried without re-uploading successful pages. Extraction does not grade or finalize the submission.
 
 Uploaded photos are stored in the ignored `.private/uploads/` folder, outside `public/`. They are separate from PostgreSQL: back up and restore **both** the database and this private folder together when moving or preparing the demo. Do not commit the folder or put student photos in `public/`. Local data and photos are not shared with groupmates who use separate installations.
 

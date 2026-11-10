@@ -197,6 +197,11 @@ model SubmissionPage {
   filePath     String
   status       PageStatus @default(PENDING)
   error        String?
+  extraction   Json?
+  extractionModel String?
+  processingStartedAt DateTime?
+  processingToken String?
+  retryAt DateTime?
   createdAt    DateTime   @default(now())
   submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 

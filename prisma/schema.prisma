@@ -214,6 +214,8 @@ model SubmissionAnswer {
   questionId     String
   extractedText  String?
   confirmedText  String?
+  teacherComment String?
+  confirmedMarkShape String?
   reviewStatus   String            @default("PENDING")
   objectiveScore Decimal?          @db.Decimal(8, 2)
   keyVersion     Int?

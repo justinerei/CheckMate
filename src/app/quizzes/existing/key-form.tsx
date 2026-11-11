@@ -81,7 +81,7 @@ export default function KeyForm() {
       <button type="button" className={styles.secondary} onClick={() => setRows(old => { const last = old[old.length - 1]; const next = blank(old.length ? Math.max(...old.map(r => r.number)) + 1 : 1); return [...old, last ? { ...next, section: last.section, style: last.style, directions: last.directions } : next]; })}>+ Add question</button>
       <p className={styles.keyNote}>Use consecutive question numbers starting at 1. Use | between alternative accepted answers. Essay points are assigned by the teacher during review.</p>
       {error && <p className={styles.error} role="alert">{error}</p>}
-      <div className={styles.keyFinish}><p>Save your key, then choose a student and upload their paper. You can edit correct answers later.</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Working…" : "Save key & upload a student paper"}</button></div>
+      <div className={styles.keyFinish}><p>Save your key, then choose a student and upload their paper. You can edit correct answers later.</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Working…" : "Save key"}</button></div>
     </section>
   </div>;
 }

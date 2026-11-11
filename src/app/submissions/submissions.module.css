@@ -59,3 +59,4 @@
 @media(max-width:600px) { .sectionSettings { grid-template-columns:1fr; }.sectionSettings div { grid-column:auto; }.keySteps { gap:8px 16px; } }
 .editKeyRow { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; border-top:1px solid #39393f; padding:14px 0; }.editKeyRow label { display:grid; gap:6px; color:#d7d7dd; font-size:13px; }.editKeyRow input { min-height:42px; padding:9px; background:#222227; color:white; border:1px solid #55545d; border-radius:6px; font:inherit; }.editKeyRow p { grid-column:1/-1; }
 .keyUncertain { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:0 16px 8px 66px; color:#ffd0a9; font-size:12px; }.keyUncertain button { color:#ffe4cb; background:#463125; border:1px solid #75513c; border-radius:5px; padding:6px 9px; cursor:pointer; font:inherit; }
+.reorder { display:flex; gap:8px; padding:10px 0 4px; flex-wrap:wrap; }.reorder button { min-height:38px; font-size:13px; }

@@ -69,3 +69,22 @@ export async function updateExpectedPages(submissionId: string, value: string): 
   revalidatePath(`/submissions/${submissionId}`);
   return { error: "" };
 }
+
+export async function swapPages(submissionId: string, firstId: string, secondId: string): Promise<{ error: string }> {
+  const teacher = await getTeacher(); if (!teacher) return { error: "Please sign in again." };
+  if (firstId === secondId) return { error: "Choose two different pages." };
+  try {
+    const ok = await db.$transaction(async tx => {
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "DRAFT", quiz: { teacherId: teacher.id } }, select: { id: true } });
+      if (!submission) return false;
+      const pages = await tx.submissionPage.findMany({ where: { submissionId, id: { in: [firstId, secondId] } }, select: { id: true, pageNumber: true } });
+      if (pages.length !== 2) return false;
+      await tx.submissionPage.update({ where: { id: pages[0].id }, data: { pageNumber: -1 } });
+      await tx.submissionPage.update({ where: { id: pages[1].id }, data: { pageNumber: pages[0].pageNumber } });
+      await tx.submissionPage.update({ where: { id: pages[0].id }, data: { pageNumber: pages[1].pageNumber } });
+      return true;
+    }, { isolationLevel: "Serializable" });
+    if (!ok) return { error: "Pages changed or this paper is locked. Refresh and try again." };
+  } catch { return { error: "Could not reorder pages. Refresh and try again." }; }
+  revalidatePath(`/submissions/${submissionId}`); return { error: "" };
+}

@@ -121,6 +121,12 @@ On the dashboard, open **Students** to create a student record or link an existi
 
 Open **Submissions** to choose one of your quizzes and linked students. Enter the expected page count, then upload and check each page photo before confirming the paper. The prototype currently accepts JPEG and PNG files, up to 8 MB each and 10 pages per submission. Select **Extract answers** to send an individual page photo to Groq, then open **Review answers** to resolve unclear responses and add per-answer comments. Boxed or triangular multiple-choice marks are shown as incorrect; uncertain shapes need teacher review. AI shape detection is provisional and total-score calculation and finalization are not implemented. A failed page can be retried without re-uploading successful pages.
 
+### Check a quiz made elsewhere
+
+Choose **Check an existing quiz** on the dashboard. Upload a PDF (up to 10 pages and 10 MB), JPEG, or PNG of the answer key, or enter answers manually. Reading an uploaded key requires `GROQ_API_KEY`; its pages are sent to Groq. Review and correct all detected answers, select the expected answer style for each section, set points, and confirm the key before saving. Questions must currently use consecutive numbers starting at 1, and all questions in a section must use the same answer style. Use `|` between alternative accepted answers. The confirmed key cannot currently be edited; check it carefully before saving.
+
+Create a submission for a linked student and upload JPEG or PNG photos. Extracting answers is optional: the teacher can enter responses manually. The review page shows the original photos and AI suggestions, and requires the teacher to confirm every response. Objective answers are compared case-insensitively with the confirmed key; essay points are entered by the teacher. Finalizing saves the score and locks the result. Finalized results cannot currently be edited. The AI can misread handwriting, marks, directions, and keys; verify against the originals. The original quiz-maker workflow still has the limitations described above.
+
 Uploaded photos are stored in the ignored `.private/uploads/` folder, outside `public/`. They are separate from PostgreSQL: back up and restore **both** the database and this private folder together when moving or preparing the demo. Do not commit the folder or put student photos in `public/`. Local data and photos are not shared with groupmates who use separate installations.
 
 ## Useful commands

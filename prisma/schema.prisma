@@ -75,6 +75,7 @@ model Quiz {
   title         String
   paperSize     String        @default("A4")
   numbering     String        @default("CONTINUOUS")
+  source        String        @default("BUILT")
   expectedPages Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -90,6 +91,7 @@ model QuizSection {
   quizId        String
   title         String
   instructions  String     @default("")
+  answerStyle   String     @default("circle")
   position      Int
   defaultPoints Decimal    @default(1) @db.Decimal(8, 2)
   quiz          Quiz       @relation(fields: [quizId], references: [id], onDelete: Cascade)
@@ -218,6 +220,7 @@ model SubmissionAnswer {
   confirmedMarkShape String?
   reviewStatus   String            @default("PENDING")
   objectiveScore Decimal?          @db.Decimal(8, 2)
+  teacherScore   Decimal?          @db.Decimal(8, 2)
   keyVersion     Int?
   submission     Submission        @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   question       Question          @relation(fields: [questionId], references: [id], onDelete: Restrict)

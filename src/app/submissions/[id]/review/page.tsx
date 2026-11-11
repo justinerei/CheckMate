@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
 import { matchCandidates, parseExtraction, needsReview, type ExtractionItem } from "@/lib/extraction";
 import AnswerForm from "./answer-form";
+import { ExistingAnswerForm, FinalizeButton } from "./existing-form";
 import styles from "../../submissions.module.css";
 
 export const instant = false;
@@ -23,9 +24,13 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   for (const page of submission.pages) {
     const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
     if (!parsed) continue;
-    const mapped = matchCandidates(questions, parsed.items);
+    const mapped = matchCandidates(questions, submission.quiz.source === "EXISTING" ? parsed.items.map(item => ({ ...item, section: null })) : parsed.items);
     for (const [questionId, items] of Object.entries(mapped.byQuestion)) (suggestions[questionId] ??= []).push(...items.map(item => ({ item, page: page.pageNumber })));
     unmatched.push(...mapped.unmatched.map(item => ({ item, page: page.pageNumber })));
+  }
+  if (submission.quiz.source === "EXISTING") {
+    const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
+    return <main className={styles.shell}><header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={`/submissions/${id}`} className={styles.back}>← Back to photos</Link></header><div className={styles.content}><p className={styles.eyebrow}>EXISTING QUIZ / REVIEW</p><h1>Review and score</h1><p className={styles.description}>{submission.student.name} · {submission.quiz.title}. Compare every response with the original photos and confirm it before finalizing. AI suggestions can be wrong.</p>{submission.status === "FINALIZED" && <p className={styles.success}>Final score: {submission.totalScore?.toString()} / {maximum}</p>}{unfinished.length > 0 && <p className={styles.help}>Some pages have not been extracted. You can extract them from the photos page, or enter answers manually after checking the photos.</p>}<div className={styles.pageGrid}>{submission.pages.map(page => <div className={styles.pageCard} key={page.id}><p>Page {page.pageNumber}</p><a href={`/api/submissions/${id}/pages/${page.id}`} target="_blank" rel="noreferrer"><img className={styles.photo} src={`/api/submissions/${id}/pages/${page.id}`} alt={`Student paper page ${page.pageNumber}`} /></a></div>)}</div>{unmatched.length > 0 && <p className={styles.error}>Some extracted responses could not be matched to a question. Check the photos carefully.</p>}{questions.map(question => { const candidates = suggestions[question.id] ?? []; const saved = submission.answers.find(a => a.questionId === question.id); const single = candidates.length === 1 ? candidates[0].item : null; const suggestion = single?.status === "clear" ? single.answer : null; return <section key={question.id} className={styles.confirm}><h2>Question {question.number} · {question.points.toString()} points</h2><p>{question.sectionTitle} · {question.type.replaceAll("_", " ")}</p><p>{candidates.length ? candidates.map(c => `Page ${c.page}: ${c.item.answer ?? "unreadable"} (${c.item.status}) ${c.item.note}`).join(" · ") : "No AI suggestion. Check the photo and enter the response."}</p>{saved?.reviewStatus === "CONFIRMED" && <p>Confirmed: {saved.confirmedText || "blank"}{question.type === "ESSAY" ? ` · ${saved.teacherScore?.toString()} points` : ""}</p>}{submission.status === "FINALIZED" && question.type !== "ESSAY" && <p>Points awarded: {saved?.objectiveScore?.toString() ?? "0"}</p>}{submission.status === "IN_REVIEW" && <ExistingAnswerForm submissionId={id} questionId={question.id} value={saved?.confirmedText ?? suggestion} comment={saved?.teacherComment ?? null} essay={question.type === "ESSAY"} score={saved?.teacherScore?.toString() ?? null} points={question.points.toString()} />}</section>; })}{submission.status === "IN_REVIEW" && <section className={styles.confirm}><h2>Finish checking</h2><p>Confirm every answer before finalizing. Finalized results cannot currently be edited.</p><FinalizeButton id={id} /></section>}</div></main>;
   }
   const flagged = questions.filter(question => {
     const items = (suggestions[question.id] ?? []).map(candidate => candidate.item);

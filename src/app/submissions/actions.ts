@@ -11,19 +11,13 @@ export async function createSubmission(_previous: CreateState, form: FormData): 
   const teacher = await getTeacher();
   if (!teacher) redirect("/");
   const quizId = form.get("quizId");
-  const studentId = form.get("studentId");
   const expectedPages = validPageCount(String(form.get("expectedPages") ?? ""));
-  if (typeof quizId !== "string" || typeof studentId !== "string" || !expectedPages) return { error: "Choose a quiz, a student, and 1 to 10 pages." };
-  const [quiz, link] = await Promise.all([
-    db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true } }),
-    db.teacherStudent.findUnique({ where: { teacherId_studentId: { teacherId: teacher.id, studentId } }, select: { studentId: true } }),
-  ]);
-  if (!quiz || !link) return { error: "Choose a quiz and student from your own lists." };
-  const existing = await db.submission.findUnique({ where: { quizId_studentId: { quizId, studentId } }, select: { id: true, teacherId: true } });
-  if (existing) return { error: "This student already has a submission for this quiz.", ...(existing.teacherId === teacher.id ? { existingId: existing.id } : {}) };
+  if (typeof quizId !== "string" || !expectedPages) return { error: "Choose a quiz and 1 to 10 pages." };
+  const quiz = await db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true } });
+  if (!quiz) return { error: "Choose a quiz from your list." };
   let id: string;
-  try { const submission = await db.submission.create({ data: { quizId, studentId, teacherId: teacher.id, expectedPages }, select: { id: true } }); id = submission.id; }
-  catch { return { error: "Could not create the submission. Please try again." }; }
+  try { const submission = await db.submission.create({ data: { quizId, teacherId: teacher.id, expectedPages }, select: { id: true } }); id = submission.id; }
+  catch { return { error: "Could not create the paper. Please try again." }; }
   revalidatePath("/submissions");
   redirect(`/submissions/${id}`);
 }

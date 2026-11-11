@@ -30,6 +30,7 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
     const result = await db.$transaction(async tx => {
       const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { answers: true, quiz: { include: { sections: { include: { questions: { include: { answerKey: true } } } } } } } });
       if (!submission) return "This paper is unavailable or already finalized.";
+      if (!submission.nameReviewed) return "Confirm the name, or mark that no readable name is present, before finalizing.";
       const questions = submission.quiz.sections.flatMap(s => s.questions); if (!questions.length) return "The answer key has no questions.";
       let objective = 0, essay = 0;
       for (const q of questions) {

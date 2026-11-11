@@ -42,3 +42,11 @@ test("requires a readable shape for multiple choice and rejects unsupported shap
   assert.equal(needsReview([{ ...item, markShape: "box" }], false, true), false);
   assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, markShape: "star" }] })), null);
 });
+
+test("accepts an optional suggested name while rejecting invalid name data", () => {
+  const item = { number: 1, section: null, answer: "B", status: "clear", note: "" };
+  assert.equal(parseExtraction(JSON.stringify({ studentName: "Alex Sample", items: [item] }))?.studentName, "Alex Sample");
+  assert.equal(parseExtraction(JSON.stringify({ studentName: null, items: [item] }))?.studentName, null);
+  assert.equal(parseExtraction(JSON.stringify({ studentName: "x".repeat(121), items: [item] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ studentName: 42, items: [item] })), null);
+});

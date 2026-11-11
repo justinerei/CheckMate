@@ -1,6 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
+import { canConfirmClearSuggestion, matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
 import { objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 
@@ -48,4 +49,34 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
     if (result) return { error: result };
   } catch { return { error: "Could not finalize the paper. Refresh and try again." }; }
   revalidatePath(`/submissions/${submissionId}/review`); revalidatePath(`/submissions/${submissionId}`); revalidatePath("/submissions"); return { error: "" };
+}
+
+export async function confirmClearAnswers(submissionId: string, expectedItems: { id: string; answer: string }[]): Promise<{ error: string; count: number }> {
+  const teacher = await getTeacher();
+  if (!teacher) return { error: "Please sign in again.", count: 0 };
+  if (!Array.isArray(expectedItems) || !expectedItems.length || expectedItems.length > 500 || expectedItems.some(item => !item || typeof item.id !== "string" || typeof item.answer !== "string") || new Set(expectedItems.map(item => item.id)).size !== expectedItems.length) return { error: "Refresh the page and review the suggestions again.", count: 0 };
+  try {
+    const result = await db.$transaction(async tx => {
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { pages: true, answers: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" } } } } } } } });
+      if (!submission || !submission.pages.length || submission.pages.some(page => page.status !== "COMPLETE")) return { error: "Read every page before confirming suggestions together.", count: 0 };
+      let counter = 0;
+      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: section.answerStyle })));
+      const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
+      for (const page of submission.pages) {
+        const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
+        if (!parsed) return { error: "A page could not be read. Refresh and check the page before continuing.", count: 0 };
+        const mapped = matchCandidates(questions, parsed.items.map(item => ({ ...item, section: null })));
+        for (const [questionId, items] of Object.entries(mapped.byQuestion)) (suggestions[questionId] ??= []).push(...items);
+      }
+      const eligible = questions.filter(q => canConfirmClearSuggestion(suggestions[q.id] ?? [], q.answerStyle, q.type, submission.answers.some(a => a.questionId === q.id)));
+      const eligibleById = new Map(eligible.map(q => [q.id, q]));
+      if (expectedItems.some(item => !eligibleById.has(item.id) || suggestions[item.id][0].answer !== item.answer)) return { error: "The suggestions changed. Refresh and review them again.", count: 0 };
+      for (const { id } of expectedItems) {
+        await tx.submissionAnswer.create({ data: { submissionId, questionId: id, confirmedText: suggestions[id][0].answer!.trim(), teacherComment: null, reviewStatus: "CONFIRMED", instructionDecision: "FOLLOWED" } });
+      }
+      return { error: "", count: expectedItems.length };
+    }, { isolationLevel: "Serializable" });
+    if (!result.error) revalidatePath(`/submissions/${submissionId}/review`);
+    return result;
+  } catch { return { error: "Could not save these answers. Refresh and try again.", count: 0 }; }
 }

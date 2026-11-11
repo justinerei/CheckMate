@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveExistingAnswer, finalizeExisting } from "./existing-actions";
+import { saveExistingAnswer, finalizeExisting, confirmClearAnswers } from "./existing-actions";
 import styles from "../../submissions.module.css";
 export function ExistingAnswerForm({ submissionId, questionId, value, comment, essay, score, points, decision }: { submissionId: string; questionId: string; value: string | null; comment: string | null; essay: boolean; score: string | null; points: string; decision: string | null }) {
   const [state, action, pending] = useActionState(saveExistingAnswer.bind(null, submissionId, questionId), { message: "", ok: false });
@@ -12,4 +12,22 @@ export function FinalizeButton({ id }: { id: string }) {
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const router = useRouter();
   async function finalize() { setBusy(true); const result = await finalizeExisting(id); setError(result.error); setBusy(false); if (!result.error) router.refresh(); }
   return <div><button type="button" className={styles.primary} disabled={busy} onClick={finalize}>{busy ? "Finalizing…" : "Finalize score"}</button>{error && <p className={styles.error} role="alert">{error}</p>}</div>;
+}
+
+export function ConfirmClearAnswers({ id, items }: { id: string; items: { id: string; number: number; answer: string }[] }) {
+  const [checked, setChecked] = useState(false);
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
+  if (!items.length) return null;
+  async function confirm() {
+    setBusy(true); setMessage("");
+    try {
+      const result = await confirmClearAnswers(id, items.map(({ id, answer }) => ({ id, answer })));
+      setMessage(result.error || `${result.count} answers confirmed. Check any remaining items individually.`);
+      if (!result.error) { setChecked(false); router.refresh(); }
+    } catch { setMessage("Could not save these answers. Please try again."); }
+    finally { setBusy(false); }
+  }
+  return <details className={styles.bulkReview}><summary>Review {items.length} clear {items.length === 1 ? "answer" : "answers"} together</summary><p>Compare these suggestions and answer styles with the original paper. Only confirm if every answer below is correct and followed the instructions. AI can be wrong.</p><div className={styles.bulkAnswers}>{items.map(item => <span key={item.id}><strong>{item.number}.</strong> {item.answer}</span>)}</div><label className={styles.check}><input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={busy} /> I checked all answers above against the paper, and each followed the instructions.</label><button type="button" className={styles.secondary} disabled={!checked || busy} onClick={confirm}>{busy ? "Saving…" : "Confirm these answers"}</button>{message && <p role="status">{message}</p>}</details>;
 }

@@ -89,3 +89,9 @@
 .reviewPhotos .pageCard { padding:10px; background:#1c1c20; }
 .reviewPhotos .pageCard p { margin:0; font-size:13px; }
 @media(max-width:700px) { .reviewSummary { grid-template-columns:34px minmax(0,1fr) auto; gap:10px; }.reviewAnswer { grid-column:2; text-align:left; }.reviewDetails { padding-left:16px; }.reviewStatus,.reviewFlag { text-align:right; } }
+.bulkReview { padding:14px 16px; border:1px solid #39393f; border-radius:8px; background:#1c1c20; }
+.bulkReview summary { cursor:pointer; font-size:14px; font-weight:600; }
+.bulkReview p { color:#bcbcc4; font-size:13px; line-height:1.5; }
+.bulkReview .check { color:#e5e5ea; font-size:13px; }
+.bulkAnswers { display:flex; flex-wrap:wrap; gap:8px; }
+.bulkAnswers span { padding:7px 10px; border:1px solid #47474f; border-radius:6px; color:#f5f5f5; font-size:13px; overflow-wrap:anywhere; }

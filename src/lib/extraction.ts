@@ -36,3 +36,12 @@ export function retryDelayMs(header: string | null, now: number) {
   const date = Date.parse(header);
   return Number.isFinite(date) ? Math.max(0, Math.min(date - now, 604800000)) : 60000;
 }
+
+// Eligibility never treats an AI observation as a teacher decision; it only
+// identifies suggestions that may be presented for explicit group review.
+export function canConfirmClearSuggestion(items: ExtractionItem[], expectedStyle: string, questionType: string, alreadySaved: boolean) {
+  if (alreadySaved || questionType === "ESSAY" || items.length !== 1) return false;
+  const item = items[0];
+  const expected = expectedStyle === "text" ? "written" : expectedStyle;
+  return item.status === "clear" && !!item.answer?.trim() && !!item.observedStyle && item.observedStyle !== "unknown" && item.observedStyle === expected;
+}

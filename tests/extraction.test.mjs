@@ -57,3 +57,27 @@ test("validates observed answer styles without deciding correctness", () => {
   assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, observedStyle: "incorrect" }] })), null);
   assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, observedStyle: "unknown" }] }))?.items[0].observedStyle, "unknown");
 });
+
+test("group review only includes clear matching styles that have not been saved", async () => {
+  const { canConfirmClearSuggestion } = await import("../src/lib/extraction.ts");
+  const item = { number: 1, section: null, answer: "B", status: "clear", note: "", observedStyle: "written" };
+  assert.equal(canConfirmClearSuggestion([item], "text", "MULTIPLE_CHOICE", false), true);
+  for (const style of ["circle", "box", "underline", "shade", "unknown"]) assert.equal(canConfirmClearSuggestion([{ ...item, observedStyle: style }], "written", "MULTIPLE_CHOICE", false), false);
+  assert.equal(canConfirmClearSuggestion([{ ...item, status: "blank", answer: null }], "written", "MULTIPLE_CHOICE", false), false);
+  assert.equal(canConfirmClearSuggestion([{ ...item, status: "unclear" }], "written", "MULTIPLE_CHOICE", false), false);
+  assert.equal(canConfirmClearSuggestion([item, item], "written", "MULTIPLE_CHOICE", false), false);
+  assert.equal(canConfirmClearSuggestion([item], "written", "ESSAY", false), false);
+  assert.equal(canConfirmClearSuggestion([item], "written", "MULTIPLE_CHOICE", true), false);
+  assert.equal(canConfirmClearSuggestion([{ ...item, observedStyle: "circle" }], "circle", "MULTIPLE_CHOICE", false), true);
+});
+
+test("answers from separate pages map to one quiz and duplicate readings remain ambiguous", async () => {
+  const { canConfirmClearSuggestion } = await import("../src/lib/extraction.ts");
+  const questions = [{ id: "first", number: 1, section: 1 }, { id: "second", number: 2, section: 1 }];
+  const page1 = [{ number: 1, section: null, answer: "A", status: "clear", note: "", observedStyle: "written" }];
+  const page2 = [{ number: 2, section: null, answer: "B", status: "clear", note: "", observedStyle: "written" }];
+  const combined = matchCandidates(questions, [...page1, ...page2]);
+  assert.equal(combined.byQuestion.first[0].answer, "A");
+  assert.equal(combined.byQuestion.second[0].answer, "B");
+  assert.equal(canConfirmClearSuggestion(matchCandidates(questions, [...page1, ...page1]).byQuestion.first, "written", "MULTIPLE_CHOICE", false), false);
+});

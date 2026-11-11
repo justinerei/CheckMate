@@ -1,4 +1,4 @@
-export type ExtractionItem = { number: number | null; section: number | null; answer: string | null; status: "clear" | "blank" | "unclear" | "multiple" | "erased"; note: string; markShape?: "circle" | "box" | "triangle" | "unknown" };
+export type ExtractionItem = { number: number | null; section: number | null; answer: string | null; status: "clear" | "blank" | "unclear" | "multiple" | "erased"; note: string; markShape?: "circle" | "box" | "triangle" | "unknown"; observedStyle?: "written" | "circle" | "shade" | "box" | "underline" | "other" | "unknown" };
 export function parseExtraction(input: string): { items: ExtractionItem[]; studentName?: string | null } | null {
   try {
     const value = JSON.parse(input);
@@ -6,9 +6,10 @@ export function parseExtraction(input: string): { items: ExtractionItem[]; stude
     const positive = (x: unknown) => x === null || (typeof x === "number" && Number.isInteger(x) && x > 0 && x <= 500);
     for (const item of value.items) {
       if (!item || !positive(item.number) || !positive(item.section) || !(item.answer === null || (typeof item.answer === "string" && item.answer.length <= 4000)) || !["clear", "blank", "unclear", "multiple", "erased"].includes(item.status) || typeof item.note !== "string" || item.note.length > 500) return null;
+      if (item.observedStyle !== undefined && !["written", "circle", "shade", "box", "underline", "other", "unknown"].includes(item.observedStyle)) return null;
       if (item.markShape !== undefined && !["circle", "box", "triangle", "unknown"].includes(item.markShape)) return null;
     }
-    return { items: value.items.map((i: ExtractionItem) => ({ number: i.number, section: i.section, answer: i.answer, status: i.status, note: i.note, ...(i.markShape !== undefined ? { markShape: i.markShape } : {}) })), ...(value.studentName !== undefined ? { studentName: value.studentName } : {}) };
+    return { items: value.items.map((i: ExtractionItem) => ({ number: i.number, section: i.section, answer: i.answer, status: i.status, note: i.note, ...(i.markShape !== undefined ? { markShape: i.markShape } : {}), ...(i.observedStyle !== undefined ? { observedStyle: i.observedStyle } : {}) })), ...(value.studentName !== undefined ? { studentName: value.studentName } : {}) };
   } catch { return null; }
 }
 export function needsReview(items: ExtractionItem[], confirmed: boolean, multipleChoice = false) {

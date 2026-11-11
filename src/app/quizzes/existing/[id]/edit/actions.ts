@@ -1,7 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { adjustedScore, matchesAnswer } from "@/lib/scoring";
+import { adjustedScore, objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 
 export async function updateKeyAnswer(quizId: string, questionId: string, _previous: { message: string; ok: boolean }, form: FormData) {
@@ -23,7 +23,7 @@ export async function updateKeyAnswer(quizId: string, questionId: string, _previ
       await tx.answerKey.update({ where: { id: key.id }, data: { acceptedAnswers: answers, version } });
       const change = await tx.answerKeyHistory.create({ data: { answerKeyId: key.id, changedById: teacher.id, previousAnswers: key.acceptedAnswers, newAnswers: answers, version } });
       for (const entry of affected) {
-        const oldScore = Number(entry.objectiveScore); const newScore = matchesAnswer(entry.confirmedText!, answers) ? Number(question.points) : 0;
+        const oldScore = Number(entry.objectiveScore); const newScore = objectivePoints(entry.confirmedText!, answers, Number(question.points), entry.instructionDecision);
         const objective = adjustedScore(Number(entry.submission.objectiveScore), oldScore, newScore);
         const total = adjustedScore(Number(entry.submission.totalScore), oldScore, newScore);
         await tx.submissionAnswer.update({ where: { id: entry.id }, data: { objectiveScore: newScore, keyVersion: version } });

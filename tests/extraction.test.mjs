@@ -50,3 +50,10 @@ test("accepts an optional suggested name while rejecting invalid name data", () 
   assert.equal(parseExtraction(JSON.stringify({ studentName: "x".repeat(121), items: [item] })), null);
   assert.equal(parseExtraction(JSON.stringify({ studentName: 42, items: [item] })), null);
 });
+
+test("validates observed answer styles without deciding correctness", () => {
+  const item = { number: 1, section: null, answer: "B", status: "clear", note: "", observedStyle: "underline" };
+  assert.equal(parseExtraction(JSON.stringify({ items: [item] }))?.items[0].observedStyle, "underline");
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, observedStyle: "incorrect" }] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, observedStyle: "unknown" }] }))?.items[0].observedStyle, "unknown");
+});

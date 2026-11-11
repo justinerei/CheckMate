@@ -220,6 +220,7 @@ model SubmissionAnswer {
   confirmedText  String?
   teacherComment String?
   confirmedMarkShape String?
+  instructionDecision String?
   reviewStatus   String            @default("PENDING")
   objectiveScore Decimal?          @db.Decimal(8, 2)
   teacherScore   Decimal?          @db.Decimal(8, 2)

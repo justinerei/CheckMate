@@ -46,7 +46,7 @@ function PageSlot({ submissionId, number, page, editable, canExtract, disabled }
   </section>;
 }
 
-export default function PhotoPages({ id, expectedPages, status, pages, existing }: { id: string; expectedPages: number; status: string; pages: Page[]; existing: boolean }) {
+export default function PhotoPages({ id, expectedPages, status, pages, existing, autoCamera = false }: { id: string; expectedPages: number; status: string; pages: Page[]; existing: boolean; autoCamera?: boolean }) {
   const router = useRouter();
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
@@ -55,7 +55,8 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [batchBusy, setBatchBusy] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(autoCamera && status === "DRAFT" && pages.length === 0);
+  useEffect(() => { if (autoCamera) { const url = new URL(window.location.href); url.searchParams.delete("camera"); window.history.replaceState(window.history.state, "", url); } }, [autoCamera]);
   const [batchProgress, setBatchProgress] = useState("");
   const editable = status === "DRAFT";
   const complete = pagesComplete(expectedPages, pages.map(page => page.pageNumber));

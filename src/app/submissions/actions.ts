@@ -22,6 +22,22 @@ export async function createSubmission(_previous: CreateState, form: FormData): 
   redirect(`/submissions/${id}`);
 }
 
+/** Start a fresh paper only from a finalized paper owned by this teacher. */
+export async function createNextPaper(previousId: string, _previous: CreateState): Promise<CreateState> {
+  void _previous;
+  const teacher = await getTeacher();
+  if (!teacher) redirect("/");
+  const previous = await db.submission.findFirst({ where: { id: previousId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "FINALIZED" }, select: { quizId: true, expectedPages: true } });
+  if (!previous || !validPageCount(String(previous.expectedPages ?? ""))) return { error: "This paper cannot be reused. Start a new paper from Student papers." };
+  let id: string;
+  try {
+    const next = await db.submission.create({ data: { quizId: previous.quizId, teacherId: teacher.id, expectedPages: previous.expectedPages }, select: { id: true } });
+    id = next.id;
+  } catch { return { error: "Could not start the next paper. Please try again." }; }
+  revalidatePath("/submissions");
+  redirect(`/submissions/${id}?camera=1`);
+}
+
 export async function confirmSubmission(submissionId: string): Promise<{ error: string }> {
   const teacher = await getTeacher();
   if (!teacher) redirect("/");

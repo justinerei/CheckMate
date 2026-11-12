@@ -4,7 +4,13 @@ export function pinchZoom(startZoom: number, startDistance: number, distance: nu
   return Math.round(Math.max(100, Math.min(400, startZoom * distance / startDistance)));
 }
 
-/** Keep the point beneath the fingers fixed as the image changes size. */
-export function zoomOffset(scroll: number, anchor: number, oldZoom: number, newZoom: number) {
-  return Math.max(0, (scroll + anchor) * newZoom / oldZoom - anchor);
+/** Width that fits the entire image in the available viewport. */
+export function fitPhotoWidth(viewWidth: number, viewHeight: number, imageWidth: number, imageHeight: number) {
+  if (viewWidth <= 0 || viewHeight <= 0 || imageWidth <= 0 || imageHeight <= 0) return 0;
+  return Math.min(viewWidth, viewHeight * imageWidth / imageHeight);
+}
+
+/** Keep the point beneath the fingers fixed, accounting for horizontal centering. */
+export function zoomOffset(scroll: number, anchor: number, oldZoom: number, newZoom: number, oldInset = 0, newInset = 0) {
+  return Math.max(0, (scroll + anchor - oldInset) * newZoom / oldZoom + newInset - anchor);
 }

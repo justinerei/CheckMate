@@ -332,3 +332,4 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .nextPaperForm { margin:0; }
 .resultActions .nextPaperForm button { min-height:46px; }
 @media(max-width:600px) { .reviewContext { grid-template-columns:1fr; } .reviewContextPhotos { grid-template-columns:repeat(2,minmax(0,1fr)); } .reviewContextPhotos > span { grid-column:1 / -1; } .reviewContextPhoto { height:150px; } .resultActions .nextPaperForm, .resultActions .nextPaperForm button, .dialogActions .nextPaperForm, .dialogActions .nextPaperForm button { width:100%; } }
+.photoViewerViewport img { margin-inline:auto; }

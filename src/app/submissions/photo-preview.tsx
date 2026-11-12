@@ -3,16 +3,19 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./submissions.module.css";
-import { pinchZoom, zoomOffset } from "@/lib/photo-zoom";
+import { fitPhotoWidth, pinchZoom, zoomOffset } from "@/lib/photo-zoom";
 
 type Props = { src: string; alt: string; className?: string; onError?: () => void; onLoad?: () => void };
 
 export default function PhotoPreview({ src, alt, className, onError, onLoad }: Props) {
   const [open, setOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
+  const [fitWidth, setFitWidth] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
+  const fullImage = useRef<HTMLImageElement>(null);
+  const fitWidthRef = useRef(0);
   const zoomRef = useRef(zoom);
   const pendingPosition = useRef<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
@@ -29,6 +32,20 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
     const element = dialog.current;
     element?.showModal();
     return () => { element?.close(); };
+  }, [open]);
+
+  function updateFit() {
+    const area = viewport.current, image = fullImage.current;
+    if (!area || !image) return;
+    const width = fitPhotoWidth(area.clientWidth, area.clientHeight, image.naturalWidth, image.naturalHeight);
+    if (width > 0) { fitWidthRef.current = width; setFitWidth(width); }
+  }
+
+  useEffect(() => {
+    if (!open || !viewport.current) return;
+    const observer = new ResizeObserver(updateFit);
+    observer.observe(viewport.current);
+    return () => observer.disconnect();
   }, [open]);
 
   useEffect(() => {
@@ -50,7 +67,9 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
         const x = (event.touches[0].clientX + event.touches[1].clientX) / 2 - bounds.left;
         const y = (event.touches[0].clientY + event.touches[1].clientY) / 2 - bounds.top;
         const current = pendingPosition.current ?? { left: area.scrollLeft, top: area.scrollTop };
-        pendingPosition.current = { left: zoomOffset(current.left, x, previous, next), top: zoomOffset(current.top, y, previous, next) };
+        const oldInset = Math.max(0, (area.clientWidth - fitWidthRef.current * previous / 100) / 2);
+        const newInset = Math.max(0, (area.clientWidth - fitWidthRef.current * next / 100) / 2);
+        pendingPosition.current = { left: zoomOffset(current.left, x, previous, next, oldInset, newInset), top: zoomOffset(current.top, y, previous, next) };
         zoomRef.current = next;
         setZoom(next);
       } else if (event.touches.length === 1) {
@@ -87,7 +106,7 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
       <p className={styles.photoViewerHelp}>Pinch or use the controls to zoom. Swipe or scroll to move.</p>
       <div ref={viewport} className={styles.photoViewerViewport} tabIndex={0} aria-label="Scrollable enlarged photo">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} style={{ width: `${zoom}%` }} />
+        <img ref={fullImage} src={src} alt={alt} onLoad={updateFit} style={fitWidth ? { width: `${fitWidth * zoom / 100}px`, maxWidth: "none", maxHeight: "none" } : { maxWidth: "100%", maxHeight: "100%", width: "auto" }} />
       </div>
     </dialog>, document.body)}
   </>;

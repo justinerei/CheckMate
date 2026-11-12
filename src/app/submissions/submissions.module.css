@@ -233,3 +233,4 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 @media(max-width:700px) { .scanToast { top:max(10px,env(safe-area-inset-top)); right:10px; left:10px; width:auto; max-height:min(45dvh,260px); padding:12px; } }
 @media(prefers-reduced-motion:reduce) { .scanToast { animation:none; } }
 .scanToast.scanToastSuccess { border-color:#496b53; background:#1e2b22; }.scanToast.scanToastError { border-color:#955941; background:#32221d; }
+@media(max-width:700px) { .previewPageActions { grid-template-columns:repeat(2,minmax(0,1fr)); }.previewPageActions .previewReplace { text-align:center; line-height:1.25; }.previewPageActions .previewRemove { grid-column:1 / -1; width:auto; justify-self:start; } }

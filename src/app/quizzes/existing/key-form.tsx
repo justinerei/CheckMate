@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
+import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
 import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import EssayRubric from "./essay-rubric";
@@ -16,6 +17,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [title, setTitle] = useState("");
   const [rows, setRows] = useState<KeyRow[]>([blank(1)]);
   const [error, setError] = useState("");
+  const [uploadError, setUploadError] = useState("");
   const [busy, setBusy] = useState(false);
   const [reviewStarted, setReviewStarted] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -31,14 +33,14 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   useEffect(() => () => { otherPreviews.forEach(item => URL.revokeObjectURL(item.url)); }, [otherPreviews]);
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
   function selectFiles(selected: File[]) {
-    if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
-    setError(""); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+    if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setUploadError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
+    setUploadError(""); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
   }
   async function extract() {
     if (!file || !files.length) return;
     if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this file will replace the answers currently entered. Continue?")) return;
-    if (files.length > 10 || files.some(f => f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setError("Choose at most 10 files; PDFs must be under 10 MB and photos under 8 MB each."); return; }
-    setBusy(true); setError("");
+    if (files.length > 10 || files.some(f => f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setUploadError("Choose at most 10 files; PDFs must be under 10 MB and photos under 8 MB each."); return; }
+    setBusy(true); setUploadError("");
     try {
       const images: Blob[] = [];
       for (const file of files) { if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
@@ -70,10 +72,10 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
         const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not read the key.");
         detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
       }
-      if (!detected.length) throw new Error("No answers were detected. Try a clearer key or enter answers manually.");
+      if (!hasReadableKeyAnswer(detected)) throw new Error("We couldn’t read any answers from these files. Check that they show an answer key, then try a clearer photo or enter answers manually. Your current answers have not been changed.");
       setRows(groupExtractedKeyRows(detected));
       setReviewStarted(true);
-    } catch (err) { setError(err instanceof Error ? err.message : "Could not read the key."); }
+    } catch (err) { setUploadError(err instanceof Error ? err.message : "Could not read the key."); }
     finally { setBusy(false); setProgress(""); }
   }
   async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result.error || !result.id) { setError(result.error || "Could not save the key."); return; } try { localStorage.removeItem(draftKey); } catch {} router.push(answerKeyReturnPath(result.id, fromChecking)); } catch { setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
@@ -91,6 +93,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
       <FileDropzone title="Add answer key files" description="Drag files here or choose them from your device. Select pages in order." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
       {files.length > 0 && <p className={styles.help}>Selected order: {files.map(f => f.name).join(" → ")}. The preview shows the first file.</p>}
       <div className={styles.keyUploadActions}><span role="status">{progress}</span><button className={styles.secondary} type="button" onClick={extract} disabled={!file || busy}>{busy ? "Reading…" : "Read answer key"}</button></div>
+      {uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
     </section>
     <section className={`${styles.keyPanel} ${styles.keyEditor}`} aria-labelledby="key-review-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>

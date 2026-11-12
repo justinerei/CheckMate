@@ -171,3 +171,13 @@
   .keyEditor .keySummary { grid-template-columns:34px minmax(0,1fr); }
   .keyEditor .keyAnswer,.keyEditor .keyPoints,.keyEditor .questionRemove { grid-column:2; }
 }
+.checkChoices { display:grid; gap:14px; margin-top:32px; }
+.checkChoice { display:grid; gap:10px; padding:22px; border:1px solid #39393f; border-radius:12px; background:#17171b; color:#f4f4f5; text-decoration:none; }
+a.checkChoice:hover { border-color:#ff945c; background:#211c1a; }
+a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
+.checkChoice .keyEyebrow { color:#ff9a63; font:11px var(--font-geist-mono),monospace; letter-spacing:.09em; }
+.checkChoice strong { font-size:17px; }
+.checkChoice > span:not(.keyEyebrow):not(.choiceAction) { color:#bcbcc4; font-size:14px; line-height:1.5; }
+.checkChoice .choiceAction { color:#f6b48d; font-size:13px; font-weight:600; }
+.choiceDisabled { opacity:.7; }
+.choiceBack { margin-top:20px; font-size:14px; }.choiceBack a { color:#dedee2; }

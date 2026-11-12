@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { getTeacher } from "@/lib/teacher";
 import { imageFormat } from "@/lib/submission-upload";
 import { validateRubric } from "@/lib/rubric";
+import { retryDelayMs } from "@/lib/extraction";
 
 export async function POST(request: Request) {
   if (!await getTeacher()) return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
@@ -26,6 +27,10 @@ export async function POST(request: Request) {
       content.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${jpeg.toString("base64")}` } });
     }
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(60000), body: JSON.stringify({ model: process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b", temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content }] }) });
+    if (response.status === 429) {
+      const retryAfterSeconds = Math.max(1, Math.ceil(retryDelayMs(response.headers.get("retry-after"), Date.now()) / 1000));
+      return NextResponse.json({ error: "Groq has reached a rate limit. Your current rubric is unchanged; you can continue editing it or retry later.", retryAfterSeconds }, { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } });
+    }
     if (!response.ok) return NextResponse.json({ error: `Could not suggest a rubric (HTTP ${response.status}). Try again or enter criteria manually.` }, { status: 502 });
     const body = await response.json(); const data = JSON.parse(body?.choices?.[0]?.message?.content ?? "null");
     if (!validateRubric(data?.criteria, points) || data.criteria.length !== 3 || data.criteria.some((item: { title: string }, index: number) => item.title !== ["Accuracy", "Explanation", "Organization"][index])) throw new Error();

@@ -2,6 +2,12 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { groupExtractedKeyRows } from "../src/lib/answer-key-sections.ts";
 
+test("uses detected section headings and a type-based fallback", () => {
+  const base = { number: 1, section: 1, type: "MULTIPLE_CHOICE", style: "circle", directions: "" };
+  const rows = groupExtractedKeyRows([{ ...base, sectionTitle: "Planets" }, { ...base, number: 2, sectionTitle: "Planets" }, { ...base, number: 3, type: "ESSAY", style: "text", sectionTitle: "" }]);
+  assert.deepEqual(rows.map(row => row.sectionTitle), ["Planets", "Planets", "Essay"]);
+});
+
 const row = (number, style, directions = "") => ({ number, section: 1, style, directions, type: "MULTIPLE_CHOICE" });
 
 test("groups a mixed answer key into consecutive sections without changing answers", () => {

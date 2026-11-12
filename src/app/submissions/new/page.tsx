@@ -27,7 +27,7 @@ export default async function NewSubmission({ searchParams }: { searchParams: Pr
       </> : <>
         <p className={styles.description}>First, tell us whether you already have an answer key saved in CheckMate. You’ll upload the student’s paper next.</p>
         <div className={styles.checkChoices}>
-          <Link className={styles.checkChoice} href="/quizzes/existing"><span className={styles.keyEyebrow}>NEW ANSWER KEY</span><strong>Set up an answer key</strong><span>Upload an existing key or enter answers manually. You can reuse it for other papers.</span><span className={styles.choiceAction}>Continue →</span></Link>
+          <Link className={styles.checkChoice} href="/quizzes/existing?from=check"><span className={styles.keyEyebrow}>NEW ANSWER KEY</span><strong>Set up an answer key</strong><span>Upload an existing key or enter answers manually. You can reuse it for other papers.</span><span className={styles.choiceAction}>Continue →</span></Link>
           {quizzes.length > 0 ? <Link className={styles.checkChoice} href="/submissions/new?choose=saved"><span className={styles.keyEyebrow}>SAVED ANSWER KEY</span><strong>Use a saved answer key</strong><span>Choose a key or a quiz you already set up in CheckMate.</span><span className={styles.choiceAction}>Choose a key →</span></Link> : <div className={`${styles.checkChoice} ${styles.choiceDisabled}`}><span className={styles.keyEyebrow}>SAVED ANSWER KEY</span><strong>Use a saved answer key</strong><span>No saved keys yet. Set one up first, then you can use it again.</span></div>}
         </div>
       </>}

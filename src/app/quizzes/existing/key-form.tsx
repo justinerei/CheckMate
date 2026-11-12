@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
+import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import EssayRubric from "./essay-rubric";
 import { validateRubric } from "@/lib/rubric";
@@ -9,7 +10,7 @@ import FileDropzone from "../../submissions/file-dropzone";
 import styles from "../../submissions/submissions.module.css";
 
 const blank = (number: number): KeyRow => ({ number, section: 1, answer: "", type: "MULTIPLE_CHOICE", style: "written", points: 1, directions: "" });
-export default function KeyForm({ teacherId }: { teacherId: string }) {
+export default function KeyForm({ teacherId, fromChecking = false }: { teacherId: string; fromChecking?: boolean }) {
   const router = useRouter();
   const draftKey = `checkmate-existing-key-draft-${teacherId}`;
   const [title, setTitle] = useState("");
@@ -75,7 +76,7 @@ export default function KeyForm({ teacherId }: { teacherId: string }) {
     } catch (err) { setError(err instanceof Error ? err.message : "Could not read the key."); }
     finally { setBusy(false); setProgress(""); }
   }
-  async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result.error || !result.id) { setError(result.error || "Could not save the key."); return; } try { localStorage.removeItem(draftKey); } catch {} router.push(`/submissions/new?quizId=${encodeURIComponent(result.id)}&saved=1`); } catch { setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
+  async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result.error || !result.id) { setError(result.error || "Could not save the key."); return; } try { localStorage.removeItem(draftKey); } catch {} router.push(answerKeyReturnPath(result.id, fromChecking)); } catch { setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
   const typeNames: Record<string, string> = { MULTIPLE_CHOICE: "Multiple choice", TRUE_FALSE: "True / false", IDENTIFICATION: "Identification", ESSAY: "Essay" };
   const mixedSections = new Set(rows.filter(row => rows.some(other => other.section === row.section && other.style !== row.style)).map(row => row.section));
   const styleNames: Record<string, string> = { written: "Write letter in blank", circle: "Circle", shade: "Shade", box: "Mark a box", text: "Written text" };
@@ -83,7 +84,7 @@ export default function KeyForm({ teacherId }: { teacherId: string }) {
   const missing = rows.filter(row => row.type !== "ESSAY" && !row.answer.trim()).length;
   const issues = rows.flatMap(row => row.uncertain ? [{ number: row.number, message: "Check this reading against the key." }] : row.type !== "ESSAY" && !row.answer.trim() ? [{ number: row.number, message: "Enter a correct answer." }] : row.type === "ESSAY" && (!row.rubricConfirmed || !validateRubric(row.rubric ?? [], row.points)) ? [{ number: row.number, message: "Review and confirm a rubric matching the points." }] : []);
   return <div className={styles.keySetup}>
-    <nav className={styles.keySteps} aria-label="Checking workflow"><span aria-current={!reviewStarted ? "step" : undefined}><b>1</b> Upload key</span><span aria-current={reviewStarted ? "step" : undefined}><b>2</b> Review answers</span><span><b>3</b> Upload student paper</span><span><b>4</b> Check results</span></nav>
+    {fromChecking && <nav className={styles.keySteps} aria-label="Checking workflow"><span aria-current={!reviewStarted ? "step" : undefined}><b>1</b> Upload key</span><span aria-current={reviewStarted ? "step" : undefined}><b>2</b> Review answers</span><span><b>3</b> Upload student paper</span><span><b>4</b> Check results</span></nav>}
     <section className={styles.keyPanel} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
@@ -111,7 +112,7 @@ export default function KeyForm({ teacherId }: { teacherId: string }) {
       <p className={styles.keyNote}>Use a new section when instructions or answer styles differ. Choose its answer style to match the student paper. For multiple choice, enter the answer students will write (for example, B rather than B — Mars).</p>
       <p className={styles.keyNote}>Use consecutive question numbers starting at 1. Use | between alternative accepted answers. Essay points are assigned by the teacher during review.</p>
       {error && <p className={styles.error} role="alert">{error}</p>}
-      <div className={styles.keyFinish}><p>Your draft is saved in this browser. After saving, upload the student paper.</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Working…" : "Save key & upload student paper"}</button></div>
+      <div className={styles.keyFinish}><p>{fromChecking ? "Your draft is saved in this browser. After saving, continue to the student paper." : "Your draft is saved in this browser. You can use the saved key to check papers later."}</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save key"}</button></div>
     </section>
   </div>;
 }

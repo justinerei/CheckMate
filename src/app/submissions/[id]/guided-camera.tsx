@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "../submissions.module.css";
+import PhotoPreview from "../photo-preview";
 
 type Capture = { file: File; url: string; warning: string };
 type Props = { pageNumbers: number[]; onClose: () => void; onUpload: (files: File[]) => Promise<void> };
@@ -88,8 +89,8 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
       {error && <p role="alert" className={styles.error}>{error}</p>}
       <div className={styles.cameraView} hidden={review || !!preview}><video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" /></div>
-      {preview && !review && <><div className={styles.cameraView}><img src={preview.url} alt={`Preview of page ${pageNumbers[current]}`} /></div>{preview.warning && <p role="status" className={styles.cameraWarning}>{preview.warning}</p>}</>}
-      {review && <div className={styles.cameraThumbnails}>{captures.map((item, index) => <div key={pageNumbers[index]}><img src={item.url} alt={`Page ${pageNumbers[index]}`} /><strong>Page {pageNumbers[index]}</strong><button type="button" className={styles.secondary} disabled={busy} onClick={() => { setCurrent(index); setReview(false); }}>Retake</button></div>)}</div>}
+      {preview && !review && <><div className={styles.cameraView}><PhotoPreview src={preview.url} alt={`Page ${pageNumbers[current]} preview`} /></div>{preview.warning && <p role="status" className={styles.cameraWarning}>{preview.warning}</p>}</>}
+      {review && <div className={styles.cameraThumbnails}>{captures.map((item, index) => <div key={pageNumbers[index]}><PhotoPreview src={item.url} alt={`Page ${pageNumbers[index]} preview`} /><strong>Page {pageNumbers[index]}</strong><button type="button" className={styles.secondary} disabled={busy} onClick={() => { setCurrent(index); setReview(false); }}>Retake</button></div>)}</div>}
       <div className={styles.cameraActions}>
         {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error} onClick={capture}>Capture</button>}
       </div>

@@ -1,11 +1,11 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { MAX_PHOTO_BYTES, pagesComplete } from "@/lib/submission-upload";
 import { confirmSubmission, reopenSubmission, updateExpectedPages, swapPages } from "../actions";
 import FileDropzone from "../file-dropzone";
+import PhotoPreview from "../photo-preview";
 import GuidedCamera from "./guided-camera";
 import styles from "../submissions.module.css";
 
@@ -39,7 +39,7 @@ function PageSlot({ submissionId, number, page, editable, canExtract, disabled }
     finally { setBusy(false); }
   }
   return <section className={styles.pageCard}><div className={styles.pageTop}><h3>Page {number}</h3><span>{page ? "UPLOADED" : "MISSING"}</span></div>
-    {page ? <><a href={`/api/submissions/${submissionId}/pages/${page.id}`} target="_blank" rel="noreferrer" aria-label={`Open page ${number} photo`}><Image className={styles.photo} src={`/api/submissions/${submissionId}/pages/${page.id}`} alt={`Uploaded photo of page ${number}`} width={500} height={400} unoptimized onLoad={() => setImageError(false)} onError={() => setImageError(true)} /></a>{imageError && <p className={styles.error} role="alert">This photo could not be loaded. {editable ? "Remove it and upload it again." : "Contact the app administrator."}</p>}{editable && <button type="button" className={styles.secondary} onClick={remove} disabled={busy || disabled}>{busy ? "Removing…" : "Remove photo"}</button>}</> : <div className={styles.pagePlaceholder}><span aria-hidden="true">+</span><p>Waiting for page {number}</p></div>}
+    {page ? <><PhotoPreview className={styles.photo} src={`/api/submissions/${submissionId}/pages/${page.id}`} alt={`Page ${number} photo`} onLoad={() => setImageError(false)} onError={() => setImageError(true)} />{imageError && <p className={styles.error} role="alert">This photo could not be loaded. {editable ? "Remove it and upload it again." : "Contact the app administrator."}</p>}{editable && <button type="button" className={styles.secondary} onClick={remove} disabled={busy || disabled}>{busy ? "Removing…" : "Remove photo"}</button>}</> : <div className={styles.pagePlaceholder}><span aria-hidden="true">+</span><p>Waiting for page {number}</p></div>}
     {page && !editable && <div className={styles.extract}><p>Extraction: {page.status.toLowerCase()}</p>{page.error && <p className={styles.error}>{page.error}{page.retryAt && <> Retry after {new Date(page.retryAt).toLocaleString()}.</>}</p>}{canExtract && page.status !== "COMPLETE" && <button type="button" className={styles.secondary} disabled={busy} onClick={extract}>{busy ? "Reading photo…" : page.status === "PROCESSING" ? "Retry if stuck" : page.status === "FAILED" ? "Retry extraction" : "Extract answers"}</button>}</div>}
     {message && <p className={message === "Photo saved." || message.startsWith("Photo removed.") || message.startsWith("Answers extracted.") ? styles.success : styles.error} role="status">{message}</p>}
   </section>;

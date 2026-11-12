@@ -255,3 +255,23 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .cameraThumbnails button { width:100%; }
 .cameraFootnote { margin:16px 0 0; font-size:12px; }
 @media(max-width:600px) { .cameraOverlay { padding:0; } .cameraPanel { min-height:100dvh; padding:18px; border:0; border-radius:0; } .cameraView { height:min(53dvh,520px); } .cameraActions > button { flex:1; } .cameraThumbnails { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+
+.photoPreviewButton { position:relative; display:block; width:100%; max-width:100%; padding:0; border:0; border-radius:8px; background:transparent; text-align:left; color:#fff; cursor:zoom-in; }
+.photoPreviewButton:focus-visible { outline:3px solid #ff994f; outline-offset:3px; }
+.photoPreviewButton .photo { margin:10px 0 4px; }
+.photoPreviewHint { display:block; padding:5px 0 8px; font-size:12px; font-weight:600; color:#e9b28d; text-align:center; }
+.cameraView .photoPreviewButton { height:100%; }
+.cameraView .photoPreviewButton img { height:calc(100% - 30px); }
+.cameraThumbnails .photoPreviewButton img { width:100%; height:180px; }
+.photoViewer { position:fixed; z-index:2000; inset:0; width:min(96vw,1000px); max-width:none; height:min(94dvh,950px); max-height:none; margin:auto; padding:18px; border:1px solid #55525a; border-radius:14px; background:#161619; color:#f4f4f5; overflow:hidden; }
+.photoViewer::backdrop { background:rgba(0,0,0,.85); }
+.photoViewer[open] { display:flex; flex-direction:column; gap:10px; }
+.photoViewerHeader,.photoViewerTools { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.photoViewerHeader { justify-content:space-between; }
+.photoViewerHeader strong { flex:1; min-width:0; }
+.photoViewerTools button { min-width:44px; }
+.photoViewerTools span { min-width:48px; text-align:center; }
+.photoViewerHelp { margin:0; color:#c3c3ca; font-size:13px; }
+.photoViewerViewport { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; background:#08080a; border-radius:8px; touch-action:pan-x pan-y pinch-zoom; }
+.photoViewerViewport img { display:block; max-width:none; height:auto; }
+@media(max-width:600px) { .photoViewer { width:100vw; height:100dvh; padding:14px; border:0; border-radius:0; } .photoViewerTools { gap:8px; } }

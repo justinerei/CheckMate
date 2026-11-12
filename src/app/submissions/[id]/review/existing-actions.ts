@@ -5,6 +5,8 @@ import { canConfirmClearSuggestion, matchCandidates, parseExtraction, type Extra
 import { objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 import { sumCriterionScores } from "@/lib/rubric";
+import { automaticDecision } from "@/lib/auto-review";
+import { pagesComplete } from "@/lib/submission-upload";
 
 export async function saveExistingAnswer(submissionId: string, questionId: string, _state: { message: string; ok: boolean }, form: FormData) {
   const teacher = await getTeacher(); if (!teacher) return { message: "Please sign in again.", ok: false };
@@ -31,29 +33,58 @@ export async function saveExistingAnswer(submissionId: string, questionId: strin
   revalidatePath(`/submissions/${submissionId}/review`); return { message: "Answer confirmed.", ok: true };
 }
 
-export async function finalizeExisting(submissionId: string): Promise<{ error: string }> {
+export async function finalizeExisting(submissionId: string): Promise<{ error: string; total?: number }> {
   const teacher = await getTeacher(); if (!teacher) return { error: "Please sign in again." };
   try {
     const result = await db.$transaction(async tx => {
-      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { answers: true, quiz: { include: { sections: { include: { questions: { include: { answerKey: true } } } } } } } });
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { answers: true, pages: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } } } } } });
       if (!submission) return "This paper is unavailable or already finalized.";
       if (!submission.nameReviewed) return "Confirm the name, or mark that no readable name is present, before finalizing.";
-      const questions = submission.quiz.sections.flatMap(s => s.questions); if (!questions.length) return "The answer key has no questions.";
+      let counter = 0;
+      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: section.answerStyle })));
+      if (!questions.length) return "The answer key has no questions.";
+      if (!pagesComplete(submission.expectedPages, submission.pages.map(page => page.pageNumber))) return "Upload and confirm all pages before finalizing.";
+      const manuallyComplete = questions.every(q => submission.answers.some(a => a.questionId === q.id && a.reviewStatus === "CONFIRMED" && a.confirmedText !== null));
+      const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
+      let unmatched = false;
+      if (!manuallyComplete) {
+        if (submission.pages.some(page => page.status !== "COMPLETE")) return "Read all pages or review every answer manually before finalizing.";
+        for (const page of submission.pages) {
+          const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
+          if (!parsed) return "A page has no valid reading. Retry it or review all answers manually.";
+          const mapped = matchCandidates(questions, parsed.items.map(item => ({ ...item, section: null })));
+          unmatched ||= mapped.unmatched.length > 0;
+          for (const [id, items] of Object.entries(mapped.byQuestion)) (suggestions[id] ??= []).push(...items);
+        }
+        if (unmatched) return "Some responses could not be matched. Review all answers manually before finalizing.";
+      }
+      const automatic: { questionId: string; text: string; decision: "FOLLOWED" | "VIOLATION"; points: number; version: number }[] = [];
       let objective = 0, essay = 0;
       for (const q of questions) {
         const answer = submission.answers.find(a => a.questionId === q.id);
-        if (!answer || answer.reviewStatus !== "CONFIRMED" || answer.confirmedText === null) return "Confirm every answer before finalizing.";
+        if (!answer) {
+          const items = suggestions[q.id] ?? [];
+          const decision = automaticDecision(items, q.answerStyle, q.type);
+          if (!decision || !q.answerKey?.acceptedAnswers.length) return "Review all flagged answers and essays before finalizing.";
+          const text = items[0].answer!;
+          const points = objectivePoints(text, q.answerKey.acceptedAnswers, Number(q.points), decision);
+          automatic.push({ questionId: q.id, text, decision, points, version: q.answerKey.version }); objective += points;
+          continue;
+        }
+        if (answer.reviewStatus !== "CONFIRMED" || answer.confirmedText === null) return "Review all flagged answers and essays before finalizing.";
         if (!["FOLLOWED", "VIOLATION"].includes(answer.instructionDecision ?? "")) return "Confirm whether every answer followed the instructions.";
         if (q.type === "ESSAY") { if (answer.teacherScore === null) return "Enter a score for every essay."; essay += answer.instructionDecision === "VIOLATION" ? 0 : Number(answer.teacherScore); }
-        else { if (!q.answerKey?.acceptedAnswers.length) return "An answer key is missing."; const score = objectivePoints(answer.confirmedText, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision); objective += score; await tx.submissionAnswer.update({ where: { id: answer.id }, data: { objectiveScore: score, keyVersion: q.answerKey.version } }); }
+        else { if (!q.answerKey?.acceptedAnswers.length) return "An answer key is missing."; const score = objectivePoints(answer.confirmedText, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision); objective += score; }
       }
+      for (const item of automatic) await tx.submissionAnswer.create({ data: { submissionId, questionId: item.questionId, confirmedText: item.text, reviewStatus: "AUTO_CHECKED", instructionDecision: item.decision, objectiveScore: item.points, keyVersion: item.version } });
+      for (const q of questions) { const answer = submission.answers.find(a => a.questionId === q.id); if (q.type !== "ESSAY" && answer && q.answerKey) await tx.submissionAnswer.update({ where: { id: answer.id }, data: { objectiveScore: objectivePoints(answer.confirmedText!, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision), keyVersion: q.answerKey.version } }); }
       const total = Math.round((objective + essay) * 100) / 100;
       await tx.submission.update({ where: { id: submission.id }, data: { status: "FINALIZED", finalizedAt: new Date(), objectiveScore: objective, essayScore: essay, totalScore: total } });
-      await tx.resultHistory.create({ data: { submissionId: submission.id, changedById: teacher.id, reason: "Teacher confirmed answers and finalized", newScore: total } }); return "";
+      await tx.resultHistory.create({ data: { submissionId: submission.id, changedById: teacher.id, reason: "Teacher finalized checked answers", newScore: total } }); return total;
     }, { isolationLevel: "Serializable" });
-    if (result) return { error: result };
+    if (typeof result === "string") return { error: result };
+    revalidatePath(`/submissions/${submissionId}`); revalidatePath("/submissions"); return { error: "", total: result };
   } catch { return { error: "Could not finalize the paper. Refresh and try again." }; }
-  revalidatePath(`/submissions/${submissionId}/review`); revalidatePath(`/submissions/${submissionId}`); revalidatePath("/submissions"); return { error: "" };
 }
 
 export async function confirmClearAnswers(submissionId: string, expectedItems: { id: string; answer: string }[]): Promise<{ error: string; count: number }> {

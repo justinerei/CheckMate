@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import styles from "./submissions.module.css";
+import { pinchZoom, zoomOffset } from "@/lib/photo-zoom";
 
 type Props = { src: string; alt: string; className?: string; onError?: () => void; onLoad?: () => void };
 
@@ -13,7 +14,15 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
   const trigger = useRef<HTMLButtonElement>(null);
   const viewport = useRef<HTMLDivElement>(null);
   const zoomRef = useRef(zoom);
-  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  const pendingPosition = useRef<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    zoomRef.current = zoom;
+    if (viewport.current && pendingPosition.current) {
+      viewport.current.scrollLeft = pendingPosition.current.left;
+      viewport.current.scrollTop = pendingPosition.current.top;
+      pendingPosition.current = null;
+    }
+  }, [zoom]);
 
   useEffect(() => {
     if (!open) return;
@@ -34,7 +43,16 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
     const move = (event: TouchEvent) => {
       if (event.touches.length === 2 && distance) {
         event.preventDefault();
-        setZoom(Math.round(Math.max(100, Math.min(400, startZoom * gap(event.touches) / distance))));
+        const next = pinchZoom(startZoom, distance, gap(event.touches));
+        const previous = zoomRef.current;
+        if (next === previous) return;
+        const bounds = area.getBoundingClientRect();
+        const x = (event.touches[0].clientX + event.touches[1].clientX) / 2 - bounds.left;
+        const y = (event.touches[0].clientY + event.touches[1].clientY) / 2 - bounds.top;
+        const current = pendingPosition.current ?? { left: area.scrollLeft, top: area.scrollTop };
+        pendingPosition.current = { left: zoomOffset(current.left, x, previous, next), top: zoomOffset(current.top, y, previous, next) };
+        zoomRef.current = next;
+        setZoom(next);
       } else if (event.touches.length === 1) {
         event.preventDefault();
         const touch = event.touches[0];
@@ -44,7 +62,7 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
     };
     const end = (event: TouchEvent) => { distance = 0; if (event.touches.length === 1) { lastX = event.touches[0].clientX; lastY = event.touches[0].clientY; } };
     area.addEventListener("touchstart", start, { passive: false }); area.addEventListener("touchmove", move, { passive: false }); area.addEventListener("touchend", end);
-    return () => { area.removeEventListener("touchstart", start); area.removeEventListener("touchmove", move); area.removeEventListener("touchend", end); };
+    return () => { pendingPosition.current = null; area.removeEventListener("touchstart", start); area.removeEventListener("touchmove", move); area.removeEventListener("touchend", end); };
   }, [open]);
 
   function close() { setOpen(false); setZoom(100); requestAnimationFrame(() => trigger.current?.focus()); }

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
+import { isPdfFile, shouldScanDuringPreview } from "@/lib/answer-key-file-policy";
 import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
 import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
@@ -17,7 +18,9 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [title, setTitle] = useState("");
   const [rows, setRows] = useState<KeyRow[]>([blank(1)]);
   const [error, setError] = useState("");
-  const [uploadError, setUploadError] = useState("");
+  const [, setUploadError] = useState("");
+  const [notification, setNotification] = useState<{ message: string; error: boolean } | null>(null);
+  const reportUploadError = (message: string) => { setUploadError(message); setNotification(message ? { message, error: true } : null); };
   const [busy, setBusy] = useState(false);
   const [reviewStarted, setReviewStarted] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -39,9 +42,13 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
   async function selectFiles(incoming: File[], append = false, updateSelection = false) {
     const selected = append ? [...files, ...incoming] : incoming;
-    if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setUploadError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
+    if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { reportUploadError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
     if (!append && !updateSelection && files.length && !window.confirm("Replace all selected answer key files?")) return;
-    setUploadError(""); setCheckedRows(null); setScanItems([]); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+    reportUploadError(""); setCheckedRows(null); setScanItems([]); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+    if (!selected.length) { setProgress(""); return; }
+    await checkFiles(selected, false);
+  }
+  async function checkFiles(selected: File[], includePdf: boolean): Promise<KeyRow[] | null> {
     setBusy(true);
     const statuses: { name: string; message: string; ok: boolean }[] = [];
     const allRows: KeyRow[] = [];
@@ -50,10 +57,12 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
       for (const [index, selectedFile] of selected.entries()) {
         setProgress(`Checking file ${index + 1} of ${selected.length}…`);
         try {
+          const isPdf = isPdfFile(selectedFile);
+          if (!shouldScanDuringPreview(selectedFile) && !includePdf) { statuses.push({ name: selectedFile.name, message: "PDF ready — scanned after you proceed", ok: true }); setScanItems([...statuses]); continue; }
           let cached = scanCache.current.get(selectedFile);
           if (!cached) {
             const images: Blob[] = [];
-            if (selectedFile.type === "application/pdf" || selectedFile.name.toLowerCase().endsWith(".pdf")) {
+            if (isPdf) {
               const pdfjs = await import("pdfjs-dist");
               pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
               const loading = pdfjs.getDocument({ data: await selectedFile.arrayBuffer() });
@@ -76,7 +85,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
               if (!response.ok) throw new Error(result.error || "Could not check this file.");
               detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
             }
-            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers detected. Try a clearer photo or enter answers manually.");
+            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers detected. Retake the photo in good lighting, choose a clearer file, or enter answers manually.");
             cached = { rows: detected, pages: images.length }; scanCache.current.set(selectedFile, cached);
           }
           totalPages += cached.pages;
@@ -85,8 +94,14 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
         } catch (err) { statuses.push({ name: selectedFile.name, message: err instanceof Error ? err.message : "Could not check this file. Try again.", ok: false }); }
         setScanItems([...statuses]);
       }
-      if (statuses.every(item => item.ok)) setCheckedRows(allRows);
-      else setUploadError("Some files need attention. Replace them or enter the answers manually. Your current answers have not been changed.");
+      if (statuses.every(item => item.ok)) {
+        setCheckedRows(allRows);
+        setNotification({ message: includePdf ? "Scan complete. Review the detected answers." : selected.some(shouldScanDuringPreview) ? "Photos checked. Review the preview before continuing." : "PDF selected. Review it before proceeding to scan.", error: false });
+        return allRows;
+      }
+      const failed = statuses.find(item => !item.ok);
+      reportUploadError(failed ? `${failed.name}: ${failed.message}` : "Some files need attention. Your current answers have not been changed.");
+      return null;
     } finally { setBusy(false); setProgress(""); }
   }
   function replacePage(index: number, replacement: File) {
@@ -101,10 +116,13 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   function retryChecks() {
     void selectFiles(files, false, true);
   }
-  function extract() {
-    if (!checkedRows?.length) return;
+  async function extract() {
+    if (!files.length || checkedRows === null) return;
     if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this key will replace the answers currently entered. Continue?")) return;
-    setUploadError(""); setRows(groupExtractedKeyRows(checkedRows)); setReviewStarted(true);
+    reportUploadError("");
+    const results = files.some(isPdfFile) ? await checkFiles(files, true) : checkedRows;
+    if (!results || !hasReadableKeyAnswer(results)) { if (results) reportUploadError("No answers detected. Retake the photo in good lighting, choose a clearer file, or enter answers manually."); return; }
+    setRows(groupExtractedKeyRows(results)); setReviewStarted(true);
     requestAnimationFrame(() => document.getElementById("key-review-heading")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
   }
   async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result.error || !result.id) { setError(result.error || "Could not save the key."); return; } try { localStorage.removeItem(draftKey); } catch {} router.push(answerKeyReturnPath(result.id, fromChecking)); } catch { setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
@@ -119,21 +137,22 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     <section className={styles.keyPanel} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
-      <FileDropzone hidden={!!file} title="Add answer key files" description="Choose pages in order. Files are sent to Groq automatically for checking." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
+      <FileDropzone hidden={!!file} title="Add answer key files" description="Photos are checked automatically. PDFs are scanned only after you proceed." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
+      {notification && <div className={`${styles.scanToast} ${notification.error ? styles.scanToastError : styles.scanToastSuccess}`} role={notification.error ? "alert" : "status"}><div><strong>{notification.error ? "Please check your file" : "File check complete"}</strong><p>{notification.message}</p></div><button type="button" aria-label="Dismiss notification" onClick={() => setNotification(null)}>×</button></div>}
       {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key preview">
         <div className={styles.uploadPreviewHeader}><div><strong>Check your photo or file</strong><p>Make sure the answers are clear and all pages are in order.</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
-        {file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf") ? <div className={styles.uploadPdf}><strong>PDF selected</strong><span>{file.name}</span><a href={preview} target="_blank" rel="noreferrer">Open PDF preview ↗</a></div> : <img className={styles.uploadPreviewImage} src={preview} alt={`Selected answer key: ${file.name}`} />}
+        {file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf") ? <div className={styles.uploadPdf}><strong>PDF selected</strong><span>{file.name}</span><iframe className={styles.uploadPdfFrame} title={`Preview of ${file.name}`} src={preview} /><a href={preview} target="_blank" rel="noreferrer">Open PDF preview ↗</a></div> : <img className={styles.uploadPreviewImage} src={preview} alt={`Selected answer key: ${file.name}`} />}
         {otherPreviews.length > 0 && <div className={styles.uploadAdditionalPages}>{otherPreviews.map((item, index) => <div key={item.url}><strong>File {index + 2}: {item.name}</strong>{files[index + 1]?.type === "application/pdf" || files[index + 1]?.name.toLowerCase().endsWith(".pdf") ? <a href={item.url} target="_blank" rel="noreferrer">Open PDF preview ↗</a> : <img src={item.url} alt={`Selected answer key page ${index + 2}: ${item.name}`} />}</div>)}</div>}
         <div className={styles.pageCheckActions}>{files.map((item, index) => <div key={`${index}-${item.name}`}><strong>File {index + 1}: {item.name}</strong><label className={styles.previewReplace}><span>Replace</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>↻ Retake</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><button type="button" className={styles.keyRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div>)}</div>
         <p className={styles.uploadFileOrder}>Selected order: {files.map(f => f.name).join(" → ")}</p>
-        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>+ Add photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={styles.previewReplace}><span>↻ Replace files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected); }} /></label><button className={styles.secondary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : "Read answer key"}</button></div>
-        <p className={styles.help}>Files are sent to Groq when selected. Review the detected answers before saving.</p>
+        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>+ Add photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={styles.previewReplace}><span>↻ Replace files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected); }} /></label><button className={styles.secondary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : files.some(isPdfFile) ? "Confirm & scan" : "Proceed to answers"}</button></div>
+        <p className={styles.help}>Photos are sent to Groq for checking. PDFs are sent only after you proceed.</p>
         {scanItems.length > 0 && <ul className={styles.scanStatus} aria-label="File check results">{scanItems.map((item, index) => <li key={index}><strong>{item.name}</strong><span className={item.ok ? styles.scanOkay : styles.scanWarning}>{item.message}</span></li>)}</ul>}
         {progress && <p className={styles.help} role="status">{progress}</p>}
-        {uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
+
         {scanItems.some(item => !item.ok) && <button type="button" className={styles.secondary} disabled={busy} onClick={retryChecks}>Retry file check</button>}
       </section>}
-      {!file && uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
+
     </section>
     <section className={`${styles.keyPanel} ${styles.keyEditor}`} aria-labelledby="key-review-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>

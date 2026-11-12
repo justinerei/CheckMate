@@ -98,3 +98,50 @@
 .bulkAnswers span { padding:7px 10px; border:1px solid #47474f; border-radius:6px; color:#f5f5f5; font-size:13px; overflow-wrap:anywhere; }
 .sectionSettings > .keyMissing { grid-column:1 / -1; margin:0; line-height:1.5; }
 .sectionSettings > .keyMissing button { display:flex; margin-top:10px; }
+
+/* Answer-key editor: one clear hierarchy for section settings, rows and actions. */
+.keyEditor { gap:22px; }
+.keyEditor .keyHeading { align-items:flex-start; }
+.keyEditor .keyHeading > div { max-width:690px; }
+.keyEditor .keyReviewLayout { grid-template-columns:minmax(220px,.7fr) minmax(0,1.5fr); gap:20px; }
+.keyEditor .keyReviewSolo { grid-template-columns:minmax(0,1fr); }
+.keyEditor .keyList { min-width:0; }
+.keyEditor .sectionSettings { padding:20px; gap:16px; background:#222227; }
+.keyEditor .sectionSettings > div:first-child { align-items:baseline; margin-bottom:2px; }
+.keyEditor .sectionSettings > div:first-child strong { color:#f5f5f5; font-size:15px; }
+.keyEditor .sectionSettings > label:last-child { grid-column:1 / -1; }
+.keyEditor .sectionSettings label { gap:7px; font-size:13px; }
+.keyEditor .sectionSettings input,.keyEditor .sectionSettings select { min-height:44px; padding:10px 12px; }
+.keyEditor .keySummary { grid-template-columns:34px minmax(120px,1fr) minmax(110px,170px) 78px auto; align-items:end; gap:12px; padding:18px 20px 12px; }
+.keyEditor .keyNumber { align-self:center; }
+.keyEditor .keyMeta { align-self:center; min-width:0; }
+.keyEditor .keyMeta span { overflow-wrap:anywhere; }
+.keyEditor .keySummary input { min-width:0; min-height:42px; }
+.keyEditor .questionRemove,.keyEditor .sectionRemove { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:8px 10px; color:#d5a39b; background:transparent; border:1px solid transparent; border-radius:6px; cursor:pointer; font:inherit; font-size:13px; white-space:nowrap; }
+.keyEditor .questionRemove:hover,.keyEditor .sectionRemove:hover { color:#ffd0c8; background:#302322; border-color:#66403a; }
+.keyEditor .keyDetails { padding:0 20px 14px 66px; }
+.keyEditor .keyDetails summary { min-height:32px; }
+.keyEditor .sectionActions { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 20px; border-top:1px solid #39393f; background:#1a1a1e; }
+.keyEditor .sectionAdd,.keyEditor .addSection { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:9px 12px; border:1px solid #4d4d55; border-radius:7px; color:#f0f0f2; background:#26262b; cursor:pointer; font-weight:600; font-size:13px; }
+.keyEditor .sectionAdd span,.keyEditor .addSection span { color:#ff9a63; font-size:18px; line-height:1; }
+.keyEditor .sectionAdd:hover,.keyEditor .addSection:hover { background:#303036; border-color:#72727c; }
+.keyEditor .addSection { justify-self:start; }
+.keyEditor .rubricBox { margin:4px 20px 16px; }
+.keyEditor .keyNote { max-width:760px; }
+.keyEditor .keyFinish { gap:24px; padding-top:22px; }
+@media(max-width:1050px) { .keyEditor .keyReviewLayout { grid-template-columns:1fr; } }
+@media(max-width:700px) {
+  .keyEditor .sectionSettings { grid-template-columns:1fr; padding:16px; }
+  .keyEditor .sectionSettings > label:last-child { grid-column:auto; }
+  .keyEditor .keySummary { grid-template-columns:34px minmax(0,1fr) auto; gap:10px; padding:16px; }
+  .keyEditor .keyMeta { grid-column:auto; }
+  .keyEditor .keyAnswer { grid-column:2; }
+  .keyEditor .keyPoints { grid-column:3; }
+  .keyEditor .questionRemove { grid-column:2 / -1; justify-self:start; min-height:36px; padding-left:0; }
+  .keyEditor .keyDetails { padding-left:60px; }
+  .keyEditor .sectionActions { padding:12px 16px; }
+}
+@media(max-width:400px) {
+  .keyEditor .keySummary { grid-template-columns:34px minmax(0,1fr); }
+  .keyEditor .keyAnswer,.keyEditor .keyPoints,.keyEditor .questionRemove { grid-column:2; }
+}

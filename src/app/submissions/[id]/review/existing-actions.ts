@@ -4,6 +4,7 @@ import { getTeacher } from "@/lib/teacher";
 import { canConfirmClearSuggestion, matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
 import { objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
+import { sumCriterionScores } from "@/lib/rubric";
 
 export async function saveExistingAnswer(submissionId: string, questionId: string, _state: { message: string; ok: boolean }, form: FormData) {
   const teacher = await getTeacher(); if (!teacher) return { message: "Please sign in again.", ok: false };
@@ -14,12 +15,16 @@ export async function saveExistingAnswer(submissionId: string, questionId: strin
     const saved = await db.$transaction(async tx => {
       const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, select: { quizId: true } });
       if (!submission) return false;
-      const question = await tx.question.findFirst({ where: { id: questionId, section: { quizId: submission.quizId } }, select: { type: true, points: true } });
+      const question = await tx.question.findFirst({ where: { id: questionId, section: { quizId: submission.quizId } }, select: { type: true, points: true, rubricCriteria: { orderBy: { position: "asc" } } } });
       if (!question) return false;
-      const score = typeof rawScore === "string" && rawScore.trim() ? Number(rawScore) : NaN;
-      if (question.type === "ESSAY" && (!Number.isFinite(score) || score < 0 || score > Number(question.points) || !/^\d+(\.\d{1,2})?$/.test(String(rawScore)))) return false;
+      const rubricScores = question.rubricCriteria.map(criterion => { const raw = form.get(`criterion-${criterion.id}`); return { criterion, score: typeof raw === "string" && raw.trim() ? Number(raw) : null, feedback: String(form.get(`feedback-${criterion.id}`) ?? "") }; });
+      if (rubricScores.some(item => item.feedback.length > 4000)) return false;
+      const score = question.type === "ESSAY" && rubricScores.length ? sumCriterionScores(rubricScores.map(item => ({ maxPoints: Number(item.criterion.maxPoints), score: item.score }))) : typeof rawScore === "string" && rawScore.trim() ? Number(rawScore) : NaN;
+      if (question.type === "ESSAY" && (score === null || !Number.isFinite(score) || score < 0 || score > Number(question.points) || (!rubricScores.length && !/^\d+(\.\d{1,2})?$/.test(String(rawScore))))) return false;
       const data = { confirmedText: blank ? "" : answer.trim(), teacherComment: comment.trim() || null, reviewStatus: "CONFIRMED", instructionDecision: String(instruction), teacherScore: question.type === "ESSAY" ? score : null };
-      await tx.submissionAnswer.upsert({ where: { submissionId_questionId: { submissionId, questionId } }, create: { submissionId, questionId, ...data }, update: data }); return true;
+      const savedAnswer = await tx.submissionAnswer.upsert({ where: { submissionId_questionId: { submissionId, questionId } }, create: { submissionId, questionId, ...data }, update: data });
+      for (const item of rubricScores) { const existing = await tx.essayAssessment.findFirst({ where: { answerId: savedAnswer.id, criterionId: item.criterion.id } }); if (existing) await tx.essayAssessment.update({ where: { id: existing.id }, data: { teacherScore: item.score, teacherFeedback: item.feedback.trim() || null } }); else await tx.essayAssessment.create({ data: { answerId: savedAnswer.id, criterionId: item.criterion.id, teacherScore: item.score, teacherFeedback: item.feedback.trim() || null } }); }
+      return true;
     }, { isolationLevel: "Serializable" });
     if (!saved) return { message: "Check that the paper is in review and the essay score is within its points.", ok: false };
   } catch { return { message: "Could not save this answer. Please try again.", ok: false }; }

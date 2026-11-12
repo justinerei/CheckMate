@@ -40,6 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ ok: true });
   } catch {
     await db.submissionPage.updateMany({ where: { ...owner, status: "PROCESSING", processingToken: token }, data: { status: "FAILED", error: message, retryAt, processingToken: null, processingStartedAt: null } });
-    return NextResponse.json({ error: message }, { status: retryAt ? 429 : 502 });
+    const retryAfterSeconds = retryAt ? Math.max(1, Math.ceil((retryAt.getTime() - Date.now()) / 1000)) : null;
+    return NextResponse.json({ error: message, retryAfterSeconds }, { status: retryAt ? 429 : 502, ...(retryAfterSeconds ? { headers: { "Retry-After": String(retryAfterSeconds) } } : {}) });
   }
 }

@@ -61,10 +61,9 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
   }, []);
   useEffect(() => { capturesRef.current = captures; }, [captures]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
-  async function toggleTorch() {
+  async function toggleTorch(next: boolean) {
     const track = streamRef.current?.getVideoTracks()[0];
     if (!track || torchBusy) return;
-    const next = !torchOn;
     setTorchBusy(true); setTorchMessage("");
     try {
       const torchConstraint = { torch: next } as MediaTrackConstraintSet & { torch: boolean };
@@ -82,7 +81,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
     if ((captures.length || preview) && !window.confirm("Leave camera? Photos captured in this session have not been uploaded yet.")) return;
     onClose();
   }
-  function capture() {
+  async function capture() {
     const video = videoRef.current;
     if (!video?.videoWidth || !video.videoHeight) { setError("Camera is still starting. Please try again."); return; }
     setError("");
@@ -93,6 +92,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
     if (!ctx) { setError("Could not capture the photo. Please try again."); return; }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const warning = photoWarning(canvas);
+    if (torchOn) await toggleTorch(false);
     canvas.toBlob(blob => {
       if (!blob) { setError("Could not capture the photo. Please try again."); return; }
       setPreview({ file: new File([blob], `page-${pageNumbers[current]}.jpg`, { type: "image/jpeg" }), url: URL.createObjectURL(blob), warning });
@@ -114,15 +114,16 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
       <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>STUDENT PAPER</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
       {error && <p role="alert" className={styles.error}>{error}</p>}
-      {torchSupported !== null && <div className={styles.cameraLightBar}>
-        {torchSupported ? <button type="button" className={styles.secondary} onClick={toggleTorch} disabled={torchBusy} aria-pressed={torchOn} aria-label={`Camera light ${torchOn ? "on" : "off"}`}><span aria-hidden="true">⚡</span> Light: {torchOn ? "On" : "Off"}</button> : <span>Camera light unavailable on this browser or device. Use a brighter spot or your camera app.</span>}
-      </div>}
-      {torchMessage && <p role="status" className={styles.cameraWarning}>{torchMessage}</p>}
-      <div className={styles.cameraView} hidden={review || !!preview}><video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" /></div>
+      {torchSupported === false && !review && !preview && <p className={styles.cameraLightUnavailable}>Camera light unavailable on this device or browser.</p>}
+      {torchMessage && <p role="status" className={styles.cameraWarning}>{torchMessage} {torchOn && (preview || review) && <button type="button" className={styles.secondary} disabled={torchBusy} onClick={() => toggleTorch(false)}>Turn light off</button>}</p>}
+      <div className={styles.cameraView} hidden={review || !!preview}>
+        <video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" />
+        {torchSupported && <button type="button" className={styles.cameraFlash} onClick={() => toggleTorch(!torchOn)} disabled={torchBusy} aria-pressed={torchOn} aria-label={torchOn ? "Turn flash off" : "Turn flash on"} title={torchOn ? "Flash on" : "Flash off"}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 10-13h-7z" fill="currentColor" />{!torchOn && <path d="M3 3 21 21" stroke="currentColor" strokeWidth="2" />}</svg></button>}
+      </div>
       {preview && !review && <><div className={styles.cameraView}><PhotoPreview src={preview.url} alt={`Page ${pageNumbers[current]} preview`} /></div>{preview.warning && <p role="status" className={styles.cameraWarning}>{preview.warning}</p>}</>}
       {review && <div className={styles.cameraThumbnails}>{captures.map((item, index) => <div key={pageNumbers[index]}><PhotoPreview src={item.url} alt={`Page ${pageNumbers[index]} preview`} /><strong>Page {pageNumbers[index]}</strong><button type="button" className={styles.secondary} disabled={busy} onClick={() => { setCurrent(index); setReview(false); }}>Retake</button></div>)}</div>}
       <div className={styles.cameraActions}>
-        {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error} onClick={capture}>Capture</button>}
+        {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error || torchBusy} onClick={capture}>Capture</button>}
       </div>
       <p className={styles.cameraFootnote}>Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking.</p>
     </div>

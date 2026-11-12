@@ -278,3 +278,14 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .cameraLightBar { display:flex; align-items:center; margin:0 0 10px; color:#c3c3ca; font-size:13px; line-height:1.5; }
 .cameraLightBar button { gap:7px; }
 .cameraLightBar button[aria-pressed="true"] { border-color:#ff994f; color:#ffd5ba; background:#39271e; }
+/* Camera controls float over the live view, leaving captured previews uncluttered. */
+.cameraView { position:relative; }
+.cameraFlash { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:44px; height:44px; padding:10px; border:1px solid #ffffff80; border-radius:50%; background:#101012c9; color:#fff; cursor:pointer; }
+.cameraFlash[aria-pressed="true"] { background:#ff7a1a; color:#17100b; border-color:#ffb47c; }
+.cameraFlash:focus-visible { outline:3px solid #fff; outline-offset:3px; }
+.cameraFlash svg { width:23px; height:23px; }
+.cameraLightUnavailable { color:#bcbcc4; font-size:12px; }
+.photoViewerViewport { touch-action:none; }
+.photoViewerTools { gap:6px; justify-content:center; }
+.photoViewerTools button { min-width:44px; min-height:44px; padding:8px 12px; }
+.photoViewerHelp { text-align:center; font-size:12px; }

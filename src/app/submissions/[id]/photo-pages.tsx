@@ -1,8 +1,9 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MAX_PHOTO_BYTES, pagesComplete } from "@/lib/submission-upload";
+import { shortRetrySeconds } from "@/lib/short-retry";
 import { confirmSubmission, reopenSubmission, updateExpectedPages, swapPages } from "../actions";
 import FileDropzone from "../file-dropzone";
 import PhotoPreview from "../photo-preview";
@@ -47,6 +48,8 @@ function PageSlot({ submissionId, number, page, editable, canExtract, disabled }
 
 export default function PhotoPages({ id, expectedPages, status, pages, existing }: { id: string; expectedPages: number; status: string; pages: Page[]; existing: boolean }) {
   const router = useRouter();
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [pending, startTransition] = useTransition();
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState("");
@@ -89,14 +92,37 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing 
     catch { setError("Could not reorder pages. Refresh and try again."); } finally { setBatchBusy(false); }
   }
   async function readAll() {
-    const todo = pages.filter(page => page.status === "PENDING" || (page.status === "FAILED" && (!page.retryAt || new Date(page.retryAt).getTime() <= Date.now())));
+    const now = Date.now();
+    const waitingPages = pages.filter(page => page.status === "FAILED" && page.retryAt && new Date(page.retryAt).getTime() > now);
+    const todo = pages.filter(page => page.status === "PENDING" || (page.status === "FAILED" && (!page.retryAt || new Date(page.retryAt).getTime() <= now)));
     if (!todo.length) { setError("No pages are ready to read. Check their status and retry time below."); return; }
     setBatchBusy(true); setError(""); const failures: string[] = [];
     for (let i = 0; i < todo.length; i++) {
       const page = todo[i]; setBatchProgress(`Reading page ${page.pageNumber} (${i + 1} of ${todo.length})…`);
-      try { const response = await fetch(`/api/submissions/${id}/pages/${page.id}/extract`, { method: "POST" }); const result = await response.json(); if (!response.ok) { failures.push(`Page ${page.pageNumber}: ${result.error || "Could not read"}`); if (response.status === 429) break; } }
-      catch { failures.push(`Page ${page.pageNumber}: connection lost; refresh to check its status`); }
+      try {
+        let attempts = 0;
+        while (true) {
+          const response = await fetch(`/api/submissions/${id}/pages/${page.id}/extract`, { method: "POST" });
+          const result = await response.json();
+          if (response.ok) break;
+          const seconds = shortRetrySeconds(response.status, result.retryAfterSeconds, attempts);
+          if (seconds !== null) {
+            attempts++;
+            for (let remaining = seconds; remaining > 0; remaining--) {
+              setBatchProgress(`Waiting ${remaining}s for the reading service, then retrying page ${page.pageNumber}…`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              if (!mounted.current) return;
+            }
+            setBatchProgress(`Retrying page ${page.pageNumber}…`);
+            continue;
+          }
+          failures.push(`Page ${page.pageNumber}: ${result.error || "Could not read"}`);
+          break;
+        }
+        if (failures.length) break;
+      } catch { failures.push(`Page ${page.pageNumber}: connection lost; refresh to check its status`); break; }
     }
+    if (!failures.length && waitingPages.length) failures.push("Some pages were not read because their retry time had not arrived. Please retry unread pages.");
     setBatchProgress(""); setBatchBusy(false); if (failures.length) { setError(`${failures.join(" · ")} Completed pages are saved. Retry remaining pages or review manually.`); router.refresh(); } else { setNotice("Reading finished. Opening review…"); router.push(`/submissions/${id}/review`); router.refresh(); }
   }
   return <><div className={styles.progress}><strong>{pages.length} / {expectedPages} pages uploaded</strong><span>{complete ? "All pages uploaded" : "Upload all pages before confirming"}</span></div>{editable && <details className={styles.countDetails}><summary>Change expected page count</summary><form onSubmit={changeCount} className={styles.countForm}><label htmlFor="page-count">Expected pages</label><input id="page-count" name="count" type="number" min="1" max="10" defaultValue={expectedPages} required /><button className={styles.secondary} disabled={pending}>{pending ? "Saving…" : "Save count"}</button></form></details>}{editable && !complete && <div className={styles.paperUploadArea}><FileDropzone title="Add paper photos" description="Drag photos here or choose them from your device. Check the page order before starting." formats="JPEG or PNG · up to 8 MB per photo" accept="image/jpeg,image/png" disabled={batchBusy || pending} onFiles={uploadMany} onCamera={() => setCameraOpen(true)} /></div>}{cameraOpen && <GuidedCamera pageNumbers={Array.from({ length: expectedPages }, (_, index) => index + 1).filter(number => !pages.some(page => page.pageNumber === number))} onClose={() => setCameraOpen(false)} onUpload={uploadMany} />}{batchProgress && <p role="status" className={styles.success}>{batchProgress}</p>}{notice && <p className={styles.success} role="status">{notice}</p>}{error && <p className={styles.error} role="alert">{error}</p>}{!editable && <p className={styles.description}>Selecting Extract answers sends that page photo to Groq. Review every answer against the photo.</p>}{pages.length > 0 && <div className={`${styles.pageGrid} ${styles.paperPageGrid} ${pages.length === 1 ? styles.paperPageGridSingle : ""}`}>

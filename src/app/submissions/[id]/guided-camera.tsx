@@ -36,6 +36,10 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
   const [review, setReview] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [torchSupported, setTorchSupported] = useState<boolean | null>(null);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchBusy, setTorchBusy] = useState(false);
+  const [torchMessage, setTorchMessage] = useState("");
   useEffect(() => {
     let cancelled = false;
     async function start() {
@@ -44,6 +48,11 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
         if (cancelled) { stream.getTracks().forEach(track => track.stop()); return; }
         streamRef.current = stream;
+        const track = stream.getVideoTracks()[0];
+        try {
+          const capabilities = track?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean | boolean[] }) | undefined;
+          setTorchSupported(capabilities?.torch === true || (Array.isArray(capabilities?.torch) && capabilities.torch.includes(true)));
+        } catch { setTorchSupported(false); }
         if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
       } catch { if (!cancelled) setError("Could not open the camera. Allow camera access in your browser or use Choose files instead."); }
     }
@@ -52,6 +61,23 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
   }, []);
   useEffect(() => { capturesRef.current = captures; }, [captures]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
+  async function toggleTorch() {
+    const track = streamRef.current?.getVideoTracks()[0];
+    if (!track || torchBusy) return;
+    const next = !torchOn;
+    setTorchBusy(true); setTorchMessage("");
+    try {
+      const torchConstraint = { torch: next } as MediaTrackConstraintSet & { torch: boolean };
+      await track.applyConstraints({ ...track.getConstraints(), advanced: [torchConstraint] });
+      const actual = track.getSettings() as MediaTrackSettings & { torch?: boolean };
+      if (typeof actual.torch === "boolean" && actual.torch !== next) {
+        setTorchOn(actual.torch);
+        setTorchMessage("The camera could not change the light. Try better lighting or use your camera app.");
+      } else setTorchOn(next);
+    } catch {
+      setTorchMessage("Could not change the camera light. Try better lighting or use your camera app.");
+    } finally { setTorchBusy(false); }
+  }
   function close() {
     if ((captures.length || preview) && !window.confirm("Leave camera? Photos captured in this session have not been uploaded yet.")) return;
     onClose();
@@ -88,6 +114,10 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
       <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>STUDENT PAPER</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
       {error && <p role="alert" className={styles.error}>{error}</p>}
+      {torchSupported !== null && <div className={styles.cameraLightBar}>
+        {torchSupported ? <button type="button" className={styles.secondary} onClick={toggleTorch} disabled={torchBusy} aria-pressed={torchOn} aria-label={`Camera light ${torchOn ? "on" : "off"}`}><span aria-hidden="true">⚡</span> Light: {torchOn ? "On" : "Off"}</button> : <span>Camera light unavailable on this browser or device. Use a brighter spot or your camera app.</span>}
+      </div>}
+      {torchMessage && <p role="status" className={styles.cameraWarning}>{torchMessage}</p>}
       <div className={styles.cameraView} hidden={review || !!preview}><video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" /></div>
       {preview && !review && <><div className={styles.cameraView}><PhotoPreview src={preview.url} alt={`Page ${pageNumbers[current]} preview`} /></div>{preview.warning && <p role="status" className={styles.cameraWarning}>{preview.warning}</p>}</>}
       {review && <div className={styles.cameraThumbnails}>{captures.map((item, index) => <div key={pageNumbers[index]}><PhotoPreview src={item.url} alt={`Page ${pageNumbers[index]} preview`} /><strong>Page {pageNumbers[index]}</strong><button type="button" className={styles.secondary} disabled={busy} onClick={() => { setCurrent(index); setReview(false); }}>Retake</button></div>)}</div>}

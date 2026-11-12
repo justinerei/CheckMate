@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
 import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
@@ -26,57 +26,86 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [otherPreviews, setOtherPreviews] = useState<{ name: string; url: string }[]>([]);
   const [draftReady, setDraftReady] = useState(false);
   const [progress, setProgress] = useState("");
+  const previewPanelRef = useRef<HTMLElement>(null);
+  const scanCache = useRef(new Map<File, { rows: KeyRow[]; pages: number }>());
+  const [scanItems, setScanItems] = useState<{ name: string; message: string; ok: boolean }[]>([]);
+  const [checkedRows, setCheckedRows] = useState<KeyRow[] | null>(null);
   useEffect(() => { const timer = window.setTimeout(() => { try { const raw = localStorage.getItem(draftKey); if (raw) { const draft = JSON.parse(raw); if (Array.isArray(draft.rows) && typeof draft.title === "string") { setRows(draft.rows); setTitle(draft.title); setReviewStarted(true); } } } catch {} setDraftReady(true); }, 0); return () => window.clearTimeout(timer); }, [draftKey]);
   useEffect(() => { if (!draftReady) return; try { if (title.trim() || rows.some(row => row.answer.trim() || row.rubric?.length)) localStorage.setItem(draftKey, JSON.stringify({ title, rows })); } catch {} }, [title, rows, draftReady, draftKey]);
   useEffect(() => { const warn = (event: BeforeUnloadEvent) => { if (title.trim() || rows.some(row => row.answer.trim() || row.rubric?.length)) { event.preventDefault(); } }; window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [title, rows]);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  useEffect(() => { if (!preview || !window.matchMedia("(max-width: 700px)").matches) return; const frame = requestAnimationFrame(() => previewPanelRef.current?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" })); return () => cancelAnimationFrame(frame); }, [preview]);
   useEffect(() => () => { otherPreviews.forEach(item => URL.revokeObjectURL(item.url)); }, [otherPreviews]);
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
-  function selectFiles(selected: File[]) {
+  async function selectFiles(incoming: File[], append = false, updateSelection = false) {
+    const selected = append ? [...files, ...incoming] : incoming;
     if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setUploadError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
-    setUploadError(""); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
-  }
-  async function extract() {
-    if (!file || !files.length) return;
-    if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this file will replace the answers currently entered. Continue?")) return;
-    if (files.length > 10 || files.some(f => f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setUploadError("Choose at most 10 files; PDFs must be under 10 MB and photos under 8 MB each."); return; }
-    setBusy(true); setUploadError("");
+    if (!append && !updateSelection && files.length && !window.confirm("Replace all selected answer key files?")) return;
+    setUploadError(""); setCheckedRows(null); setScanItems([]); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+    setBusy(true);
+    const statuses: { name: string; message: string; ok: boolean }[] = [];
+    const allRows: KeyRow[] = [];
+    let totalPages = 0;
     try {
-      const images: Blob[] = [];
-      for (const file of files) { if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-        const loading = pdfjs.getDocument({ data: await file.arrayBuffer() });
-        const pdf = await loading.promise;
-        if (pdf.numPages > 10) throw new Error("The PDF can have at most 10 pages.");
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const base = page.getViewport({ scale: 1 });
-          const viewport = page.getViewport({ scale: Math.min(2, 1800 / Math.max(base.width, base.height)) });
-          const canvas = document.createElement("canvas"); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
-          const context = canvas.getContext("2d"); if (!context) throw new Error("Could not prepare PDF page.");
-          await page.render({ canvas, canvasContext: context, viewport }).promise;
-          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
-          if (!blob) throw new Error("Could not prepare PDF page."); images.push(blob);
-        }
-        await loading.destroy();
-      } else if (["image/jpeg", "image/png"].includes(file.type)) images.push(file);
-      else throw new Error("Choose a PDF, JPEG, or PNG answer key.");
+      for (const [index, selectedFile] of selected.entries()) {
+        setProgress(`Checking file ${index + 1} of ${selected.length}…`);
+        try {
+          let cached = scanCache.current.get(selectedFile);
+          if (!cached) {
+            const images: Blob[] = [];
+            if (selectedFile.type === "application/pdf" || selectedFile.name.toLowerCase().endsWith(".pdf")) {
+              const pdfjs = await import("pdfjs-dist");
+              pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
+              const loading = pdfjs.getDocument({ data: await selectedFile.arrayBuffer() });
+              const pdf = await loading.promise;
+              try {
+                if (pdf.numPages > 10) throw new Error("The PDF can have at most 10 pages.");
+                for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                  const page = await pdf.getPage(pageNumber); const base = page.getViewport({ scale: 1 }); const viewport = page.getViewport({ scale: Math.min(2, 1800 / Math.max(base.width, base.height)) });
+                  const canvas = document.createElement("canvas"); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height); const context = canvas.getContext("2d"); if (!context) throw new Error("Could not prepare PDF page.");
+                  await page.render({ canvas, canvasContext: context, viewport }).promise;
+                  const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9)); if (!blob) throw new Error("Could not prepare PDF page."); images.push(blob);
+                }
+              } finally { await loading.destroy(); }
+            } else images.push(selectedFile);
+            if (totalPages + images.length > 10) throw new Error("The answer key can have at most 10 pages in total.");
+            const detected: KeyRow[] = [];
+            for (const image of images) {
+              const data = new FormData(); data.set("file", image, "key.jpg");
+              const response = await fetch("/api/answer-key/extract", { method: "POST", body: data }); const result = await response.json();
+              if (!response.ok) throw new Error(result.error || "Could not check this file.");
+              detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
+            }
+            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers detected. Try a clearer photo or enter answers manually.");
+            cached = { rows: detected, pages: images.length }; scanCache.current.set(selectedFile, cached);
+          }
+          totalPages += cached.pages;
+          if (totalPages > 10) throw new Error("The answer key can have at most 10 pages in total.");
+          allRows.push(...cached.rows); statuses.push({ name: selectedFile.name, message: "Answers detected — check the preview", ok: true });
+        } catch (err) { statuses.push({ name: selectedFile.name, message: err instanceof Error ? err.message : "Could not check this file. Try again.", ok: false }); }
+        setScanItems([...statuses]);
       }
-      if (images.length > 10) throw new Error("The answer key can have at most 10 pages in total.");
-      const detected: KeyRow[] = [];
-      for (const [index, image] of images.entries()) {
-        setProgress(`Reading page ${index + 1} of ${images.length}…`);
-        const data = new FormData(); data.set("file", image, "key.jpg");
-        const response = await fetch("/api/answer-key/extract", { method: "POST", body: data });
-        const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not read the key.");
-        detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
-      }
-      if (!hasReadableKeyAnswer(detected)) throw new Error("We couldn’t read any answers from these files. Check that they show an answer key, then try a clearer photo or enter answers manually. Your current answers have not been changed.");
-      setRows(groupExtractedKeyRows(detected));
-      setReviewStarted(true);
-    } catch (err) { setUploadError(err instanceof Error ? err.message : "Could not read the key."); }
-    finally { setBusy(false); setProgress(""); }
+      if (statuses.every(item => item.ok)) setCheckedRows(allRows);
+      else setUploadError("Some files need attention. Replace them or enter the answers manually. Your current answers have not been changed.");
+    } finally { setBusy(false); setProgress(""); }
+  }
+  function replacePage(index: number, replacement: File) {
+    const updated = files.map((item, i) => i === index ? replacement : item);
+    void selectFiles(updated, false, true);
+  }
+  function removePage(index: number) {
+    if (!window.confirm(`Remove ${files[index].name} from this answer key?`)) return;
+    const updated = files.filter((_, i) => i !== index);
+    void selectFiles(updated, false, true);
+  }
+  function retryChecks() {
+    void selectFiles(files, false, true);
+  }
+  function extract() {
+    if (!checkedRows?.length) return;
+    if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this key will replace the answers currently entered. Continue?")) return;
+    setUploadError(""); setRows(groupExtractedKeyRows(checkedRows)); setReviewStarted(true);
+    requestAnimationFrame(() => document.getElementById("key-review-heading")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
   }
   async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result.error || !result.id) { setError(result.error || "Could not save the key."); return; } try { localStorage.removeItem(draftKey); } catch {} router.push(answerKeyReturnPath(result.id, fromChecking)); } catch { setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
   const typeNames: Record<string, string> = { MULTIPLE_CHOICE: "Multiple choice", TRUE_FALSE: "True / false", IDENTIFICATION: "Identification", ESSAY: "Essay" };
@@ -90,10 +119,21 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     <section className={styles.keyPanel} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
-      <FileDropzone title="Add answer key files" description="Drag files here or choose them from your device. Select pages in order." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
-      {files.length > 0 && <p className={styles.help}>Selected order: {files.map(f => f.name).join(" → ")}. The preview shows the first file.</p>}
-      <div className={styles.keyUploadActions}><span role="status">{progress}</span><button className={styles.secondary} type="button" onClick={extract} disabled={!file || busy}>{busy ? "Reading…" : "Read answer key"}</button></div>
-      {uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
+      <FileDropzone hidden={!!file} title="Add answer key files" description="Choose pages in order. Files are sent to Groq automatically for checking." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
+      {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key preview">
+        <div className={styles.uploadPreviewHeader}><div><strong>Check your photo or file</strong><p>Make sure the answers are clear and all pages are in order.</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
+        {file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf") ? <div className={styles.uploadPdf}><strong>PDF selected</strong><span>{file.name}</span><a href={preview} target="_blank" rel="noreferrer">Open PDF preview ↗</a></div> : <img className={styles.uploadPreviewImage} src={preview} alt={`Selected answer key: ${file.name}`} />}
+        {otherPreviews.length > 0 && <div className={styles.uploadAdditionalPages}>{otherPreviews.map((item, index) => <div key={item.url}><strong>File {index + 2}: {item.name}</strong>{files[index + 1]?.type === "application/pdf" || files[index + 1]?.name.toLowerCase().endsWith(".pdf") ? <a href={item.url} target="_blank" rel="noreferrer">Open PDF preview ↗</a> : <img src={item.url} alt={`Selected answer key page ${index + 2}: ${item.name}`} />}</div>)}</div>}
+        <div className={styles.pageCheckActions}>{files.map((item, index) => <div key={`${index}-${item.name}`}><strong>File {index + 1}: {item.name}</strong><label className={styles.previewReplace}><span>Replace</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>↻ Retake</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><button type="button" className={styles.keyRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div>)}</div>
+        <p className={styles.uploadFileOrder}>Selected order: {files.map(f => f.name).join(" → ")}</p>
+        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>+ Add photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={styles.previewReplace}><span>↻ Replace files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected); }} /></label><button className={styles.secondary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : "Read answer key"}</button></div>
+        <p className={styles.help}>Files are sent to Groq when selected. Review the detected answers before saving.</p>
+        {scanItems.length > 0 && <ul className={styles.scanStatus} aria-label="File check results">{scanItems.map((item, index) => <li key={index}><strong>{item.name}</strong><span className={item.ok ? styles.scanOkay : styles.scanWarning}>{item.message}</span></li>)}</ul>}
+        {progress && <p className={styles.help} role="status">{progress}</p>}
+        {uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
+        {scanItems.some(item => !item.ok) && <button type="button" className={styles.secondary} disabled={busy} onClick={retryChecks}>Retry file check</button>}
+      </section>}
+      {!file && uploadError && <p className={styles.error} role="alert">{uploadError}</p>}
     </section>
     <section className={`${styles.keyPanel} ${styles.keyEditor}`} aria-labelledby="key-review-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>

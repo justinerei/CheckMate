@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./submissions.module.css";
 
-type Props = { title: string; description: string; formats: string; accept: string; disabled?: boolean; onFiles: (files: File[]) => void };
-export default function FileDropzone({ title, description, formats, accept, disabled = false, onFiles }: Props) {
+type Props = { title: string; description: string; formats: string; accept: string; disabled?: boolean; hidden?: boolean; onFiles: (files: File[]) => void };
+export default function FileDropzone({ title, description, formats, accept, disabled = false, hidden = false, onFiles }: Props) {
   const [dragging, setDragging] = useState(false);
   const onFilesRef = useRef(onFiles);
   useEffect(() => { onFilesRef.current = onFiles; }, [onFiles]);
@@ -21,7 +21,7 @@ export default function FileDropzone({ title, description, formats, accept, disa
   }, [disabled]);
   function select(event: React.ChangeEvent<HTMLInputElement>) { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; if (files.length) onFiles(files); }
   return <>
-    <section className={styles.dropzone} aria-label={title}>
+    <section className={styles.dropzone} aria-label={title} hidden={hidden}>
       <div className={styles.dropIcon} aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
       <h3>{title}</h3><p>{description}</p>
       <div className={styles.dropActions}><label className={styles.photoFileButton}><span>Choose files</span><input type="file" accept={accept} multiple disabled={disabled} onChange={select} aria-label={`Choose files: ${title}`} /></label><label className={styles.cameraFileButton}><span>Take a photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={disabled} onChange={select} aria-label={`Take a photo: ${title}`} /></label></div>

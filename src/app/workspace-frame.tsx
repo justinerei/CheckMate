@@ -6,7 +6,7 @@ import styles from "./workspace.module.css";
 type Active = "overview" | "quizzes" | "papers";
 const links: { id: Active; label: string; href: string; path: string }[] = [
   { id: "overview", label: "Overview", href: "/dashboard", path: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
-  { id: "quizzes", label: "My quizzes", href: "/quizzes", path: "M6 3h9l3 3v15H6z M14 3v4h4 M9 11h6 M9 15h6" },
+  { id: "quizzes", label: "Quizzes & keys", href: "/quizzes", path: "M6 3h9l3 3v15H6z M14 3v4h4 M9 11h6 M9 15h6" },
   { id: "papers", label: "Student papers", href: "/submissions", path: "M5 5h14v14H5z M8 9h8 M8 13h8 M8 17h5" },
 ];
 function Navigation({ active }: { active: Active }) {

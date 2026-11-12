@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createExisting, type KeyRow } from "./actions";
+import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import styles from "../../submissions/submissions.module.css";
 
 const blank = (number: number): KeyRow => ({ number, section: 1, answer: "", type: "MULTIPLE_CHOICE", style: "written", points: 1, directions: "" });
@@ -47,7 +48,7 @@ export default function KeyForm() {
         detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
       }
       if (!detected.length) throw new Error("No answers were detected. Try a clearer key or enter answers manually.");
-      setRows(detected.sort((a, b) => a.number - b.number));
+      setRows(groupExtractedKeyRows(detected));
       setReviewStarted(true);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not read the key."); }
     finally { setBusy(false); }
@@ -66,7 +67,7 @@ export default function KeyForm() {
       <div className={styles.keyUploadActions}><button className={styles.secondary} type="button" onClick={extract} disabled={!file || busy}>{busy ? "Reading…" : "Read answer key"}</button><span>Reading a file replaces the answers below.</span></div>
     </section>
     <section className={styles.keyPanel} aria-labelledby="key-review-heading">
-      <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Correct mistakes and fill in any missing answers before continuing.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>
+      <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>
       {reviewStarted && missing > 0 && <p className={styles.keyMissing} role="status">{missing} {missing === 1 ? "answer needs" : "answers need"} your attention. Check the highlighted fields.</p>}
       {reviewStarted && uncertain > 0 && <p className={styles.keyMissing} role="status">{uncertain} {uncertain === 1 ? "answer needs" : "answers need"} verification. Compare with the key, then confirm or correct each one.</p>}
       <div className={styles.keyReviewLayout}>

@@ -1,15 +1,15 @@
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
+import { paperDestination, paperStatus } from "@/lib/workspace-navigation";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import Link from "next/link";
-import styles from "./submissions.module.css";
+import WorkspaceFrame from "../workspace-frame";
+import styles from "../workspace-content.module.css";
 
 export const instant = false;
 export default async function Submissions() {
-  await connection();
-  const teacher = await getTeacher();
-  if (!teacher) redirect("/");
-  const submissions = await db.submission.findMany({ where: { teacherId: teacher.id, quiz: { teacherId: teacher.id } }, orderBy: { createdAt: "desc" }, select: { id: true, status: true, expectedPages: true, paperName: true, student: { select: { name: true } }, quiz: { select: { title: true } }, _count: { select: { pages: true } } } });
-  return <main className={styles.shell}><header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href="/dashboard" className={styles.back}>← Dashboard</Link></header><div className={styles.content}><div className={styles.titleRow}><div><p className={styles.eyebrow}>YOUR WORKSPACE / SUBMISSIONS</p><h1>Student papers.</h1><p className={styles.description}>Upload and organize one student paper at a time.</p></div><Link className={styles.primary} href="/submissions/new">＋ New submission</Link></div><section className={styles.list}><h2>Your submissions</h2>{!submissions.length ? <div className={styles.empty}><p>No submissions yet. Start by selecting a quiz.</p><Link href="/submissions/new">Create a submission ↗</Link></div> : <ul>{submissions.map(item => <li key={item.id}><Link href={`/submissions/${item.id}`}><strong>{item.paperName || item.student?.name || "Unnamed paper"}</strong><span>{item.quiz.title} · {item._count.pages}/{item.expectedPages ?? "?"} pages · {item.status === "DRAFT" ? "Uploading" : item.status === "IN_REVIEW" ? "Pages confirmed" : "Finalized"}</span></Link></li>)}</ul>}</section></div></main>;
+  await connection(); const teacher = await getTeacher(); if (!teacher) redirect("/");
+  const submissions = await db.submission.findMany({ where: { teacherId: teacher.id, quiz: { teacherId: teacher.id } }, orderBy: { updatedAt: "desc" }, select: { id: true, status: true, expectedPages: true, pages: { select: { status: true } }, paperName: true, student: { select: { name: true } }, quiz: { select: { title: true } }, _count: { select: { pages: true } } } });
+  return <WorkspaceFrame active="papers" teacherId={teacher.id}><header className={styles.pageHeader}><div><span className={styles.eyebrow}>YOUR WORKSPACE / STUDENT PAPERS</span><h1>Student papers.</h1><p>Continue checking a paper or revisit a finalized result.</p></div><div className={styles.pageActions}><Link className={styles.button} href="/submissions/new">+ Check a paper</Link></div></header><section className={styles.listSection} aria-label="All student papers">{submissions.length ? <div className={styles.list}>{submissions.map(item => <Link className={styles.row} href={paperDestination(item.id, item.status, !!item.expectedPages && item.pages.length === item.expectedPages && item.pages.every(page => page.status === "COMPLETE"))} key={item.id}><span className={styles.rowIcon} aria-hidden="true">▤</span><span className={styles.rowMain}><strong>{item.paperName || item.student?.name || "Unnamed paper"}</strong><small>{item.quiz.title} · {item._count.pages}/{item.expectedPages ?? "?"} pages</small></span><span className={styles.status}>{paperStatus(item.status)}</span><span className={styles.rowAction}>{item.status === "FINALIZED" ? "View result" : "Continue"} <span aria-hidden="true">↗</span></span></Link>)}</div> : <div className={styles.empty}><strong>No papers yet</strong><p>Upload a student paper when your quiz is ready.</p><Link href="/submissions/new">Check your first paper ↗</Link></div>}</section></WorkspaceFrame>;
 }

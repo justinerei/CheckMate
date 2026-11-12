@@ -28,3 +28,12 @@ test("written words for a letter-only choice key require a teacher decision", ()
   assert.equal(automaticDecision([item], "written", "MULTIPLE_CHOICE", ["B"]), null);
   assert.equal(automaticDecision([item], "written", "IDENTIFICATION", ["Lungs"]), "FOLLOWED");
 });
+
+test("format review is independent of unclear text and essay scoring", async () => {
+  const { hasInstructionConcern } = await import("../src/lib/auto-review.ts");
+  const reading = { status: "unclear", answer: "B", observedStyle: "written", note: "Faint letter" };
+  assert.equal(hasInstructionConcern([reading], "written", "MULTIPLE_CHOICE", ["B"]), false);
+  assert.equal(hasInstructionConcern([reading], "text", "ESSAY"), false);
+  assert.equal(hasInstructionConcern([reading, { ...reading, observedStyle: "circle" }], "written", "MULTIPLE_CHOICE"), true);
+  assert.equal(hasInstructionConcern([{ ...reading, observedStyle: "unknown", markShape: "box" }], "written", "MULTIPLE_CHOICE"), true);
+});

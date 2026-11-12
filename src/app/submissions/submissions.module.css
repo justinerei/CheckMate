@@ -197,3 +197,5 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .dropOverlayContent p { margin:0; color:#bcbcc4; font-size:13px; line-height:1.5; }
 @media (prefers-reduced-motion:reduce) { .dropOverlay,.dropOverlayFrame,.dropOverlayContent { transition:none; } }
 @media (prefers-reduced-transparency:reduce) { .dropOverlay { background:#101014; backdrop-filter:none; } }
+.backFooter { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-top:28px; padding-top:20px; border-top:1px solid #39393f; }
+.backFooter p { margin:0; color:#aaaab2; font-size:13px; line-height:1.5; }

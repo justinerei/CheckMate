@@ -289,3 +289,26 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .photoViewerTools { gap:6px; justify-content:center; }
 .photoViewerTools button { min-width:44px; min-height:44px; padding:8px 12px; }
 .photoViewerHelp { text-align:center; font-size:12px; }
+
+/* A compact, readable score breakdown for desktop and mobile. */
+.scoreOverview { display:flex; align-items:end; justify-content:space-between; gap:16px; padding:18px; border:1px solid #414047; border-radius:10px; background:#202024; }
+.scoreOverview > div { display:grid; gap:5px; }
+.scoreOverview span { color:#aaaab2; font-size:12px; }
+.scoreOverview strong { font-size:28px; line-height:1.1; }
+.scoreOverview small { color:#a7a7af; font-size:16px; font-weight:500; }
+.scoreOverview p { max-width:190px; margin:0; color:#aaaab2; font-size:12px; line-height:1.5; }
+.scoreList { display:grid; border:1px solid #39393f; border-radius:10px; overflow:hidden; }
+.scoreRow { min-width:0; padding:15px; background:#1b1b20; }
+.scoreRow + .scoreRow { border-top:1px solid #39393f; }
+.scoreRowHead,.scoreLabel { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+.scoreRowHead { justify-content:space-between; }
+.scoreLabel { min-width:0; }
+.scoreLabel > strong { font-size:14px; }
+.scoreNumber { display:grid; place-items:center; width:28px; height:28px; border-radius:6px; background:#30241e; color:#ffb185; font:11px var(--font-geist-mono),monospace; }
+.scoreBadge { padding:4px 8px; border-radius:99px; font-size:11px; line-height:1.2; }
+.scoreCorrect { color:#bfe5c8; background:#21362a; }.scoreIncorrect { color:#ffcebf; background:#412721; }.scorePending { color:#ffdbab; background:#43311e; }.scoreNeutral { color:#d2d2dd; background:#33333c; }
+.scorePoints { white-space:nowrap; font-size:14px; }.scorePoints span { color:#aaaab2; font-size:12px; font-weight:500; }
+.scoreAnswers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:12px 0 0 37px; }
+.scoreAnswers p { display:grid; gap:4px; margin:0; min-width:0; }.scoreAnswers span { color:#aaaab2; font-size:11px; }.scoreAnswers strong { color:#e8e8eb; font-size:13px; font-weight:500; overflow-wrap:anywhere; white-space:pre-wrap; }
+.scoreInstruction { margin:10px 0 0 37px; color:#ffbc9c; font-size:12px; line-height:1.4; }
+@media(max-width:480px) { .scoreOverview { align-items:start; flex-direction:column; }.scoreAnswers { grid-template-columns:1fr; gap:9px; }.scoreRowHead { align-items:start; }.scoreLabel { flex:1; }.scorePoints { padding-top:5px; } }

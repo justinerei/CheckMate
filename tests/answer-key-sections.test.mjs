@@ -25,3 +25,9 @@ test("directions found later apply to the entire section", () => {
   const rows = [row(1, "written"), row(2, "written", "Write the letter")];
   assert.deepEqual(groupExtractedKeyRows(rows).map(r => r.directions), ["Write the letter", "Write the letter"]);
 });
+
+test("groups a fourteen-item key with multiple choice, true/false, identification, and essays", () => {
+  const types = [...Array(5).fill("MULTIPLE_CHOICE"), ...Array(3).fill("TRUE_FALSE"), ...Array(4).fill("IDENTIFICATION"), ...Array(2).fill("ESSAY")];
+  const rows = types.map((type, index) => ({ ...row(index + 1, index < 8 ? "written" : "text"), type }));
+  assert.deepEqual(groupExtractedKeyRows(rows).map(item => item.section), [1,1,1,1,1,2,2,2,3,3,3,3,4,4]);
+});

@@ -1,14 +1,22 @@
 "use client";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MAX_PHOTO_BYTES, pagesComplete } from "@/lib/submission-upload";
+import { isMobileCaptureDevice } from "@/lib/mobile-capture";
 import { shortRetrySeconds } from "@/lib/short-retry";
 import { confirmSubmission, reopenSubmission, updateExpectedPages, swapPages } from "../actions";
 import FileDropzone from "../file-dropzone";
 import PhotoPreview from "../photo-preview";
 import GuidedCamera from "./guided-camera";
 import styles from "../submissions.module.css";
+
+const subscribeDevice = () => () => {};
+function mobileDevice() {
+  const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+  return isMobileCaptureDevice(nav.userAgent, nav.platform, nav.maxTouchPoints, nav.userAgentData?.mobile);
+}
+const serverDevice = () => false;
 
 type Page = { id: string; pageNumber: number; status: string; error: string | null; retryAt: string | null };
 
@@ -55,7 +63,9 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing,
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [batchBusy, setBatchBusy] = useState(false);
-  const [cameraOpen, setCameraOpen] = useState(autoCamera && status === "DRAFT" && pages.length === 0);
+  const mobile = useSyncExternalStore(subscribeDevice, mobileDevice, serverDevice);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [autoRequested, setAutoRequested] = useState(autoCamera && status === "DRAFT" && pages.length === 0);
   useEffect(() => { if (autoCamera) { const url = new URL(window.location.href); url.searchParams.delete("camera"); window.history.replaceState(window.history.state, "", url); } }, [autoCamera]);
   const [batchProgress, setBatchProgress] = useState("");
   const editable = status === "DRAFT";
@@ -126,7 +136,7 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing,
     if (!failures.length && waitingPages.length) failures.push("Some pages were not read because their retry time had not arrived. Please retry unread pages.");
     setBatchProgress(""); setBatchBusy(false); if (failures.length) { setError(`${failures.join(" · ")} Completed pages are saved. Retry remaining pages or review manually.`); router.refresh(); } else { setNotice("Reading finished. Opening review…"); router.push(`/submissions/${id}/review`); router.refresh(); }
   }
-  return <><div className={styles.progress}><strong>{pages.length} / {expectedPages} pages uploaded</strong><span>{complete ? "All pages uploaded" : "Upload all pages before confirming"}</span></div>{editable && <details className={styles.countDetails}><summary>Change expected page count</summary><form onSubmit={changeCount} className={styles.countForm}><label htmlFor="page-count">Expected pages</label><input id="page-count" name="count" type="number" min="1" max="10" defaultValue={expectedPages} required /><button className={styles.secondary} disabled={pending}>{pending ? "Saving…" : "Save count"}</button></form></details>}{editable && !complete && <div className={styles.paperUploadArea}><FileDropzone title="Add paper photos" description="Drag photos here or choose them from your device. Check the page order before starting." formats="JPEG or PNG · up to 8 MB per photo" accept="image/jpeg,image/png" disabled={batchBusy || pending} onFiles={uploadMany} onCamera={() => setCameraOpen(true)} /></div>}{cameraOpen && <GuidedCamera pageNumbers={Array.from({ length: expectedPages }, (_, index) => index + 1).filter(number => !pages.some(page => page.pageNumber === number))} onClose={() => setCameraOpen(false)} onUpload={uploadMany} />}{batchProgress && <p role="status" className={styles.success}>{batchProgress}</p>}{notice && <p className={styles.success} role="status">{notice}</p>}{error && <p className={styles.error} role="alert">{error}</p>}{!editable && <p className={styles.description}>Selecting Extract answers sends that page photo to Groq. Review every answer against the photo.</p>}{pages.length > 0 && <div className={`${styles.pageGrid} ${styles.paperPageGrid} ${pages.length === 1 ? styles.paperPageGridSingle : ""}`}>
+  return <><div className={styles.progress}><strong>{pages.length} / {expectedPages} pages uploaded</strong><span>{complete ? "All pages uploaded" : "Upload all pages before confirming"}</span></div>{editable && <details className={styles.countDetails}><summary>Change expected page count</summary><form onSubmit={changeCount} className={styles.countForm}><label htmlFor="page-count">Expected pages</label><input id="page-count" name="count" type="number" min="1" max="10" defaultValue={expectedPages} required /><button className={styles.secondary} disabled={pending}>{pending ? "Saving…" : "Save count"}</button></form></details>}{editable && !complete && <div className={styles.paperUploadArea}><FileDropzone title="Add paper photos" description="Drag photos here or choose them from your device. Check the page order before starting." formats="JPEG or PNG · up to 8 MB per photo" accept="image/jpeg,image/png" disabled={batchBusy || pending} onFiles={uploadMany} onCamera={() => setCameraOpen(true)} showCamera={mobile} /></div>}{mobile && (cameraOpen || autoRequested) && <GuidedCamera pageNumbers={Array.from({ length: expectedPages }, (_, index) => index + 1).filter(number => !pages.some(page => page.pageNumber === number))} onClose={() => { setCameraOpen(false); setAutoRequested(false); }} onUpload={uploadMany} />}{batchProgress && <p role="status" className={styles.success}>{batchProgress}</p>}{notice && <p className={styles.success} role="status">{notice}</p>}{error && <p className={styles.error} role="alert">{error}</p>}{!editable && <p className={styles.description}>Selecting Extract answers sends that page photo to Groq. Review every answer against the photo.</p>}{pages.length > 0 && <div className={`${styles.pageGrid} ${styles.paperPageGrid} ${pages.length === 1 ? styles.paperPageGridSingle : ""}`}>
       {[...pages].sort((a, b) => a.pageNumber - b.pageNumber).map(page => <div key={page.id}>
         <PageSlot submissionId={id} number={page.pageNumber} page={page} editable={editable} disabled={batchBusy || pending} canExtract={status === "IN_REVIEW" && !batchBusy} />
         {editable && <div className={styles.reorder}>

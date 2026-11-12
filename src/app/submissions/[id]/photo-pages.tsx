@@ -20,7 +20,7 @@ const serverDevice = () => false;
 
 type Page = { id: string; pageNumber: number; status: string; error: string | null; retryAt: string | null };
 
-function PageSlot({ submissionId, number, page, editable, canExtract, disabled }: { submissionId: string; number: number; page?: Page; editable: boolean; canExtract: boolean; disabled: boolean }) {
+function PageSlot({ submissionId, number, page, editable, canExtract, disabled, onEarlier, onLater }: { submissionId: string; number: number; page?: Page; editable: boolean; canExtract: boolean; disabled: boolean; onEarlier?: () => void; onLater?: () => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -48,7 +48,13 @@ function PageSlot({ submissionId, number, page, editable, canExtract, disabled }
     finally { setBusy(false); }
   }
   return <section className={styles.pageCard}><div className={styles.pageTop}><h3>Page {number}</h3><span>{page ? "UPLOADED" : "MISSING"}</span></div>
-    {page ? <><PhotoPreview className={styles.photo} src={`/api/submissions/${submissionId}/pages/${page.id}`} alt={`Page ${number} photo`} onLoad={() => setImageError(false)} onError={() => setImageError(true)} />{imageError && <p className={styles.error} role="alert">This photo could not be loaded. {editable ? "Remove it and upload it again." : "Contact the app administrator."}</p>}{editable && <button type="button" className={styles.secondary} onClick={remove} disabled={busy || disabled}>{busy ? "Removing…" : "Remove photo"}</button>}</> : <div className={styles.pagePlaceholder}><span aria-hidden="true">+</span><p>Waiting for page {number}</p></div>}
+    {page ? <><PhotoPreview className={styles.photo} src={`/api/submissions/${submissionId}/pages/${page.id}`} alt={`Page ${number} photo`} onLoad={() => setImageError(false)} onError={() => setImageError(true)} />{imageError && <p className={styles.error} role="alert">This photo could not be loaded. {editable ? "Remove it and upload it again." : "Contact the app administrator."}</p>}{editable && <div className={styles.pageToolbar}>
+      <div className={styles.pageOrderControls} role="group" aria-label={`Reorder page ${number}`}>
+        <button type="button" onClick={onEarlier} disabled={busy || disabled || !onEarlier} aria-label={`Move page ${number} earlier`}><span aria-hidden="true">←</span> Earlier</button>
+        <button type="button" onClick={onLater} disabled={busy || disabled || !onLater} aria-label={`Move page ${number} later`}>Later <span aria-hidden="true">→</span></button>
+      </div>
+      <button type="button" className={styles.removePageButton} onClick={remove} disabled={busy || disabled}>{busy ? "Removing…" : "Remove"}</button>
+    </div>}</> : <div className={styles.pagePlaceholder}><span aria-hidden="true">+</span><p>Waiting for page {number}</p></div>}
     {page && !editable && <div className={styles.extract}><p>Extraction: {page.status.toLowerCase()}</p>{page.error && <p className={styles.error}>{page.error}{page.retryAt && <> Retry after {new Date(page.retryAt).toLocaleString()}.</>}</p>}{canExtract && page.status !== "COMPLETE" && <button type="button" className={styles.secondary} disabled={busy} onClick={extract}>{busy ? "Reading photo…" : page.status === "PROCESSING" ? "Retry if stuck" : page.status === "FAILED" ? "Retry extraction" : "Extract answers"}</button>}</div>}
     {message && <p className={message === "Photo saved." || message.startsWith("Photo removed.") || message.startsWith("Answers extracted.") ? styles.success : styles.error} role="status">{message}</p>}
   </section>;
@@ -99,7 +105,7 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing,
   }
   async function move(page: Page, other: Page | undefined) {
     if (!other) return; setBatchBusy(true); setError("");
-    try { const result = await swapPages(id, page.id, other.id); if (result.error) setError(result.error); else { setChecked(false); setNotice(`Swapped page ${page.pageNumber} with page ${other.pageNumber}.`); router.refresh(); } }
+    try { const result = await swapPages(id, page.id, other.id); if (result.error) setError(result.error); else { setChecked(false); setNotice(`Page order updated. Photo ${page.pageNumber} is now page ${other.pageNumber}.`); router.refresh(); } }
     catch { setError("Could not reorder pages. Refresh and try again."); } finally { setBatchBusy(false); }
   }
   async function readAll() {
@@ -137,13 +143,11 @@ export default function PhotoPages({ id, expectedPages, status, pages, existing,
     setBatchProgress(""); setBatchBusy(false); if (failures.length) { setError(`${failures.join(" · ")} Completed pages are saved. Retry remaining pages or review manually.`); router.refresh(); } else { setNotice("Reading finished. Opening review…"); router.push(`/submissions/${id}/review`); router.refresh(); }
   }
   return <><div className={styles.progress}><strong>{pages.length} / {expectedPages} pages uploaded</strong><span>{complete ? "All pages uploaded" : "Upload all pages before confirming"}</span></div>{editable && <details className={styles.countDetails}><summary>Change expected page count</summary><form onSubmit={changeCount} className={styles.countForm}><label htmlFor="page-count">Expected pages</label><input id="page-count" name="count" type="number" min="1" max="10" defaultValue={expectedPages} required /><button className={styles.secondary} disabled={pending}>{pending ? "Saving…" : "Save count"}</button></form></details>}{editable && !complete && <div className={styles.paperUploadArea}><FileDropzone title="Add paper photos" description="Drag photos here or choose them from your device. Check the page order before starting." formats="JPEG or PNG · up to 8 MB per photo" accept="image/jpeg,image/png" disabled={batchBusy || pending} onFiles={uploadMany} onCamera={() => setCameraOpen(true)} showCamera={mobile} /></div>}{mobile && (cameraOpen || autoRequested) && <GuidedCamera pageNumbers={Array.from({ length: expectedPages }, (_, index) => index + 1).filter(number => !pages.some(page => page.pageNumber === number))} onClose={() => { setCameraOpen(false); setAutoRequested(false); }} onUpload={uploadMany} />}{batchProgress && <p role="status" className={styles.success}>{batchProgress}</p>}{notice && <p className={styles.success} role="status">{notice}</p>}{error && <p className={styles.error} role="alert">{error}</p>}{!editable && <p className={styles.description}>Selecting Extract answers sends that page photo to Groq. Review every answer against the photo.</p>}{pages.length > 0 && <div className={`${styles.pageGrid} ${styles.paperPageGrid} ${pages.length === 1 ? styles.paperPageGridSingle : ""}`}>
-      {[...pages].sort((a, b) => a.pageNumber - b.pageNumber).map(page => <div key={page.id}>
-        <PageSlot submissionId={id} number={page.pageNumber} page={page} editable={editable} disabled={batchBusy || pending} canExtract={status === "IN_REVIEW" && !batchBusy} />
-        {editable && <div className={styles.reorder}>
-          {pages.some(p => p.pageNumber === page.pageNumber - 1) && <button type="button" className={styles.secondary} disabled={batchBusy || pending} onClick={() => move(page, pages.find(p => p.pageNumber === page.pageNumber - 1))}>Swap with page {page.pageNumber - 1}</button>}
-          {pages.some(p => p.pageNumber === page.pageNumber + 1) && <button type="button" className={styles.secondary} disabled={batchBusy || pending} onClick={() => move(page, pages.find(p => p.pageNumber === page.pageNumber + 1))}>Swap with page {page.pageNumber + 1}</button>}
-        </div>}
-      </div>)}
+      {[...pages].sort((a, b) => a.pageNumber - b.pageNumber).map(page => {
+        const earlier = pages.find(p => p.pageNumber === page.pageNumber - 1);
+        const later = pages.find(p => p.pageNumber === page.pageNumber + 1);
+        return <PageSlot key={page.id} submissionId={id} number={page.pageNumber} page={page} editable={editable} disabled={batchBusy || pending} canExtract={status === "IN_REVIEW" && !batchBusy} onEarlier={earlier ? () => move(page, earlier) : undefined} onLater={later ? () => move(page, later) : undefined} />;
+      })}
     </div>}
     {editable && complete ? <div className={`${styles.confirm} ${styles.paperConfirm}`}><h2>Check page order</h2><p>Open each photo and make sure it matches its page number. Missing or repeated pages need your attention.</p><label className={styles.check}><input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={!complete || pending} /> I checked that all pages are present and in the correct order.</label>{existing && <p>Starting sends these page photos to Groq for reading.</p>}<button className={styles.primary} type="button" disabled={!complete || !checked || pending || batchBusy} onClick={() => change(false)}>{pending || batchBusy ? "Starting…" : existing ? "Start checking" : "Confirm pages"}</button></div> : !editable ? <div className={styles.confirm}><h2>Read and review</h2><p>Reading sends the selected page photos to Groq. {existing ? "Clear objective answers are checked automatically; review flagged answers and essays before finalizing." : "Check suggestions against the original photo. No scores are assigned yet."}</p>{status === "IN_REVIEW" && <button type="button" className={styles.primary} disabled={batchBusy || !pages.some(page => page.status === "PENDING" || page.status === "FAILED")} onClick={readAll}>{batchBusy ? "Reading…" : "Retry unread pages"}</button>}<Link className={styles.secondary} href={`/submissions/${id}/review`}>Review answers</Link>{status === "IN_REVIEW" && <button type="button" className={styles.secondary} disabled={pending} onClick={() => change(true)}>{pending ? "Opening…" : "Reopen page uploads"}</button>}</div> : null}</>;
 }

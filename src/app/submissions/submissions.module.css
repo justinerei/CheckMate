@@ -181,3 +181,11 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .checkChoice .choiceAction { color:#f6b48d; font-size:13px; font-weight:600; }
 .choiceDisabled { opacity:.7; }
 .choiceBack { margin-top:20px; font-size:14px; }.choiceBack a { color:#dedee2; }
+.dropzone { display:grid; justify-items:center; gap:10px; padding:32px 20px; margin:4px 0; text-align:center; border:1px dashed #66616a; border-radius:12px; background:#1b1b20; }
+.dropIcon { display:grid; place-items:center; width:48px; height:48px; border:1px solid #65412e; border-radius:11px; background:#2d211c; color:#ffad7d; }
+.dropzone h3 { margin:4px 0 0; font:600 17px var(--font-geist-sans),Arial,sans-serif; }.dropzone p { max-width:480px; margin:0; color:#bcbcc4; font-size:14px; line-height:1.5; }
+.dropActions { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin:8px 0 2px; }.dropFormats { color:#a8a8b2; font-size:12px; line-height:1.5; }
+.dropOverlay { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:20px; background:rgba(10,10,13,.78); backdrop-filter:blur(8px); pointer-events:none; }
+.dropOverlay > div { display:grid; justify-items:center; gap:12px; width:min(620px,100%); padding:64px 24px; border:2px dashed #ff9a63; border-radius:16px; background:#201b1b; box-shadow:0 20px 80px #0008; text-align:center; }
+.dropOverlay strong { color:#f4f4f5; font-size:24px; }.dropOverlay span { color:#ff9a63; font-size:38px; }.dropOverlay p { color:#c3c3ca; font-size:13px; }
+@media (prefers-reduced-transparency:reduce) { .dropOverlay { background:#101014; backdrop-filter:none; } }

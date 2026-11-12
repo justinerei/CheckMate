@@ -5,6 +5,7 @@ import { createExisting, type KeyRow } from "./actions";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import EssayRubric from "./essay-rubric";
 import { validateRubric } from "@/lib/rubric";
+import FileDropzone from "../../submissions/file-dropzone";
 import styles from "../../submissions/submissions.module.css";
 
 const blank = (number: number): KeyRow => ({ number, section: 1, answer: "", type: "MULTIPLE_CHOICE", style: "written", points: 1, directions: "" });
@@ -28,6 +29,10 @@ export default function KeyForm({ teacherId }: { teacherId: string }) {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
   useEffect(() => () => { otherPreviews.forEach(item => URL.revokeObjectURL(item.url)); }, [otherPreviews]);
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
+  function selectFiles(selected: File[]) {
+    if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { setError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
+    setError(""); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
+  }
   async function extract() {
     if (!file || !files.length) return;
     if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this file will replace the answers currently entered. Continue?")) return;
@@ -82,7 +87,7 @@ export default function KeyForm({ teacherId }: { teacherId: string }) {
     <section className={styles.keyPanel} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
-      <label className={styles.keyLabel}>Answer key <span className={styles.keyMuted}>(PDF, JPEG, or PNG; select multiple photos in page order)</span><input className={styles.keyFile} type="file" multiple accept="application/pdf,image/jpeg,image/png" onChange={e => { const selected = Array.from(e.target.files ?? []); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) }))); }} /></label>
+      <FileDropzone title="Add answer key files" description="Drag files here or choose them from your device. Select pages in order." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
       {files.length > 0 && <p className={styles.help}>Selected order: {files.map(f => f.name).join(" → ")}. The preview shows the first file.</p>}
       <div className={styles.keyUploadActions}><button className={styles.secondary} type="button" onClick={extract} disabled={!file || busy}>{busy ? "Reading…" : "Read answer key"}</button><span role="status">{progress || "Reading files replaces the answers below."}</span></div>
     </section>

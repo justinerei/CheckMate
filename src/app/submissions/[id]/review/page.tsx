@@ -60,7 +60,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
           reason = "The key expects a letter. Check the word written on the paper and confirm whether it follows the directions.";
         else if (observed && observed !== "unknown" && observed !== expected)
           reason = `Expected ${expected}; detected ${observed}. Check the mark on the paper.`;
-        else if (question.type === "ESSAY") reason = "Score the essay using the teacher’s criteria.";
+        else if (question.type === "ESSAY") reason = "Score the essay using the teacherâ€™s criteria.";
         else reason = single?.note || (candidates.length > 1 ? "Multiple readings. Compare the pages before confirming." : "Verify the response against the paper.");
       }
       const form = <article>

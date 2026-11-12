@@ -22,3 +22,9 @@ test("answer style mismatches require a teacher decision", () => {
   assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), null);
   assert.equal(automaticDecision([{ ...item, observedStyle: "underline" }], "written", "MULTIPLE_CHOICE"), null);
 });
+
+test("written words for a letter-only choice key require a teacher decision", () => {
+  const item = { status: "clear", answer: "Lungs", observedStyle: "written", note: "" };
+  assert.equal(automaticDecision([item], "written", "MULTIPLE_CHOICE", ["B"]), null);
+  assert.equal(automaticDecision([item], "written", "IDENTIFICATION", ["Lungs"]), "FOLLOWED");
+});

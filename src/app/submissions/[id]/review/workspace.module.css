@@ -1,0 +1,14 @@
+.workspace { margin-block: 24px; }
+.workspace [hidden] { display:none; }
+.tabs,.row { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.tabs { border-bottom:1px solid #38383e; margin:16px 0; }
+.tabs button,.row button,.row select { min-height:44px; border:0; background:transparent; color:#c7c7cb; padding:8px 12px; cursor:pointer; }
+.tabs button[aria-pressed=true] { color:white; box-shadow:inset 0 -2px #fa974c; }
+.workspace button:disabled { opacity:.45; cursor:default; }
+.row { justify-content:space-between; color:#bfbfc5; font-size:14px; }
+.row select { background:#242429; color:white; border-radius:6px; }
+.columns { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:18px; align-items:start; }
+.paper,.question { border:1px solid #39393f; border-radius:12px; padding:16px; background:#17171b; min-width:0; }
+.paper { position:sticky; top:12px; }
+.photo { display:block; width:100%; height:min(64vh,640px); object-fit:contain; margin-top:10px; }
+@media(max-width:700px) { .columns {grid-template-columns:1fr;} .paper {position:static;} .photo {height:24vh;} .tabs button {padding-inline:8px;} }

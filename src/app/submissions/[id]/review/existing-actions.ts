@@ -64,7 +64,7 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
         const answer = submission.answers.find(a => a.questionId === q.id);
         if (!answer) {
           const items = suggestions[q.id] ?? [];
-          const decision = automaticDecision(items, q.answerStyle, q.type);
+          const decision = automaticDecision(items, q.answerStyle, q.type, q.answerKey?.acceptedAnswers);
           if (!decision || !q.answerKey?.acceptedAnswers.length) return "Review all flagged answers and essays before finalizing.";
           const text = items[0].answer!;
           const points = objectivePoints(text, q.answerKey.acceptedAnswers, Number(q.points), decision);

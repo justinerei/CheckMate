@@ -7,6 +7,7 @@ import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
 import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import EssayRubric from "./essay-rubric";
+import ScanNotification from "./scan-notification";
 import { validateRubric } from "@/lib/rubric";
 import FileDropzone from "../../submissions/file-dropzone";
 import styles from "../../submissions/submissions.module.css";
@@ -85,7 +86,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
               if (!response.ok) throw new Error(result.error || "Could not check this file.");
               detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
             }
-            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers detected. Retake the photo in good lighting, choose a clearer file, or enter answers manually.");
+            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers found. Retake in good lighting, choose a clearer file, or enter answers manually.");
             cached = { rows: detected, pages: images.length }; scanCache.current.set(selectedFile, cached);
           }
           totalPages += cached.pages;
@@ -121,7 +122,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this key will replace the answers currently entered. Continue?")) return;
     reportUploadError("");
     const results = files.some(isPdfFile) ? await checkFiles(files, true) : checkedRows;
-    if (!results || !hasReadableKeyAnswer(results)) { if (results) reportUploadError("No answers detected. Retake the photo in good lighting, choose a clearer file, or enter answers manually."); return; }
+    if (!results || !hasReadableKeyAnswer(results)) { if (results) reportUploadError("No answers found. Retake in good lighting, choose a clearer file, or enter answers manually."); return; }
     setRows(groupExtractedKeyRows(results)); setReviewStarted(true);
     requestAnimationFrame(() => document.getElementById("key-review-heading")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }));
   }
@@ -138,7 +139,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
       <FileDropzone hidden={!!file} title="Add answer key files" description="Photos are checked automatically. PDFs are scanned only after you proceed." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
-      {notification && <div className={`${styles.scanToast} ${notification.error ? styles.scanToastError : styles.scanToastSuccess}`} role={notification.error ? "alert" : "status"}><div><strong>{notification.error ? "Please check your file" : "File check complete"}</strong><p>{notification.message}</p></div><button type="button" aria-label="Dismiss notification" onClick={() => setNotification(null)}>×</button></div>}
+      {notification && <ScanNotification message={notification.message} error={notification.error} onDismiss={() => setNotification(null)} />}
       {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key files">
         <div className={styles.uploadPreviewHeader}><div><strong>Check your files</strong><p>Review each page, then continue when ready.</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
         <div className={styles.previewPages}>{files.map((item, index) => {
@@ -147,7 +148,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
           return <article className={styles.previewPage} key={`${index}-${item.name}`}>
             <div className={styles.previewPageHead}><strong>File {index + 1}</strong><span title={item.name}>{item.name}</span></div>
             {isPdfFile(item) ? <div className={styles.uploadPdf}><strong>PDF document</strong>{url && <a href={url} target="_blank" rel="noreferrer">Open PDF preview ↗</a>}</div> : url && <img className={styles.uploadPreviewImage} src={url} alt={`Answer key photo ${index + 1}`} />}
-            <div className={styles.previewPageBottom}><span className={status && !status.ok ? styles.scanWarning : styles.scanOkay}>{status ? status.ok ? (isPdfFile(item) ? "Ready to scan" : "Answers detected") : "Needs attention" : "Waiting to check"}</span><div className={styles.previewPageActions}><label className={styles.previewReplace}><span>Replace</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>↻ Retake</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><button type="button" className={styles.previewRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div></div>
+            <div className={styles.previewPageBottom}><span className={status && !status.ok ? styles.scanWarning : styles.scanOkay}>{status ? status.ok ? (isPdfFile(item) ? "Ready to scan" : "Answers detected") : "Check this file" : "Waiting to check"}</span><div className={styles.previewPageActions}><label className={styles.previewReplace}><span>Replace</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>↻ Retake</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><button type="button" className={styles.previewRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div></div>
           </article>;
         })}</div>
         <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>+ Add photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><button className={styles.primary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : files.some(isPdfFile) ? "Confirm & scan" : "Continue to review"}</button></div>

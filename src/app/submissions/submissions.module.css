@@ -185,7 +185,15 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .dropIcon { display:grid; place-items:center; width:48px; height:48px; border:1px solid #65412e; border-radius:11px; background:#2d211c; color:#ffad7d; }
 .dropzone h3 { margin:4px 0 0; font:600 17px var(--font-geist-sans),Arial,sans-serif; }.dropzone p { max-width:480px; margin:0; color:#bcbcc4; font-size:14px; line-height:1.5; }
 .dropActions { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin:8px 0 2px; }.dropFormats { color:#a8a8b2; font-size:12px; line-height:1.5; }
-.dropOverlay { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:20px; background:rgba(10,10,13,.78); backdrop-filter:blur(8px); pointer-events:none; }
-.dropOverlay > div { display:grid; justify-items:center; gap:12px; width:min(620px,100%); padding:64px 24px; border:2px dashed #ff9a63; border-radius:16px; background:#201b1b; box-shadow:0 20px 80px #0008; text-align:center; }
-.dropOverlay strong { color:#f4f4f5; font-size:24px; }.dropOverlay span { color:#ff9a63; font-size:38px; }.dropOverlay p { color:#c3c3ca; font-size:13px; }
+ .dropOverlay { position:fixed; inset:0; z-index:9999; display:grid; place-items:center; padding:clamp(14px,3vw,36px); background:rgba(10,10,13,.76); backdrop-filter:blur(0); opacity:0; visibility:hidden; pointer-events:none; transition:opacity .22s ease, backdrop-filter .22s ease, visibility 0s linear .22s; }
+.dropOverlayVisible { opacity:1; visibility:visible; backdrop-filter:blur(10px); transition:opacity .22s ease, backdrop-filter .22s ease, visibility 0s; }
+.dropOverlayFrame { width:100%; height:100%; display:grid; place-items:center; padding:24px; border:1px dashed rgba(255,155,99,.7); border-radius:18px; background:radial-gradient(ellipse at center,rgba(100,51,30,.2),rgba(23,23,27,.64) 65%); transform:scale(.985); transition:transform .25s cubic-bezier(.2,.8,.2,1); }
+.dropOverlayVisible .dropOverlayFrame { transform:scale(1); }
+.dropOverlayContent { display:grid; justify-items:center; gap:12px; max-width:480px; text-align:center; transform:translateY(10px); transition:transform .25s cubic-bezier(.2,.8,.2,1); }
+.dropOverlayVisible .dropOverlayContent { transform:translateY(0); }
+.dropOverlayIcon { display:grid; place-items:center; width:68px; height:68px; margin-bottom:8px; border:1px solid #72503f; border-radius:20px; color:#ffad7d; background:#30231e; box-shadow:0 12px 40px #0005; }
+.dropOverlayEyebrow { color:#ffad7d; font:11px var(--font-geist-mono),monospace; letter-spacing:.13em; }
+.dropOverlayContent strong { color:#f4f4f5; font:600 clamp(24px,3vw,34px) var(--font-geist-sans),Arial,sans-serif; letter-spacing:-.03em; }
+.dropOverlayContent p { margin:0; color:#bcbcc4; font-size:13px; line-height:1.5; }
+@media (prefers-reduced-motion:reduce) { .dropOverlay,.dropOverlayFrame,.dropOverlayContent { transition:none; } }
 @media (prefers-reduced-transparency:reduce) { .dropOverlay { background:#101014; backdrop-filter:none; } }

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createExisting, type KeyRow } from "./actions";
-import { groupDetectedKeyRows } from "@/lib/existing-key-sections";
+import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import styles from "../../submissions/submissions.module.css";
 
 const blank = (number: number): KeyRow => ({ number, section: 1, answer: "", type: "MULTIPLE_CHOICE", style: "written", points: 1, directions: "" });
@@ -17,6 +17,7 @@ export default function KeyForm() {
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
   async function extract() {
     if (!file) return;
+    if (rows.some(row => row.answer.trim() || row.uncertain) && !window.confirm("Reading this file will replace the answers currently entered. Continue?")) return;
     if (file.size > 10_000_000) { setError("The answer key must be under 10 MB."); return; }
     setBusy(true); setError("");
     try {
@@ -48,13 +49,14 @@ export default function KeyForm() {
         detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
       }
       if (!detected.length) throw new Error("No answers were detected. Try a clearer key or enter answers manually.");
-      setRows(groupDetectedKeyRows(detected));
+      setRows(groupExtractedKeyRows(detected));
       setReviewStarted(true);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not read the key."); }
     finally { setBusy(false); }
   }
   async function save() { setReviewStarted(true); setBusy(true); setError(""); try { const result = await createExisting(title, rows); if (result?.error) setError(result.error); } catch (err) { if (err && typeof err === "object" && "digest" in err) throw err; setError("Could not save the key. Please try again."); } finally { setBusy(false); } }
   const typeNames: Record<string, string> = { MULTIPLE_CHOICE: "Multiple choice", TRUE_FALSE: "True / false", IDENTIFICATION: "Identification", ESSAY: "Essay" };
+  const mixedSections = new Set(rows.filter(row => rows.some(other => other.section === row.section && other.style !== row.style)).map(row => row.section));
   const styleNames: Record<string, string> = { written: "Write letter in blank", circle: "Circle", shade: "Shade", box: "Mark a box", text: "Written text" };
   const uncertain = rows.filter(row => row.uncertain).length;
   const missing = rows.filter(row => row.type !== "ESSAY" && !row.answer.trim()).length;
@@ -67,22 +69,24 @@ export default function KeyForm() {
       <div className={styles.keyUploadActions}><button className={styles.secondary} type="button" onClick={extract} disabled={!file || busy}>{busy ? "Reading…" : "Read answer key"}</button><span>Reading a file replaces the answers below.</span></div>
     </section>
     <section className={styles.keyPanel} aria-labelledby="key-review-heading">
-      <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Sections are suggested from detected question types and styles; check each section and choose how students should answer on their paper.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>
+      <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>
       {reviewStarted && missing > 0 && <p className={styles.keyMissing} role="status">{missing} {missing === 1 ? "answer needs" : "answers need"} your attention. Check the highlighted fields.</p>}
       {reviewStarted && uncertain > 0 && <p className={styles.keyMissing} role="status">{uncertain} {uncertain === 1 ? "answer needs" : "answers need"} verification. Compare with the key, then confirm or correct each one.</p>}
       <div className={styles.keyReviewLayout}>
       <aside className={styles.keyPreview} aria-label="Original answer key"><div className={styles.previewHead}><strong>Original answer key</strong><span>Compare with the answers on the right.</span></div>{preview ? (file?.type === "application/pdf" || file?.name.toLowerCase().endsWith(".pdf") ? <iframe title="Uploaded answer key PDF" src={preview} /> : <img src={preview} alt="Uploaded answer key" />) : <p>Choose a file above to see it here. You can also enter answers manually.</p>}</aside>
       <div className={styles.keyList}>{rows.map((row, i) => <div className={styles.keyItem} key={i}>
-        {(i === 0 || rows[i - 1].section !== row.section) && <div className={styles.sectionSettings}><div><strong>Section {row.section}</strong><span>These settings apply to the whole section</span></div><label>How do students answer?<select value={row.style} onChange={e => { const style = e.target.value; setRows(old => old.map(r => r.section === row.section ? { ...r, style } : r)); }}><option value="written">Write letter in blank</option><option value="circle">Circle a choice</option><option value="shade">Shade a choice</option><option value="box">Mark a box</option><option value="text">Write text</option></select></label><label>Directions (optional)<input value={row.directions} onChange={e => { const directions = e.target.value; setRows(old => old.map(r => r.section === row.section ? { ...r, directions } : r)); }} /></label></div>}
+        {(i === 0 || rows[i - 1].section !== row.section) && <div className={styles.sectionSettings}><div><strong>Section {row.section}</strong><span>These settings apply to the whole section</span></div><label>How do students answer?<select value={row.style} onChange={e => { const style = e.target.value; setRows(old => old.map(r => r.section === row.section ? { ...r, style } : r)); }}><option value="written">Write letter in blank</option><option value="circle">Circle a choice</option><option value="shade">Shade a choice</option><option value="box">Mark a box</option><option value="text">Write text</option></select></label>{mixedSections.has(row.section) && <p className={styles.keyMissing}>This section contains different answer styles. Choose a style and apply it to all, or move questions with a different style into a new section. <button type="button" className={styles.secondary} onClick={() => setRows(old => old.map(r => r.section === row.section ? { ...r, style: row.style } : r))}>Apply shown style to all</button></p>}<label>Directions (optional)<input value={row.directions} onChange={e => { const directions = e.target.value; setRows(old => old.map(r => r.section === row.section ? { ...r, directions } : r)); }} /></label></div>}
         <div className={styles.keySummary}><span className={styles.keyNumber}> {String(row.number).padStart(2, "0")} </span><div className={styles.keyMeta}><strong>Question {row.number}</strong><span>Section {row.section} · {typeNames[row.type] ?? row.type} · {styleNames[row.style] ?? row.style}</span></div><label className={styles.keyAnswer}>Correct answer<input aria-label={`Correct answer for question ${row.number}`} className={reviewStarted && row.type !== "ESSAY" && !row.answer.trim() ? styles.keyNeedsAnswer : undefined} value={row.answer} disabled={row.type === "ESSAY"} onChange={e => update(i, { answer: e.target.value, uncertain: false })} placeholder={row.type === "ESSAY" ? "Teacher graded" : "e.g. B"} /></label><label className={styles.keyPoints}>Points<input aria-label={`Points for question ${row.number}`} type="number" min="0.01" step="0.01" max="9999" value={row.points} onChange={e => update(i, { points: Number(e.target.value) })} /></label></div>
         {row.uncertain && <div className={styles.keyUncertain}><span>AI was unsure. Check the original key.</span><button type="button" onClick={() => update(i, { uncertain: false })}>I checked this answer</button></div>}
         <details className={styles.keyDetails}><summary>Question settings</summary><div className={styles.keyFields}><label>Question #<input type="number" min="1" value={row.number} onChange={e => update(i, { number: Number(e.target.value) })} /></label><label>Section #<input type="number" min="1" value={row.section} onChange={e => { const section = Number(e.target.value); const target = rows.find(r => r.section === section); update(i, { section, ...(target ? { style: target.style, directions: target.directions } : {}) }); }} /></label><label>Type<select value={row.type} onChange={e => update(i, { type: e.target.value })}><option value="MULTIPLE_CHOICE">Multiple choice</option><option value="TRUE_FALSE">True / false</option><option value="IDENTIFICATION">Identification</option><option value="ESSAY">Essay</option></select></label><button type="button" className={styles.keyRemove} onClick={() => setRows(old => old.filter((_, n) => n !== i))}>Remove question</button></div></details>
       </div>)}</div>
       </div>
-      <button type="button" className={styles.secondary} onClick={() => setRows(old => { const last = old[old.length - 1]; const next = blank(old.length ? Math.max(...old.map(r => r.number)) + 1 : 1); return [...old, last ? { ...next, section: last.section, style: last.style, directions: last.directions } : next]; })}>+ Add question</button>
+      <button type="button" className={styles.secondary} onClick={() => setRows(old => { const last = old[old.length - 1]; const next = blank(old.length ? Math.max(...old.map(r => r.number)) + 1 : 1); return [...old, last ? { ...next, section: last.section, type: last.type, style: last.style, directions: last.directions } : next]; })}>+ Add question</button>
+      <button type="button" className={styles.secondary} onClick={() => setRows(old => { const nextNumber = old.length ? Math.max(...old.map(r => r.number)) + 1 : 1; const nextSection = old.length ? Math.max(...old.map(r => r.section)) + 1 : 1; return [...old, { ...blank(nextNumber), section: nextSection }]; })}>+ Start a new section</button>
+      <p className={styles.keyNote}>Use a new section when instructions or answer styles differ. Choose its answer style to match the student paper. For multiple choice, enter the answer students will write (for example, B rather than B — Mars).</p>
       <p className={styles.keyNote}>Use consecutive question numbers starting at 1. Use | between alternative accepted answers. Essay points are assigned by the teacher during review.</p>
       {error && <p className={styles.error} role="alert">{error}</p>}
-      <div className={styles.keyFinish}><p>Save your key, then choose a student and upload their paper. You can edit correct answers later.</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Working…" : "Save key"}</button></div>
+      <div className={styles.keyFinish}><p>Save your key, then upload the student paper. You can edit correct answers later.</p><button type="button" className={styles.primary} disabled={busy} onClick={save}>{busy ? "Working…" : "Save key"}</button></div>
     </section>
   </div>;
 }

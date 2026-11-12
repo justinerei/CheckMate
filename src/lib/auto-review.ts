@@ -5,6 +5,5 @@ export function automaticDecision(items: Candidate[], expectedStyle: string, typ
   if (item.status !== "clear" || !item.answer?.trim() || item.note.trim() || !item.observedStyle || item.observedStyle === "unknown") return null;
   const expected = expectedStyle === "text" ? "written" : expectedStyle;
   if (item.observedStyle === expected) return "FOLLOWED";
-  if (type === "MULTIPLE_CHOICE" && expected === "circle" && ["box", "triangle"].includes(item.observedStyle)) return "VIOLATION";
   return null;
 }

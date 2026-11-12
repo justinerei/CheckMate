@@ -312,3 +312,8 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .scoreAnswers p { display:grid; gap:4px; margin:0; min-width:0; }.scoreAnswers span { color:#aaaab2; font-size:11px; }.scoreAnswers strong { color:#e8e8eb; font-size:13px; font-weight:500; overflow-wrap:anywhere; white-space:pre-wrap; }
 .scoreInstruction { margin:10px 0 0 37px; color:#ffbc9c; font-size:12px; line-height:1.4; }
 @media(max-width:480px) { .scoreOverview { align-items:start; flex-direction:column; }.scoreAnswers { grid-template-columns:1fr; gap:9px; }.scoreRowHead { align-items:start; }.scoreLabel { flex:1; }.scorePoints { padding-top:5px; } }
+
+.resultActions { display:flex; align-items:stretch; flex-wrap:wrap; gap:10px; margin:14px 0 0; }
+.resultActions a { min-height:46px; gap:12px; }
+.resultActions .primary span { margin-left:4px; }
+@media(max-width:600px) { .resultActions { display:grid; grid-template-columns:1fr; gap:9px; } .resultActions a { width:100%; min-height:48px; } }

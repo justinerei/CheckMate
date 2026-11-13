@@ -6,3 +6,8 @@
 .logo { font-family:var(--font-display); font-weight:500; }
 
 .rubricProgress { margin:8px 0 0; color:#ffd2b8; font-size:13px; font-weight:600; }
+.sectionHeadingActions { display:flex; align-items:center; justify-content:flex-end; gap:14px; flex-wrap:wrap; }
+.sectionListHeading .outlineAction,.sectionListHeading .outlineAction:visited { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:8px 12px; border:1px solid #5a5a62; border-radius:7px; color:#f4f4f5; background:#202024; text-decoration:none; font-size:13px; font-weight:600; }
+.sectionListHeading .outlineAction:hover { background:#303036; border-color:#93939b; }
+.sectionListHeading .outlineAction:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+@media(max-width:480px) { .sectionListHeading { align-items:flex-start; gap:16px; flex-direction:column; }.sectionHeadingActions { justify-content:flex-start; } }

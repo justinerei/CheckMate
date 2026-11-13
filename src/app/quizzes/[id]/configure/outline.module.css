@@ -17,3 +17,4 @@
 }
 
 .sectionRow[data-reorder-source="true"] { opacity:.28; }
+.editHint { margin:0; color:#bcbcc4; font-size:13px; line-height:1.5; }

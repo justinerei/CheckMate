@@ -57,3 +57,21 @@ test("format review is independent of unclear text and essay scoring", async () 
   assert.equal(hasInstructionConcern([reading, { ...reading, observedStyle: "circle" }], "written", "MULTIPLE_CHOICE"), true);
   assert.equal(hasInstructionConcern([{ ...reading, observedStyle: "unknown", markShape: "box" }], "written", "MULTIPLE_CHOICE"), true);
 });
+
+test("no-erasure rules only penalize clear erasures when the section forbids them", async () => {
+  const { forbidsErasures } = await import("../src/lib/auto-review.ts");
+  const item = { status: "clear", answer: "B", observedStyle: "circle", erasure: "present", note: "" };
+  assert.equal(forbidsErasures("Circle the answer. No erasures."), true);
+  assert.equal(forbidsErasures("Erasures are not allowed."), true);
+  assert.equal(forbidsErasures("Erasures are allowed."), false);
+  assert.equal(forbidsErasures("No erasures required."), false);
+  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), "VIOLATION");
+  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], ""), "FOLLOWED");
+  assert.equal(automaticDecision([{ ...item, erasure: "none" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), "FOLLOWED");
+  assert.equal(automaticDecision([{ ...item, erasure: "uncertain" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
+  assert.equal(automaticDecision([{ ...item, erasure: undefined }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
+  assert.equal(automaticDecision([{ ...item, note: "possibly an erasure" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
+  assert.equal(automaticDecision([{ ...item, status: "multiple" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
+  assert.equal(automaticDecision([item], "circle", "ESSAY", ["B"], "No erasures."), null);
+  assert.equal(objectivePoints("B", ["B"], 1, automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures.")), 0);
+});

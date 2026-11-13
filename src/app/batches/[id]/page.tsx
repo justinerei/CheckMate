@@ -28,7 +28,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   });
   if (!batch) notFound();
   let number = 0;
-  const questions = batch.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: batch.quiz.numbering === "CONTINUOUS" ? ++number : position + 1, section: index + 1, answerStyle: batch.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
+  const questions = batch.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: batch.quiz.numbering === "CONTINUOUS" ? ++number : position + 1, section: index + 1, instructions: section.instructions, answerStyle: batch.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
   const maximum = questions.reduce((sum, question) => sum + Number(question.points), 0);
   const active = batch.submissions.some(p => p.status === "IN_REVIEW" && p.pages.some(page => page.status === "PENDING" || page.status === "PROCESSING" || (page.status === "FAILED" && page.retryAt)));
   const finalized = batch.submissions.filter(p => p.status === "FINALIZED").length;
@@ -61,7 +61,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             const points = complete && paper.status === "IN_REVIEW" ? questions.map(question => {
               const saved = paper.answers.find(answer => answer.questionId === question.id);
               const items = suggestions[question.id] ?? [];
-              const automatic = !saved ? automaticDecision(items, question.answerStyle, question.type, question.answerKey?.acceptedAnswers) : null;
+              const automatic = !saved ? automaticDecision(items, question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions) : null;
               return reviewPoints(saved, false, question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, items[0]?.answer ?? "", objectivePoints);
             }) : [];
             const flagged = points.filter(point => point === null).length;

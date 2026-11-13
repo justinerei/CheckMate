@@ -13,7 +13,7 @@ import { ExistingAnswerForm, FinalizeButton } from "./existing-form";
 import styles from "../../submissions.module.css";
 import { objectivePoints } from "@/lib/scoring";
 import { reviewPoints } from "@/lib/review-points";
-import { automaticDecision } from "@/lib/auto-review";
+import { automaticDecision, forbidsErasures } from "@/lib/auto-review";
 import ReviewWorkspace from "./review-workspace";
 import { hasInstructionConcern, requiresLetterReview } from "@/lib/auto-review";
 
@@ -43,7 +43,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   const nameReview = submission.status === "IN_REVIEW" ? <NameForm id={id} value={submission.paperName ?? submission.student?.name ?? null} suggestion={nameSuggestion} reviewed={submission.nameReviewed} /> : null;
   {
     const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
-    const autoDecision = (question: typeof questions[number]) => unfinished.length ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers);
+    const autoDecision = (question: typeof questions[number]) => unfinished.length ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions);
     const scored = questions.map(question => { const saved = submission.answers.find(a => a.questionId === question.id); const automatic = !saved ? autoDecision(question) : null; const points = reviewPoints(saved, submission.status === "FINALIZED", question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, suggestions[question.id]?.[0]?.item.answer ?? "", objectivePoints); return { question, saved, points }; });
     const flagged = scored.filter(item => item.points === null);
     const unmatchedBlocked = requiresUnmatchedReview(unmatched.length, questions, submission.answers);
@@ -54,12 +54,15 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
       const single = candidates.length === 1 ? candidates[0].item : null;
       const suggestion = single?.status === "blank" ? "" : single?.status === "clear" ? single.answer : null;
       const automaticViolation = !saved && autoDecision(question) === "VIOLATION";
+      const erasureViolation = automaticViolation && forbidsErasures(question.instructions) && single?.erasure === "present";
       const expected = question.answerStyle === "text" ? "written" : question.answerStyle;
       const observed = single?.observedStyle;
       const value = saved?.confirmedText ?? suggestion;
       let reason = "";
       if (points === null) {
-        if (requiresLetterReview(single?.answer, question.answerStyle, question.type, question.answerKey?.acceptedAnswers))
+        if (forbidsErasures(question.instructions) && single?.erasure !== "none")
+          reason = "Check whether this answer has an erasure; the section says no erasures.";
+        else if (requiresLetterReview(single?.answer, question.answerStyle, question.type, question.answerKey?.acceptedAnswers))
           reason = "The key expects a letter. Check the word written on the paper and confirm whether it follows the directions.";
         else if (observed && observed !== "unknown" && observed !== expected)
           reason = `Expected ${expected}; detected ${observed}. Check the mark on the paper.`;
@@ -68,14 +71,14 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
       }
       const form = <article>
         <h2>Question {question.number}</h2>
-        {reason && <p className={styles.reviewWarning}>{reason}</p>}{automaticViolation && <p className={styles.reviewWarning}>Marked incorrect: the answer is boxed or triangular, but the instruction requires a circle. You can correct this decision after checking the photo.</p>}
+        {reason && <p className={styles.reviewWarning}>{reason}</p>}{automaticViolation && <p className={styles.reviewWarning}>{erasureViolation ? "Marked incorrect: an erasure was detected and this section says no erasures." : "Marked incorrect: the answer is boxed or triangular, but the instruction requires a circle."} You can correct this decision after checking the photo.</p>}
         <div className={styles.scoreAnswers}>
           <p><span>{saved ? "Confirmed answer" : "Detected answer"}</span><strong>{candidates.length > 1 && !saved ? "Conflicting readings" : value || (value === "" || single?.status === "blank" ? "Blank" : single?.answer || "Unreadable")}</strong></p>
           <p><span>{question.type === "ESSAY" ? "Reference answer" : "Answer key"}</span><strong>{question.answerKey?.acceptedAnswers.join(" / ") || "Not provided"}</strong></p>
         </div>
         {question.instructions && <p>{question.instructions}</p>}
         {candidates.length > 1 && <ul>{candidates.map((c,i) => <li key={i}>Page {c.page}: {c.item.answer || "Unreadable"} {c.item.note}</li>)}</ul>}
-        {submission.status === "FINALIZED" && question.type === "ESSAY" && question.rubricCriteria.map(c => { const assessment = saved?.assessments.find(a => a.criterionId === c.id); return <p key={c.id}>{c.title}: {assessment?.teacherScore?.toString() ?? "—"} / {c.maxPoints.toString()}{assessment?.teacherFeedback ? ` · ${assessment.teacherFeedback}` : ""}</p>; })}{submission.status === "FINALIZED" && question.type !== "ESSAY" && <p>Points awarded: {saved?.objectiveScore?.toString() ?? "0"}</p>}{submission.status === "IN_REVIEW" && <ExistingAnswerForm formatConcern={hasInstructionConcern(candidates.map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers)} advance={points === null} submissionId={id} questionId={question.id} value={saved?.confirmedText ?? suggestion} comment={saved?.teacherComment ?? null} essay={question.type === "ESSAY"} score={saved?.teacherScore?.toString() ?? null} points={question.points.toString()} decision={saved?.instructionDecision ?? null} criteria={question.rubricCriteria.map(c => ({ id: c.id, title: c.title, description: c.description, maxPoints: c.maxPoints.toString(), score: saved?.assessments.find(a => a.criterionId === c.id)?.teacherScore?.toString() ?? "", feedback: saved?.assessments.find(a => a.criterionId === c.id)?.teacherFeedback ?? "" }))} />}</article>;
+        {submission.status === "FINALIZED" && question.type === "ESSAY" && question.rubricCriteria.map(c => { const assessment = saved?.assessments.find(a => a.criterionId === c.id); return <p key={c.id}>{c.title}: {assessment?.teacherScore?.toString() ?? "—"} / {c.maxPoints.toString()}{assessment?.teacherFeedback ? ` · ${assessment.teacherFeedback}` : ""}</p>; })}{submission.status === "FINALIZED" && question.type !== "ESSAY" && <p>Points awarded: {saved?.objectiveScore?.toString() ?? "0"}</p>}{submission.status === "IN_REVIEW" && <ExistingAnswerForm formatConcern={hasInstructionConcern(candidates.map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers) || (forbidsErasures(question.instructions) && candidates.some(c => c.item.erasure !== "none"))} advance={points === null} submissionId={id} questionId={question.id} value={saved?.confirmedText ?? suggestion} comment={saved?.teacherComment ?? null} essay={question.type === "ESSAY"} score={saved?.teacherScore?.toString() ?? null} points={question.points.toString()} decision={saved?.instructionDecision ?? null} criteria={question.rubricCriteria.map(c => ({ id: c.id, title: c.title, description: c.description, maxPoints: c.maxPoints.toString(), score: saved?.assessments.find(a => a.criterionId === c.id)?.teacherScore?.toString() ?? "", feedback: saved?.assessments.find(a => a.criterionId === c.id)?.teacherFeedback ?? "" }))} />}</article>;
       return { id: question.id, number: question.number, flagged: points === null, detected: candidates.map(c => c.page), form };
     });
     const score = <section className={styles.keyPanel}><div className={styles.keyHeading}><div><span className={styles.keyEyebrow}>03 / SCORE</span><h2>{submission.status === "FINALIZED" ? "Score breakdown" : "Score preview"}</h2></div></div><div className={styles.scoreOverview}><div><span>{submission.status === "FINALIZED" ? "Final score" : "Total score"}</span>{ready ? <strong>{provisional} <small>/ {maximum}</small></strong> : <strong>Pending review</strong>}</div><p>{ready ? (submission.status === "FINALIZED" ? "This paper has been finalized." : "Review the answers before finalizing.") : `Remaining: ${[!submission.nameReviewed && "confirm student name", flagged.length > 0 && `review ${flagged.length} answers`, unmatchedBlocked && "verify all answers because a reading could not be matched"].filter(Boolean).join(" and ")}.`}</p></div>{submission.status === "IN_REVIEW" && <p>Finalizing locks the score for this paper.</p>}<FinalizeButton batchId={submission.batchId} id={id} name={submission.paperName || submission.student?.name || "Unnamed paper"} quizTitle={submission.quiz.title} maximum={maximum} ready={ready} finalized={submission.status === "FINALIZED"} finalScore={submission.totalScore?.toString() ?? null} /><div className={styles.scoreList} aria-label="Question scores">{scored.map(({ question, saved, points }) => {

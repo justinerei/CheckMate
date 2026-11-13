@@ -81,3 +81,10 @@ test("answers from separate pages map to one quiz and duplicate readings remain 
   assert.equal(combined.byQuestion.second[0].answer, "B");
   assert.equal(canConfirmClearSuggestion(matchCandidates(questions, [...page1, ...page1]).byQuestion.first, "written", "MULTIPLE_CHOICE", false), false);
 });
+
+test("preserves erasure observations and rejects unknown values", () => {
+  const item = { number: 1, section: null, answer: "B", status: "clear", note: "", erasure: "present" };
+  assert.equal(parseExtraction(JSON.stringify({ items: [item] }))?.items[0].erasure, "present");
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, erasure: "maybe" }] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, erasure: undefined }] }))?.items[0].erasure, undefined);
+});

@@ -1,9 +1,20 @@
-type Candidate = { status: string; answer: string | null; observedStyle?: string; markShape?: string; note: string };
-const uncertainty = /\b(?:unclear|uncertain|unsure|ambiguous|maybe|possibly|possible|probably|likely|faint|illegible|unreadable|smudged|erased|multiple|overlap|guess|appears|seems|looks like)\b/i;
-export function automaticDecision(items: Candidate[], expectedStyle: string, type: string, keys?: string[]): "FOLLOWED" | "VIOLATION" | null {
+type Candidate = { status: string; answer: string | null; observedStyle?: string; markShape?: string; erasure?: string; note: string };
+const uncertainty = /\b(?:unclear|uncertain|unsure|ambiguous|maybe|possibly|possible|probably|likely|faint|illegible|unreadable|smudged|multiple|overlap|guess|appears|seems|looks like)\b/i;
+
+// Only recognize standalone, unambiguous rules; other wording stays under teacher control.
+export function forbidsErasures(directions: string | null | undefined): boolean {
+  return (directions ?? "").split(/[.!?;\n]+/).some(clause => /^(?:no erasures?(?: (?:are )?allowed)?|erasures? (?:are |is )?not allowed)$/i.test(clause.trim()));
+}
+
+export function automaticDecision(items: Candidate[], expectedStyle: string, type: string, keys?: string[], directions?: string | null): "FOLLOWED" | "VIOLATION" | null {
   if (type === "ESSAY" || items.length !== 1) return null;
   const item = items[0];
   if (uncertainty.test(item.note)) return null;
+  if (/\berased\b/i.test(item.note) && !item.erasure) return null;
+  if (forbidsErasures(directions)) {
+    if (item.erasure === "present" && ["clear", "blank", "erased"].includes(item.status)) return "VIOLATION";
+    if (item.erasure !== "none") return null;
+  }
   if (item.status === "blank" && !item.answer?.trim()) return "FOLLOWED";
   if (item.status !== "clear" || !item.answer?.trim() || !item.observedStyle || item.observedStyle === "unknown") return null;
   if (expectedStyle === "circle" && type === "MULTIPLE_CHOICE" && ["box", "triangle"].includes(item.observedStyle)) return "VIOLATION";

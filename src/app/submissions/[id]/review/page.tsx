@@ -12,6 +12,7 @@ import NameForm from "./name-form";
 import { ExistingAnswerForm, FinalizeButton } from "./existing-form";
 import styles from "../../submissions.module.css";
 import { objectivePoints } from "@/lib/scoring";
+import { reviewPoints } from "@/lib/review-points";
 import { automaticDecision } from "@/lib/auto-review";
 import ReviewWorkspace from "./review-workspace";
 import { hasInstructionConcern, requiresLetterReview } from "@/lib/auto-review";
@@ -43,7 +44,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   {
     const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
     const autoDecision = (question: typeof questions[number]) => unfinished.length ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers);
-    const scored = questions.map(question => { const saved = submission.answers.find(a => a.questionId === question.id); const automatic = !saved ? autoDecision(question) : null; const complete = (saved?.reviewStatus === "CONFIRMED" || saved?.reviewStatus === "AUTO_CHECKED") && !!saved.instructionDecision && saved.confirmedText !== null; const points = complete ? (submission.status === "FINALIZED" && question.type !== "ESSAY" ? (saved!.objectiveScore === null ? null : Number(saved!.objectiveScore)) : saved!.instructionDecision === "VIOLATION" ? 0 : question.type === "ESSAY" ? (saved!.teacherScore === null ? null : Number(saved!.teacherScore)) : objectivePoints(saved!.confirmedText!, question.answerKey?.acceptedAnswers ?? [], Number(question.points), saved!.instructionDecision)) : automatic && question.answerKey?.acceptedAnswers.length ? objectivePoints(suggestions[question.id][0].item.answer ?? "", question.answerKey.acceptedAnswers, Number(question.points), automatic) : null; return { question, saved, points }; });
+    const scored = questions.map(question => { const saved = submission.answers.find(a => a.questionId === question.id); const automatic = !saved ? autoDecision(question) : null; const points = reviewPoints(saved, submission.status === "FINALIZED", question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, suggestions[question.id]?.[0]?.item.answer ?? "", objectivePoints); return { question, saved, points }; });
     const flagged = scored.filter(item => item.points === null);
     const unmatchedBlocked = requiresUnmatchedReview(unmatched.length, questions, submission.answers);
     const ready = flagged.length === 0 && submission.nameReviewed && !unmatchedBlocked;

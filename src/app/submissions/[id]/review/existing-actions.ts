@@ -6,6 +6,7 @@ import { objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 import { sumCriterionScores } from "@/lib/rubric";
 import { automaticDecision } from "@/lib/auto-review";
+import { builtAnswerStyle, normalizeBuiltReading } from "@/lib/built-review";
 import { pagesComplete } from "@/lib/submission-upload";
 
 export async function saveExistingAnswer(submissionId: string, questionId: string, _state: { message: string; ok: boolean }, form: FormData) {
@@ -15,7 +16,7 @@ export async function saveExistingAnswer(submissionId: string, questionId: strin
   if (!["FOLLOWED", "VIOLATION"].includes(String(instruction))) return { message: "Check the paper and choose whether the answer followed the instructions.", ok: false };
   try {
     const saved = await db.$transaction(async tx => {
-      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, select: { quizId: true } });
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, select: { quizId: true } });
       if (!submission) return false;
       const question = await tx.question.findFirst({ where: { id: questionId, section: { quizId: submission.quizId } }, select: { type: true, points: true, rubricCriteria: { orderBy: { position: "asc" } } } });
       if (!question) return false;
@@ -37,11 +38,11 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
   const teacher = await getTeacher(); if (!teacher) return { error: "Please sign in again." };
   try {
     const result = await db.$transaction(async tx => {
-      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { answers: true, pages: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } } } } } });
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, include: { answers: true, pages: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } } } } } });
       if (!submission) return "This paper is unavailable or already finalized.";
       if (!submission.nameReviewed) return "Confirm the name, or mark that no readable name is present, before finalizing.";
       let counter = 0;
-      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: section.answerStyle })));
+      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: submission.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
       if (!questions.length) return "The answer key has no questions.";
       if (!pagesComplete(submission.expectedPages, submission.pages.map(page => page.pageNumber))) return "Upload and confirm all pages before finalizing.";
       const manuallyComplete = questions.every(q => submission.answers.some(a => a.questionId === q.id && a.reviewStatus === "CONFIRMED" && a.confirmedText !== null));
@@ -52,9 +53,9 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
         for (const page of submission.pages) {
           const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
           if (!parsed) return "A page has no valid reading. Retry it or review all answers manually.";
-          const mapped = matchCandidates(questions, parsed.items.map(item => ({ ...item, section: null })));
+          const mapped = matchCandidates(questions, submission.quiz.source === "EXISTING" ? parsed.items.map(item => ({ ...item, section: null })) : parsed.items);
           unmatched ||= mapped.unmatched.length > 0;
-          for (const [id, items] of Object.entries(mapped.byQuestion)) (suggestions[id] ??= []).push(...items);
+          for (const [id, items] of Object.entries(mapped.byQuestion)) (suggestions[id] ??= []).push(...items.map(item => submission.quiz.source === "BUILT" ? normalizeBuiltReading(item, questions.find(q => q.id === id)!.type) : item));
         }
         if (unmatched) return "Some responses could not be matched. Review all answers manually before finalizing.";
       }
@@ -66,7 +67,7 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
           const items = suggestions[q.id] ?? [];
           const decision = automaticDecision(items, q.answerStyle, q.type, q.answerKey?.acceptedAnswers);
           if (!decision || !q.answerKey?.acceptedAnswers.length) return "Review all flagged answers and essays before finalizing.";
-          const text = items[0].answer!;
+          const text = items[0].answer ?? "";
           const points = objectivePoints(text, q.answerKey.acceptedAnswers, Number(q.points), decision);
           automatic.push({ questionId: q.id, text, decision, points, version: q.answerKey.version }); objective += points;
           continue;
@@ -93,16 +94,16 @@ export async function confirmClearAnswers(submissionId: string, expectedItems: {
   if (!Array.isArray(expectedItems) || !expectedItems.length || expectedItems.length > 500 || expectedItems.some(item => !item || typeof item.id !== "string" || typeof item.answer !== "string") || new Set(expectedItems.map(item => item.id)).size !== expectedItems.length) return { error: "Refresh the page and review the suggestions again.", count: 0 };
   try {
     const result = await db.$transaction(async tx => {
-      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { source: "EXISTING", teacherId: teacher.id } }, include: { pages: true, answers: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" } } } } } } } });
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, include: { pages: true, answers: true, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" } } } } } } } });
       if (!submission || !submission.pages.length || submission.pages.some(page => page.status !== "COMPLETE")) return { error: "Read every page before confirming suggestions together.", count: 0 };
       let counter = 0;
-      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: section.answerStyle })));
+      const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, answerStyle: submission.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
       const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
       for (const page of submission.pages) {
         const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
         if (!parsed) return { error: "A page could not be read. Refresh and check the page before continuing.", count: 0 };
-        const mapped = matchCandidates(questions, parsed.items.map(item => ({ ...item, section: null })));
-        for (const [questionId, items] of Object.entries(mapped.byQuestion)) (suggestions[questionId] ??= []).push(...items);
+        const mapped = matchCandidates(questions, submission.quiz.source === "EXISTING" ? parsed.items.map(item => ({ ...item, section: null })) : parsed.items);
+        for (const [questionId, items] of Object.entries(mapped.byQuestion)) (suggestions[questionId] ??= []).push(...items.map(item => submission.quiz.source === "BUILT" ? normalizeBuiltReading(item, questions.find(q => q.id === questionId)!.type) : item));
       }
       const eligible = questions.filter(q => canConfirmClearSuggestion(suggestions[q.id] ?? [], q.answerStyle, q.type, submission.answers.some(a => a.questionId === q.id)));
       const eligibleById = new Map(eligible.map(q => [q.id, q]));

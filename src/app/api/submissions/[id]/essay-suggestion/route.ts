@@ -9,7 +9,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const { id } = await params; const input = await request.json();
     if (typeof input.questionId !== "string" || typeof input.answer !== "string" || !input.answer.trim() || input.answer.length > 4000) return NextResponse.json({ error: "Enter the student answer before requesting a suggestion." }, { status: 400 });
-    const submission = await db.submission.findFirst({ where: { id, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id, source: "EXISTING" } }, select: { quizId: true } });
+    const submission = await db.submission.findFirst({ where: { id, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, select: { quizId: true } });
     const question = submission && await db.question.findFirst({ where: { id: input.questionId, type: "ESSAY", section: { quizId: submission.quizId } }, include: { rubricCriteria: { orderBy: { position: "asc" } } } });
     if (!question?.rubricCriteria.length) return NextResponse.json({ error: "Essay rubric unavailable." }, { status: 404 });
     const criteria = question.rubricCriteria.map(c => ({ id: c.id, title: c.title, description: c.description, maxPoints: Number(c.maxPoints) }));

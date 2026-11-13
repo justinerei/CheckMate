@@ -4,6 +4,7 @@ import { getTeacher } from "@/lib/teacher";
 import { pagesComplete, validPageCount } from "@/lib/submission-upload";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { canAddPaper, validBatchPageCount } from "@/lib/batch-policy";
 
 export type CreateState = { error: string; existingId?: string };
 
@@ -12,14 +13,41 @@ export async function createSubmission(_previous: CreateState, form: FormData): 
   if (!teacher) redirect("/");
   const quizId = form.get("quizId");
   const expectedPages = validPageCount(String(form.get("expectedPages") ?? ""));
-  if (typeof quizId !== "string" || !expectedPages) return { error: "Choose a quiz and 1 to 10 pages." };
-  const quiz = await db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true } });
+  if (typeof quizId !== "string" || !expectedPages || !validBatchPageCount(expectedPages)) return { error: "Choose a quiz and 1 to 3 pages." };
+  const quiz = await db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true, sections: { select: { questions: { select: { type: true, answerKey: { select: { acceptedAnswers: true } }, rubricCriteria: { select: { id: true } } } } } } } });
   if (!quiz) return { error: "Choose a quiz from your list." };
+  const questions = quiz.sections.flatMap(section => section.questions);
+  if (!questions.length || questions.some(question => question.type === "ESSAY" ? !question.rubricCriteria.length : !question.answerKey?.acceptedAnswers.length)) return { error: "Complete the quiz questions, answer keys, and essay rubrics before checking papers." };
   let id: string;
-  try { const submission = await db.submission.create({ data: { quizId, teacherId: teacher.id, expectedPages }, select: { id: true } }); id = submission.id; }
+  try { const submission = await db.$transaction(async tx => { const batch = await tx.checkingBatch.create({ data: { quizId, teacherId: teacher.id } }); return tx.submission.create({ data: { quizId, teacherId: teacher.id, expectedPages, batchId: batch.id }, select: { id: true } }); }); id = submission.id; }
   catch { return { error: "Could not create the paper. Please try again." }; }
   revalidatePath("/submissions");
   redirect(`/submissions/${id}`);
+}
+
+export async function addBatchPaper(batchId: string, _previous: CreateState, form: FormData): Promise<CreateState> {
+  const teacher = await getTeacher();
+  if (!teacher) redirect("/");
+  const expectedPages = Number(form.get("expectedPages"));
+  if (!validBatchPageCount(expectedPages)) return { error: "Choose 1 to 3 pages." };
+  let id: string;
+  try {
+    const result = await db.$transaction(async tx => {
+      const batch = await tx.checkingBatch.findFirst({ where: { id: batchId, teacherId: teacher.id, quiz: { teacherId: teacher.id } }, include: { _count: { select: { submissions: true } } } });
+      if (!batch || !canAddPaper(batch._count.submissions)) return null;
+      return tx.submission.create({ data: { teacherId: teacher.id, quizId: batch.quizId, batchId, expectedPages }, select: { id: true } });
+    }, { isolationLevel: "Serializable" });
+    if (!result) return { error: "This batch is unavailable or already has five papers." };
+    id = result.id;
+  } catch { return { error: "Could not add the paper. Refresh and try again." }; }
+  redirect(`/submissions/${id}`);
+}
+
+export async function retryBatchPage(submissionId: string, pageId: string): Promise<{ error: string }> {
+  const teacher = await getTeacher();
+  if (!teacher) return { error: "Please sign in again." };
+  const result = await db.submissionPage.updateMany({ where: { id: pageId, submissionId, status: "FAILED", retryAt: null, submission: { batchId: { not: null }, status: "IN_REVIEW", teacherId: teacher.id, quiz: { teacherId: teacher.id } } }, data: { status: "PENDING", error: null } });
+  return { error: result.count ? "" : "This page is not ready to retry." };
 }
 
 /** Start a fresh paper only from a finalized paper owned by this teacher. */
@@ -43,8 +71,8 @@ export async function confirmSubmission(submissionId: string): Promise<{ error: 
   if (!teacher) redirect("/");
   try {
     const result = await db.$transaction(async tx => {
-      const item = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "DRAFT" }, select: { expectedPages: true, pages: { select: { pageNumber: true } } } });
-      if (!item || !pagesComplete(item.expectedPages, item.pages.map(p => p.pageNumber))) return false;
+      const item = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "DRAFT" }, select: { batchId: true, expectedPages: true, pages: { select: { pageNumber: true } } } });
+      if (!item || (item.batchId && !validBatchPageCount(item.expectedPages ?? 0)) || !pagesComplete(item.expectedPages, item.pages.map(p => p.pageNumber))) return false;
       const updated = await tx.submission.updateMany({ where: { id: submissionId, teacherId: teacher.id, status: "DRAFT" }, data: { status: "IN_REVIEW" } });
       return updated.count === 1;
     }, { isolationLevel: "Serializable" });
@@ -74,8 +102,9 @@ export async function updateExpectedPages(submissionId: string, value: string): 
   if (!count) return { error: "Enter a page count from 1 to 10." };
   try {
     const result = await db.$transaction(async tx => {
-      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "DRAFT" }, select: { pages: { select: { pageNumber: true } } } });
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "DRAFT" }, select: { batchId: true, pages: { select: { pageNumber: true } } } });
       if (!submission) return "This submission is unavailable or already confirmed.";
+      if (submission.batchId && !validBatchPageCount(count)) return "Batch papers can have at most 3 pages.";
       if (submission.pages.some(page => page.pageNumber > count)) return "Remove photos beyond the new page count first.";
       await tx.submission.update({ where: { id: submissionId }, data: { expectedPages: count } });
       return "";

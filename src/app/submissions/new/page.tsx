@@ -14,16 +14,16 @@ export default async function NewSubmission({ searchParams }: { searchParams: Pr
   const { quizId, saved, choose } = await searchParams;
   const quizzes = await db.quiz.findMany({ where: { teacherId: teacher.id }, orderBy: { title: "asc" }, select: { id: true, title: true } });
   const selected = quizzes.some(q => q.id === quizId);
-  const selecting = selected || (choose === "saved" && quizzes.length > 0);
+  const selecting = selected || (choose === "saved" && quizzes.length > 0) || quizzes.length > 0;
   return <main className={styles.shell}>
     <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href="/dashboard" className={styles.back}>← Dashboard</Link></header>
     <div className={styles.narrow}>
-      <p className={styles.eyebrow}>CHECK A PAPER / 01</p><h1>Check a paper</h1>
+      <p className={styles.eyebrow}>CHECK PAPERS</p><h1>Start checking</h1>
       {selecting ? <>
         {saved === "1" && selected && <p className={styles.success} role="status">Answer key saved. Next, upload the student’s paper.</p>}
-        <p className={styles.description}>Choose the answer key for this paper. Your saved keys and quizzes made in CheckMate are listed here.</p>
+        <p className={styles.description}>Choose a quiz, then add your first paper. You can add up to five papers to this batch.</p>
         <CreateForm selectedQuizId={selected ? quizId : undefined} quizzes={quizzes.map(q => ({ id: q.id, label: q.title }))} />
-        <p className={styles.choiceBack}><Link href="/submissions/new">← Choose another option</Link></p>
+        <p className={styles.choiceBack}>Need to add an answer key? <Link href="/quizzes/existing?from=check">Set up an existing quiz</Link></p>
       </> : <>
         <p className={styles.description}>First, tell us whether you already have an answer key saved in CheckMate. You’ll upload the student’s paper next.</p>
         <div className={styles.checkChoices}>

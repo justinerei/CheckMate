@@ -44,6 +44,7 @@ model User {
   students      TeacherStudent[]
   quizzes       Quiz[]
   submissions   Submission[]
+  batches       CheckingBatch[]
   keyChanges    AnswerKeyHistory[]
   resultChanges ResultHistory[]
 }
@@ -82,6 +83,7 @@ model Quiz {
   teacher       User          @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   sections      QuizSection[]
   submissions   Submission[]
+  batches       CheckingBatch[]
 
   @@index([teacherId])
 }
@@ -168,6 +170,23 @@ model RubricCriterion {
   @@unique([questionId, position])
 }
 
+model CheckingBatch {
+  id          String       @id @default(cuid())
+  teacherId   String
+  quizId      String
+  createdAt   DateTime     @default(now())
+  teacher     User         @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Restrict)
+  submissions Submission[]
+
+  @@index([teacherId, createdAt])
+}
+
+model PendingPhotoDeletion {
+  filePath  String   @id
+  createdAt DateTime @default(now())
+}
+
 model Submission {
   id             String             @id @default(cuid())
   quizId         String
@@ -175,6 +194,7 @@ model Submission {
   paperName      String?
   nameReviewed   Boolean            @default(false)
   teacherId      String
+  batchId        String?
   expectedPages  Int?
   status         SubmissionStatus   @default(DRAFT)
   objectiveScore Decimal?           @db.Decimal(8, 2)
@@ -186,6 +206,7 @@ model Submission {
   quiz           Quiz               @relation(fields: [quizId], references: [id], onDelete: Restrict)
   student        Student?           @relation(fields: [studentId], references: [id], onDelete: Restrict)
   teacher        User               @relation(fields: [teacherId], references: [id], onDelete: Restrict)
+  batch          CheckingBatch?     @relation(fields: [batchId], references: [id], onDelete: Restrict)
   pages          SubmissionPage[]
   answers        SubmissionAnswer[]
   resultHistory  ResultHistory[]

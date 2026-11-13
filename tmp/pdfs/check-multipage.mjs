@@ -1,0 +1,12 @@
+import { createRequire } from "node:module";
+import { readFile } from "node:fs/promises";
+const require = createRequire("C:/Program Files/WindowsApps/OpenAI.CodexPrimaryRuntime.v26-1105-1297-0_26.1105.1297.0_x64__3k8sg7r9htsxt/dependencies/node/node_modules/playwright/package.json");
+const { chromium } = require("playwright");
+const css = await readFile("src/app/quizzes/[id]/print/print.module.css", "utf8");
+const browser = await chromium.launch({ executablePath: "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", headless: true });
+const page = await browser.newPage();
+const questions = Array.from({length: 30}, (_, i) => `<div class="row"><div class="question"><div class="prompt">${i + 1}. Sample question ${i + 1}?</div><div class="choices"><span>A. Alpha</span><span>B. Beta</span><span>C. Gamma</span><span>D. Delta</span></div></div></div>`).join("");
+const lines = Array.from({length: 7}, () => "<div></div>").join("");
+await page.setContent(`<style>${css}\n@page { size:A4; margin:16mm; @bottom-right { content:'CM-TEST12345678  ·  Page ' counter(page) ' of ' counter(pages); font:8pt Arial; color:#555; } }</style><article class="paper"><header class="paperHeader"><h1>Science Quiz</h1><div class="fields"><div>Name: <span></span></div><div>Date: <span></span></div><div>Section: <span></span></div></div></header><section class="section"><h2>1. Multiple choice</h2>${questions}</section><section class="section"><h2>2. True or False</h2><div class="row"><div class="question"><div class="prompt"><span class="shortBlank"></span><span>31. The Earth revolves around the Sun.</span></div></div></div></section><section class="section"><h2>3. Identification</h2><div class="row"><div class="question"><div class="prompt"><span class="longBlank"></span><span>32. The planet known as the Red Planet.</span></div></div></div></section><section class="section"><h2>4. Essay</h2><div class="row"><div class="question"><div class="prompt">33. Explain one way plants help people and the environment.</div><div class="lines">${lines}</div></div></div></section></article>`);
+await page.pdf({ path: "tmp/pdfs/multipage-check.pdf", preferCSSPageSize: true, printBackground: true });
+await browser.close();

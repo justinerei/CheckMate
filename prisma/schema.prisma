@@ -84,8 +84,20 @@ model Quiz {
   sections      QuizSection[]
   submissions   Submission[]
   batches       CheckingBatch[]
+  modules       QuizModule[]
 
   @@index([teacherId])
+}
+
+model QuizModule {
+  id        String   @id @default(cuid())
+  quizId    String
+  name      String
+  pages     Json
+  createdAt DateTime @default(now())
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId, createdAt])
 }
 
 model QuizSection {
@@ -111,6 +123,8 @@ model Question {
   points         Decimal            @db.Decimal(8, 2)
   besideNext     Boolean            @default(false)
   essayLineCount Int?
+  sourceModuleName String?
+  sourcePage       Int?
   section        QuizSection        @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   choices        QuestionChoice[]
   answerKey      AnswerKey?

@@ -3,7 +3,7 @@
 .handle { padding:8px; touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab; color:#ffc19a; font-size:21px; line-height:1; }
 .handle.active { background:#4a3022; border-color:#ffad7d; cursor:grabbing; }
 .arrow { min-width:38px; padding:8px; font-size:17px; }
-.handle:hover,.arrow:hover:not(:disabled) { border-color:#ffad7d; background:#39302b; }
+@media (hover:hover) { .handle:hover,.arrow:hover:not(:disabled) { border-color:#ffad7d; background:#39302b; } }
 .handle:disabled,.arrow:disabled { opacity:.35; cursor:not-allowed; }
 .handle:focus-visible,.arrow:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
 .ghost { background:#282326!important; border:1px solid #b87953!important; border-radius:10px!important; box-shadow:0 20px 45px #0009,0 2px 8px #0005; will-change:transform; }

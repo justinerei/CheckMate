@@ -121,6 +121,10 @@ On the dashboard, open **Students** to create a student record or link an existi
 
 Open **Submissions** to choose a saved quiz or answer key and start a batch; no student record is required. Each batch contains up to five papers, and each paper has one to three JPEG or PNG photos, up to 8 MB each. Check the page order before starting. The server reads pages in the background and saves each successful reading. Review and finalize results per paper.
 
+### Create a quiz in CheckMate
+
+Create a draft, then set the total question count and divide it into multiple-choice, identification, true/false, or essay sections. Confirm the outline to create numbered question slots; fill in and save each question and its answer or rubric. You can return to the outline while the generated slots and section settings are still untouched. Once you have started editing, change individual questions or sections instead. Complete every slot before previewing, printing, or checking papers. You may also skip the outline and build sections manually.
+
 ### Check a quiz made elsewhere
 
 Choose **Check an existing quiz** on the dashboard. Upload a PDF (up to 10 pages and 10 MB), JPEG, or PNG of the answer key, or enter answers manually. Reading an uploaded key requires `GROQ_API_KEY`; its pages are sent to Groq. Review and correct all detected answers against the original preview, select the expected answer style for each section, set points, and save the key. Questions must currently use consecutive numbers starting at 1, and all questions in a section must use the same answer style. Use `|` between alternative accepted answers. The preview is temporary: the answer key file is not retained after leaving the page.

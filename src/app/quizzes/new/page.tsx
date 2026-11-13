@@ -23,7 +23,7 @@ export default async function NewQuiz() {
     const title = validQuizTitle(form.get("title"));
     if (!title) redirect("/quizzes/new?error=title");
     const quiz = await db.quiz.create({ data: { title, teacherId: currentUser.id } });
-    redirect(`/quizzes/${quiz.id}`);
+    redirect(`/quizzes/${quiz.id}/configure`);
   }
   return <main className={styles.shell}><header className={styles.header}><Link className={styles.logo} href="/dashboard">checkmate<span>.</span></Link></header><div className={styles.formWrap}>
     <QuizBackLink /><p className={styles.eyebrow}>NEW QUIZ <span>✳</span></p><h1>Start with a title.</h1><p className={styles.formDescription}>Create a draft, then add your sections and questions.</p>

@@ -16,7 +16,7 @@ export default function QuestionForm({ action, defaultPoints, initial, cancelHre
   const [type, setType] = useState(initial?.type ?? "MULTIPLE_CHOICE");
   const [error, setError] = useState("");
   const [points, setPoints] = useState(initial?.points ?? defaultPoints);
-  const [criteria, setCriteria] = useState<Criterion[]>(() => initial?.rubric ? initial.rubric.split("\n").map((line, id) => { const [title, description, points] = line.split("|").map(value => value.trim()); return { id, title, description, points }; }) : [{ id: 0, title: "", description: "", points: "" }]);
+  const [criteria, setCriteria] = useState<Criterion[]>(() => initial?.rubric ? initial.rubric.split("\n").map((line, id) => { const [title, description, points] = line.split("|").map(value => value.trim()); return { id, title, description, points }; }) : initial?.type === "ESSAY" ? defaultEssayRubric(Number(initial.points)).map((c, id) => ({ id, title: c.title, description: c.description, points: String(c.maxPoints) })) : [{ id: 0, title: "", description: "", points: "" }]);
   const total = Math.round(criteria.reduce((sum, c) => sum + (Number(c.points) || 0), 0) * 100) / 100;
   const rubric = criteria.map(c => `${c.title.trim()} | ${c.description.trim()} | ${c.points.trim()}`).join("\n");
   function update(id: number, key: "title" | "description" | "points", value: string) { setCriteria(previous => previous.map(c => c.id === id ? { ...c, [key]: value } : c)); }

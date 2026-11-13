@@ -4,6 +4,7 @@ import { getTeacher } from "@/lib/teacher";
 import { pagesComplete, validPageCount } from "@/lib/submission-upload";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { questionIsComplete } from "@/lib/quiz-outline";
 import { canAddPaper, validBatchPageCount } from "@/lib/batch-policy";
 
 export type CreateState = { error: string; existingId?: string };
@@ -14,10 +15,10 @@ export async function createSubmission(_previous: CreateState, form: FormData): 
   const quizId = form.get("quizId");
   const expectedPages = validPageCount(String(form.get("expectedPages") ?? ""));
   if (typeof quizId !== "string" || !expectedPages || !validBatchPageCount(expectedPages)) return { error: "Choose a quiz and 1 to 3 pages." };
-  const quiz = await db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true, sections: { select: { questions: { select: { type: true, answerKey: { select: { acceptedAnswers: true } }, rubricCriteria: { select: { id: true } } } } } } } });
+  const quiz = await db.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id }, select: { id: true, sections: { select: { questions: { select: { text: true, type: true, answerKey: { select: { acceptedAnswers: true } }, rubricCriteria: { select: { id: true } } } } } } } });
   if (!quiz) return { error: "Choose a quiz from your list." };
   const questions = quiz.sections.flatMap(section => section.questions);
-  if (!questions.length || questions.some(question => question.type === "ESSAY" ? !question.rubricCriteria.length : !question.answerKey?.acceptedAnswers.length)) return { error: "Complete the quiz questions, answer keys, and essay rubrics before checking papers." };
+  if (!questions.length || questions.some(question => !questionIsComplete(question))) return { error: "Complete the quiz questions, answer keys, and essay rubrics before checking papers." };
   let id: string;
   try { const submission = await db.$transaction(async tx => { const batch = await tx.checkingBatch.create({ data: { quizId, teacherId: teacher.id } }); return tx.submission.create({ data: { quizId, teacherId: teacher.id, expectedPages, batchId: batch.id }, select: { id: true } }); }); id = submission.id; }
   catch { return { error: "Could not create the paper. Please try again." }; }

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
 import { isPdfFile, shouldScanDuringPreview } from "@/lib/answer-key-file-policy";
@@ -10,7 +10,16 @@ import EssayRubric from "./essay-rubric";
 import ScanNotification from "./scan-notification";
 import { validateRubric } from "@/lib/rubric";
 import FileDropzone from "../../submissions/file-dropzone";
+import GuidedCamera from "../../submissions/[id]/guided-camera";
+import { isMobileCaptureDevice } from "@/lib/mobile-capture";
 import styles from "../../submissions/submissions.module.css";
+
+const subscribeDevice = () => () => {};
+const serverDevice = () => false;
+function mobileDevice() {
+  const nav = navigator as Navigator & { userAgentData?: { mobile?: boolean } };
+  return isMobileCaptureDevice(nav.userAgent, nav.platform, nav.maxTouchPoints, nav.userAgentData?.mobile);
+}
 
 const blank = (number: number): KeyRow => ({ number, section: 1, answer: "", type: "MULTIPLE_CHOICE", style: "written", points: 1, directions: "" });
 export default function KeyForm({ teacherId, fromChecking = false }: { teacherId: string; fromChecking?: boolean }) {
@@ -23,6 +32,8 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [notification, setNotification] = useState<{ message: string; error: boolean } | null>(null);
   const reportUploadError = (message: string) => { setUploadError(message); setNotification(message ? { message, error: true } : null); };
   const [busy, setBusy] = useState(false);
+  const mobile = useSyncExternalStore(subscribeDevice, mobileDevice, serverDevice);
+  const [cameraTarget, setCameraTarget] = useState<number | "add" | null>(null);
   const [reviewStarted, setReviewStarted] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -138,7 +149,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     {!reviewStarted && <section className={`${styles.keyPanel} ${styles.keyStage}`} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
-      <FileDropzone hidden={!!file} title="Add answer key files" description="Photos are checked automatically. PDFs are scanned only after you proceed." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} />
+      <FileDropzone hidden={!!file} title="Add answer key files" description="Photos are checked automatically. PDFs are scanned only after you proceed." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} showCamera={mobile} onCamera={() => setCameraTarget("add")} />
       {notification && <ScanNotification message={notification.message} error={notification.error} onDismiss={() => setNotification(null)} />}
       {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key files">
         <div className={styles.uploadPreviewHeader}><div><strong>Check your files</strong><p>Review each page, then continue when ready.</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
@@ -148,16 +159,17 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
           return <article className={styles.previewPage} key={`${index}-${item.name}`}>
             <div className={styles.previewPageHead}><strong>File {index + 1}</strong><span title={item.name}>{item.name}</span></div>
             {isPdfFile(item) ? <div className={styles.uploadPdf}><strong>PDF document</strong>{url && <a href={url} target="_blank" rel="noreferrer">Open PDF preview ↗</a>}</div> : url && <img className={styles.uploadPreviewImage} src={url} alt={`Answer key photo ${index + 1}`} />}
-            <div className={styles.previewPageBottom}><span className={status && !status.ok ? styles.scanWarning : styles.scanOkay}>{status ? status.ok ? (isPdfFile(item) ? "Ready to scan" : "Answers detected") : "Check this file" : "Waiting to check"}</span><div className={styles.previewPageActions}><label className={styles.previewReplace}><span>Choose another</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>↻ Retake photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label><button type="button" className={styles.previewRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div></div>
+            <div className={styles.previewPageBottom}><span className={status && !status.ok ? styles.scanWarning : styles.scanOkay}>{status ? status.ok ? (isPdfFile(item) ? "Ready to scan" : "Answers detected") : "Check this file" : "Waiting to check"}</span><div className={styles.previewPageActions}><label className={styles.previewReplace}><span>Choose another</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy} onClick={() => setCameraTarget(index)}>↻ Retake photo</button>}<button type="button" className={styles.previewRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div></div>
           </article>;
         })}</div>
-        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><label className={`${styles.previewReplace} ${styles.previewCamera}`}><span>+ Add photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label><button className={styles.primary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : files.some(isPdfFile) ? "Confirm & scan" : "Continue to review"}</button></div>
+        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy || files.length >= 10} onClick={() => setCameraTarget("add")}>+ Add photo</button>}<button className={styles.primary} type="button" onClick={extract} disabled={busy || !checkedRows}>{busy ? "Checking…" : files.some(isPdfFile) ? "Confirm & scan" : "Continue to review"}</button></div>
         <p className={styles.help}>Photos are sent to Groq for checking. PDFs are sent only after you continue.</p>
         {progress && <p className={styles.help} role="status">{progress}</p>}
         {scanItems.some(item => !item.ok) && <button type="button" className={styles.retryCheck} disabled={busy} onClick={retryChecks}>↻ Retry file check</button>}
       </section>}
       <button type="button" className={styles.manualEntry} disabled={busy} onClick={() => { setNotification(null); setReviewStarted(true); requestAnimationFrame(() => document.getElementById("key-review-heading")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" })); }}>Enter answers manually →</button>
     </section>}
+    {cameraTarget !== null && <GuidedCamera kind="answer-key" pageNumbers={[cameraTarget === "add" ? files.length + 1 : cameraTarget + 1]} onClose={() => setCameraTarget(null)} onUpload={async captured => { if (cameraTarget === "add") await selectFiles(captured, files.length > 0); else await selectFiles(files.map((item, index) => index === cameraTarget ? captured[0] : item), false, true); }} />}
     {reviewStarted && <section className={`${styles.keyPanel} ${styles.keyEditor} ${styles.keyStage}`} aria-labelledby="key-review-heading">
       <button type="button" className={styles.manualEntry} onClick={() => { setReviewStarted(false); setNotification(null); }}>← Back to answer key files</button>
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>02 / REVIEW</p><h2 id="key-review-heading">Review answers</h2><p>Compare each answer with your key. Check how students are instructed to answer in each section; the uploaded key may not include the exam directions.</p></div><span className={styles.keyCount}>{rows.length} {rows.length === 1 ? "question" : "questions"}</span></div>

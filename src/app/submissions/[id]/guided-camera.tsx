@@ -5,7 +5,7 @@ import styles from "../submissions.module.css";
 import PhotoPreview from "../photo-preview";
 
 type Capture = { file: File; url: string; warning: string };
-type Props = { pageNumbers: number[]; onClose: () => void; onUpload: (files: File[]) => Promise<void> };
+type Props = { pageNumbers: number[]; onClose: () => void; onUpload: (files: File[]) => Promise<void>; kind?: "student" | "answer-key" };
 
 // Local, deliberately conservative checks: neither result verifies document contents.
 function photoWarning(canvas: HTMLCanvasElement): string {
@@ -26,7 +26,7 @@ function photoWarning(canvas: HTMLCanvasElement): string {
   return "";
 }
 
-export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) {
+export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "student" }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const capturesRef = useRef<Capture[]>([]);
@@ -111,7 +111,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
   async function upload() { setBusy(true); try { await onUpload(captures.map(item => item.file)); onClose(); } finally { setBusy(false); } }
   return <div className={styles.cameraOverlay} role="dialog" aria-modal="true" aria-labelledby="camera-title">
     <div className={styles.cameraPanel}>
-      <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>STUDENT PAPER</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
+      <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>{kind === "answer-key" ? "ANSWER KEY" : "STUDENT PAPER"}</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
       {error && <p role="alert" className={styles.error}>{error}</p>}
       {torchSupported === false && !review && !preview && <p className={styles.cameraLightUnavailable}>Camera light unavailable on this device or browser.</p>}
@@ -125,7 +125,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload }: Props) 
       <div className={styles.cameraActions}>
         {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error || torchBusy} onClick={capture}>Capture</button>}
       </div>
-      <p className={styles.cameraFootnote}>Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking.</p>
+      <p className={styles.cameraFootnote}>{kind === "answer-key" ? "Photos are checked locally for basic quality. After you use a photo, it is sent to Groq for checking." : "Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking."}</p>
     </div>
   </div>;
 }

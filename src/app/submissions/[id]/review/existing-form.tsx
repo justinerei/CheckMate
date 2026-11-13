@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useEffect, useRef, useState } from "react";
 import NextPaperButton from "../next-paper-button";
+import ConfirmDialog from "../../confirm-dialog";
 import { useRouter } from "next/navigation";
 import { saveExistingAnswer, finalizeExisting, confirmClearAnswers } from "./existing-actions";
 import styles from "../../submissions.module.css";
@@ -34,11 +35,12 @@ export function ExistingAnswerForm({ formatConcern, advance, submissionId, quest
 }
 export function FinalizeButton({ id, name, quizTitle, maximum, ready, finalized, finalScore }: { id: string; name: string; quizTitle: string; maximum: number; ready: boolean; finalized: boolean; finalScore: string | null }) {
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const router = useRouter(); const dialog = useRef<HTMLDialogElement>(null);
+  const [confirmFinalize, setConfirmFinalize] = useState(false);
   const marker = `checkmate-finalized-${id}`;
   useEffect(() => { if (!finalized) return; try { if (sessionStorage.getItem(marker) && dialog.current && !dialog.current.open) dialog.current.showModal(); } catch {} }, [finalized, marker]);
   function dismiss() { try { sessionStorage.removeItem(marker); } catch {} }
-  async function finalize() { if (!window.confirm("Finalize this score? The result cannot currently be edited after finalizing.")) return; setBusy(true); setError(""); try { try { sessionStorage.setItem(marker, "pending"); } catch {} const result = await finalizeExisting(id); if (result.error || result.total === undefined) { dismiss(); setError(result.error || "Could not finalize the paper."); return; } router.refresh(); } catch { setError("Could not confirm the result. Refresh to check whether it was saved."); } finally { setBusy(false); } }
-  return <div>{!finalized && <button type="button" className={styles.primary} disabled={busy || !ready} onClick={finalize}>{busy ? "Finalizing…" : "Finalize score"}</button>}{error && <p className={styles.error} role="alert">{error}</p>}<dialog ref={dialog} className={styles.successDialog} aria-labelledby="success-title" onClose={dismiss}><div className={styles.successMark} aria-hidden="true">✓</div><h2 id="success-title">Paper checked!</h2><p>{name} · {quizTitle}</p><p className={styles.finalScore}>{finalScore ?? "—"} / {maximum}</p><div className={styles.dialogActions}><NextPaperButton id={id} onStart={dismiss} /><button type="button" className={styles.secondary} onClick={() => dialog.current?.close()}>View result</button></div></dialog></div>;
+  async function finalize() { setConfirmFinalize(false); setBusy(true); setError(""); try { try { sessionStorage.setItem(marker, "pending"); } catch {} const result = await finalizeExisting(id); if (result.error || result.total === undefined) { dismiss(); setError(result.error || "Could not finalize the paper."); return; } router.refresh(); } catch { setError("Could not confirm the result. Refresh to check whether it was saved."); } finally { setBusy(false); } }
+  return <div>{!finalized && <button type="button" className={styles.primary} disabled={busy || !ready} onClick={() => setConfirmFinalize(true)}>{busy ? "Finalizing…" : "Finalize score"}</button>}{error && <p className={styles.error} role="alert">{error}</p>}{confirmFinalize && <ConfirmDialog title="Finalize this score?" message="Review the answers before continuing. The result cannot currently be edited after finalizing." confirmLabel="Finalize score" onCancel={() => setConfirmFinalize(false)} onConfirm={finalize} />}<dialog ref={dialog} className={styles.successDialog} aria-labelledby="success-title" onClose={dismiss}><div className={styles.successMark} aria-hidden="true">✓</div><h2 id="success-title">Paper checked!</h2><p>{name} · {quizTitle}</p><p className={styles.finalScore}>{finalScore ?? "—"} / {maximum}</p><div className={styles.dialogActions}><NextPaperButton id={id} onStart={dismiss} /><button type="button" className={styles.secondary} onClick={() => dialog.current?.close()}>View result</button></div></dialog></div>;
 }
 
 export function ConfirmClearAnswers({ id, items }: { id: string; items: { id: string; number: number; answer: string }[] }) {

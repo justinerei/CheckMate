@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "../submissions.module.css";
 import PhotoPreview from "../photo-preview";
+import ConfirmDialog from "../confirm-dialog";
 
 type Capture = { file: File; url: string; warning: string };
 type Props = { pageNumbers: number[]; onClose: () => void; onUpload: (files: File[]) => Promise<void>; kind?: "student" | "answer-key" };
@@ -35,6 +36,8 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
   const [preview, setPreview] = useState<Capture | null>(null);
   const [review, setReview] = useState(false);
   const [error, setError] = useState("");
+  const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [busy, setBusy] = useState(false);
   const [torchSupported, setTorchSupported] = useState<boolean | null>(null);
   const [torchOn, setTorchOn] = useState(false);
@@ -43,7 +46,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
   useEffect(() => {
     let cancelled = false;
     async function start() {
-      if (!navigator.mediaDevices?.getUserMedia) { setError("Camera access needs HTTPS or localhost. You can use Choose files instead."); return; }
+      if (!navigator.mediaDevices?.getUserMedia) { setError("Open this page using HTTPS or localhost, then try again. You can also close the camera and choose an existing photo."); return; }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
         if (cancelled) { stream.getTracks().forEach(track => track.stop()); return; }
@@ -54,12 +57,13 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
           setTorchSupported(capabilities?.torch === true || (Array.isArray(capabilities?.torch) && capabilities.torch.includes(true)));
         } catch { setTorchSupported(false); }
         if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
-      } catch { if (!cancelled) setError("Could not open the camera. Allow camera access in your browser or use Choose files instead."); }
+      } catch { if (!cancelled) setError("Allow camera access in your browser settings, then tap Try camera again. If it still does not open, close the camera and choose an existing photo."); }
     }
     start();
-    return () => { cancelled = true; streamRef.current?.getTracks().forEach(track => track.stop()); capturesRef.current.forEach(item => item && URL.revokeObjectURL(item.url)); };
-  }, []);
+    return () => { cancelled = true; streamRef.current?.getTracks().forEach(track => track.stop()); };
+  }, [cameraAttempt]);
   useEffect(() => { capturesRef.current = captures; }, [captures]);
+  useEffect(() => () => { capturesRef.current.forEach(item => item && URL.revokeObjectURL(item.url)); }, []);
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview.url); }, [preview]);
   async function toggleTorch(next: boolean) {
     const track = streamRef.current?.getVideoTracks()[0];
@@ -78,12 +82,12 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
     } finally { setTorchBusy(false); }
   }
   function close() {
-    if ((captures.length || preview) && !window.confirm("Leave camera? Photos captured in this session have not been uploaded yet.")) return;
+    if (captures.length || preview) { setConfirmClose(true); return; }
     onClose();
   }
   async function capture() {
     const video = videoRef.current;
-    if (!video?.videoWidth || !video.videoHeight) { setError("Camera is still starting. Please try again."); return; }
+    if (!video?.videoWidth || !video.videoHeight) { setError("Camera is still starting. Tap Try camera again, or close it and choose an existing photo."); return; }
     setError("");
     const canvas = document.createElement("canvas");
     const scale = Math.min(1, 2400 / Math.max(video.videoWidth, video.videoHeight));
@@ -113,19 +117,20 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
     <div className={styles.cameraPanel}>
       <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>{kind === "answer-key" ? "ANSWER KEY" : "STUDENT PAPER"}</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
-      {error && <p role="alert" className={styles.error}>{error}</p>}
+      {error && <div role="alert" className={styles.feedbackNotice}><span className={styles.feedbackIcon} aria-hidden="true">!</span><div><strong>Camera needs attention</strong><p>{error}</p><button type="button" className={styles.secondary} onClick={() => { setError(""); setTorchSupported(null); setTorchOn(false); setCameraAttempt(value => value + 1); }}>Try camera again</button></div></div>}
       {torchSupported === false && !review && !preview && <p className={styles.cameraLightUnavailable}>Camera light unavailable on this device or browser.</p>}
       {torchMessage && <p role="status" className={styles.cameraWarning}>{torchMessage} {torchOn && (preview || review) && <button type="button" className={styles.secondary} disabled={torchBusy} onClick={() => toggleTorch(false)}>Turn light off</button>}</p>}
       <div className={styles.cameraView} hidden={review || !!preview}>
         <video ref={videoRef} autoPlay playsInline muted aria-label="Live camera preview" />
-        {torchSupported && <button type="button" className={styles.cameraFlash} onClick={() => toggleTorch(!torchOn)} disabled={torchBusy} aria-pressed={torchOn} aria-label={torchOn ? "Turn flash off" : "Turn flash on"} title={torchOn ? "Flash on" : "Flash off"}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 10-13h-7z" fill="currentColor" />{!torchOn && <path d="M3 3 21 21" stroke="currentColor" strokeWidth="2" />}</svg></button>}
+        {torchSupported && <button type="button" className={styles.cameraFlash} onClick={() => toggleTorch(!torchOn)} disabled={torchBusy} aria-pressed={torchOn} aria-label={torchOn ? "Turn camera light off" : "Turn camera light on"} title={torchOn ? "Camera light on" : "Camera light off"}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M13.5 2.75 5.75 13h5.7l-.95 8.25L18.25 11h-5.7l.95-8.25Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />{!torchOn && <path d="M4 4 20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}</svg><span>Light {torchOn ? "on" : "off"}</span></button>}
       </div>
       {preview && !review && <><div className={styles.cameraView}><PhotoPreview src={preview.url} alt={`Page ${pageNumbers[current]} preview`} /></div>{preview.warning && <p role="status" className={styles.cameraWarning}>{preview.warning}</p>}</>}
       {review && <div className={styles.cameraThumbnails}>{captures.map((item, index) => <div key={pageNumbers[index]}><PhotoPreview src={item.url} alt={`Page ${pageNumbers[index]} preview`} /><strong>Page {pageNumbers[index]}</strong><button type="button" className={styles.secondary} disabled={busy} onClick={() => { setCurrent(index); setReview(false); }}>Retake</button></div>)}</div>}
       <div className={styles.cameraActions}>
         {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error || torchBusy} onClick={capture}>Capture</button>}
       </div>
-      <p className={styles.cameraFootnote}>{kind === "answer-key" ? "Photos are checked locally for basic quality. After you use a photo, it is sent to Groq for checking." : "Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking."}</p>
+      <p className={styles.cameraFootnote}>{kind === "answer-key" ? "Photos are checked locally for basic quality. Review your files and select Scan answer key when you are ready to send them to Groq." : "Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking."}</p>
     </div>
+    {confirmClose && <ConfirmDialog title="Leave the camera?" message="Photos taken in this session have not been added yet. Leaving will discard them." confirmLabel="Discard photos" onCancel={() => setConfirmClose(false)} onConfirm={onClose} />}
   </div>;
 }

@@ -1,14 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { automaticDecision } from "../src/lib/auto-review.ts";
+import { objectivePoints } from "../src/lib/scoring.ts";
 
 test("only unambiguous objective responses with a known mark can be checked automatically", () => {
   const item = { status: "clear", answer: "B", observedStyle: "circle", note: "" };
   assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE"), "FOLLOWED");
-  assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), null);
-  assert.equal(automaticDecision([{ ...item, observedStyle: "triangle" }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
+  assert.equal(automaticDecision([{ ...item, observedStyle: "triangle" }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "unknown" }], "circle", "MULTIPLE_CHOICE"), null);
-  assert.equal(automaticDecision([{ ...item, status: "blank", answer: null }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([{ ...item, status: "blank", answer: null }], "circle", "MULTIPLE_CHOICE"), "FOLLOWED");
   assert.equal(automaticDecision([{ ...item, status: "multiple" }], "circle", "MULTIPLE_CHOICE"), null);
   assert.equal(automaticDecision([item, item], "circle", "MULTIPLE_CHOICE"), null);
   assert.equal(automaticDecision([item], "circle", "ESSAY"), null);
@@ -19,8 +20,27 @@ test("only unambiguous objective responses with a known mark can be checked auto
 test("answer style mismatches require a teacher decision", () => {
   const item = { status: "clear", answer: "B", observedStyle: "circle", note: "" };
   assert.equal(automaticDecision([item], "written", "MULTIPLE_CHOICE"), null);
-  assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "underline" }], "written", "MULTIPLE_CHOICE"), null);
+});
+
+test("only clear, unambiguous box or triangle marks violate a circle instruction", () => {
+  const item = { status: "clear", answer: "B", observedStyle: "box", note: "" };
+  assert.equal(automaticDecision([{ ...item, status: "unclear" }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([{ ...item, note: "shape unclear" }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([{ ...item, note: "The answer is boxed." }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
+  assert.equal(automaticDecision([{ ...item, note: "Possibly a box" }], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([item, item], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([item], "box", "MULTIPLE_CHOICE"), "FOLLOWED");
+  assert.equal(automaticDecision([{ ...item, observedStyle: "unknown" }], "circle", "MULTIPLE_CHOICE"), null);
+});
+
+test("automatic violations and clearly blank responses score zero even if the key matches", () => {
+  const item = { status: "clear", answer: "B", observedStyle: "box", note: "" };
+  const decision = automaticDecision([item], "circle", "MULTIPLE_CHOICE");
+  assert.equal(objectivePoints(item.answer, ["B"], 1, decision), 0);
+  const blank = { status: "blank", answer: null, note: "" };
+  assert.equal(objectivePoints(blank.answer ?? "", ["B"], 1, automaticDecision([blank], "circle", "MULTIPLE_CHOICE")), 0);
 });
 
 test("written words for a letter-only choice key require a teacher decision", () => {

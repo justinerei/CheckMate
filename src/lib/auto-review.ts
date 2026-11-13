@@ -1,8 +1,12 @@
 type Candidate = { status: string; answer: string | null; observedStyle?: string; markShape?: string; note: string };
+const uncertainty = /\b(?:unclear|uncertain|unsure|ambiguous|maybe|possibly|possible|probably|likely|faint|illegible|unreadable|smudged|erased|multiple|overlap|guess|appears|seems|looks like)\b/i;
 export function automaticDecision(items: Candidate[], expectedStyle: string, type: string, keys?: string[]): "FOLLOWED" | "VIOLATION" | null {
   if (type === "ESSAY" || items.length !== 1) return null;
   const item = items[0];
-  if (item.status !== "clear" || !item.answer?.trim() || item.note.trim() || !item.observedStyle || item.observedStyle === "unknown") return null;
+  if (uncertainty.test(item.note)) return null;
+  if (item.status === "blank" && !item.answer?.trim()) return "FOLLOWED";
+  if (item.status !== "clear" || !item.answer?.trim() || !item.observedStyle || item.observedStyle === "unknown") return null;
+  if (expectedStyle === "circle" && type === "MULTIPLE_CHOICE" && ["box", "triangle"].includes(item.observedStyle)) return "VIOLATION";
   if (hasInstructionConcern(items, expectedStyle, type, keys)) return null;
   const expected = expectedStyle === "text" ? "written" : expectedStyle;
   if (item.observedStyle === expected) return "FOLLOWED";

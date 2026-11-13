@@ -11,6 +11,9 @@
 @media(max-width:380px) { .metrics { grid-template-columns:1fr; }.metrics > div + div { border-left:0; border-top:1px solid #323239; }.row { grid-template-columns:30px minmax(0,1fr); }.status,.row time,.rowAction { grid-column:2; justify-self:start; } }
 @media(prefers-reduced-motion:reduce) { .action { transition:none; } }
 .libraryCount { display:inline-flex; align-items:center; justify-content:center; min-width:26px; padding:4px 8px; margin-left:6px; border:1px solid #45454c; border-radius:20px; color:#bcbcc4; font-size:12px; vertical-align:middle; }
+.quizGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr)); gap:14px; margin-top:20px; }
+.quizCard { min-height:185px; display:flex; flex-direction:column; gap:12px; padding:20px; border:1px solid #393940; border-radius:11px; background:#17171b; color:#f4f4f5; text-decoration:none; }
+.quizCard:hover { background:#202024; border-color:#777780; }.quizCard:focus-visible { outline:3px solid #ff9b63; outline-offset:3px; }.quizCard>strong { margin-top:4px; font-size:17px; line-height:1.35; overflow-wrap:anywhere; }.cardTop { display:flex; justify-content:space-between; align-items:center; color:#ffad7d; }.cardMeta { color:#bcbcc4; font-size:13px; }.cardFooter { display:flex; justify-content:space-between; gap:8px; margin-top:auto; padding-top:12px; border-top:1px solid #393940; color:#bcbcc4; font-size:12px; }.cardFooter span { color:#f4f4f5; }
 .libraryRow { display:flex; align-items:center; gap:20px; border-bottom:1px solid #34343b; }
 .libraryMain { display:grid; grid-template-columns:36px minmax(0,1fr) auto auto; align-items:center; flex:1; min-width:0; gap:16px; min-height:77px; padding:14px 4px; color:#f4f4f5; text-decoration:none; }
 .libraryMain:hover .rowMain strong { text-decoration:underline; }.libraryMain time { color:#a8a8b2; font-size:12px; }

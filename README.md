@@ -123,7 +123,7 @@ Open **Submissions** to choose a saved quiz or answer key and start a batch; no 
 
 ### Create a quiz in CheckMate
 
-Create a draft, then set the total question count and divide it into multiple-choice, identification, true/false, or essay sections. Confirm the outline to create numbered question slots; fill in and save each question and its answer or rubric. You can return to the outline while the generated slots and section settings are still untouched. Once you have started editing, change individual questions or sections instead. Complete every slot before previewing, printing, or checking papers. You may also skip the outline and build sections manually.
+Create a draft, then set the total question count and divide it into multiple-choice, identification, true/false, or essay sections. Use the drag handle (hold and drag on a touchscreen) or the up/down arrows to change section order. Confirm the outline to create numbered question slots; fill in and save each question and its answer or rubric. You can return to the outline while the generated slots and section settings are still untouched. Once you have started editing, use **Reorder sections** in the quiz editor to move whole sections with their saved questions and answers; save any open edits before saving the new order. Section reordering is locked once a quiz has papers. Complete every slot before previewing, printing, or checking papers. You may also skip the outline and build sections manually.
 
 ### Check a quiz made elsewhere
 

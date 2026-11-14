@@ -1,6 +1,12 @@
 export const questionTypes = ["MULTIPLE_CHOICE", "IDENTIFICATION", "TRUE_FALSE", "ESSAY"] as const;
 export type OutlineType = typeof questionTypes[number];
 export type OutlineSection = { type: OutlineType; count: number };
+export function parseAdditionalSection(type: unknown, count: unknown, existingCount: number): OutlineSection | null {
+  if (typeof type !== "string" || !questionTypes.includes(type as OutlineType) || typeof count !== "string" || !/^\d+$/.test(count)) return null;
+  const n = Number(count);
+  if (!Number.isInteger(existingCount) || existingCount < 0 || !Number.isInteger(n) || n < 1 || existingCount + n > 200) return null;
+  return { type: type as OutlineType, count: n };
+}
 export function sameQuizOutline(left: OutlineSection[], right: OutlineSection[]): boolean {
   return left.length === right.length && left.every((section, index) => section.type === right[index].type && section.count === right[index].count);
 }

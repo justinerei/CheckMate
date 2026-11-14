@@ -1,6 +1,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuizOutline, questionIsComplete, sameQuizOutline } from "../src/lib/quiz-outline.ts";
+import { parseAdditionalSection, parseQuizOutline, questionIsComplete, sameQuizOutline } from "../src/lib/quiz-outline.ts";
+
+test("adds typed slots while honoring the quiz question limit", () => {
+  assert.deepEqual(parseAdditionalSection("ESSAY", "5", 20), { type: "ESSAY", count: 5 });
+  assert.deepEqual(parseAdditionalSection("TRUE_FALSE", "1", 199), { type: "TRUE_FALSE", count: 1 });
+  assert.equal(parseAdditionalSection("ESSAY", "2", 199), null);
+  assert.equal(parseAdditionalSection("ENUMERATION", "1", 1), null);
+  assert.equal(parseAdditionalSection("ESSAY", "0", 1), null);
+  assert.equal(parseAdditionalSection("ESSAY", "1.5", 1), null);
+});
 
 test("validates total and section counts before creating draft slots", () => {
   const rows = [{ type: "MULTIPLE_CHOICE", count: 15 }, { type: "ESSAY", count: 5 }];

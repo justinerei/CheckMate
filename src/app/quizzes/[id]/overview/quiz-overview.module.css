@@ -13,3 +13,15 @@
 .exportResults { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:9px 13px; border:1px solid #56565f; border-radius:8px; color:#f4f4f5; text-decoration:none; font-size:13px; font-weight:600; }
 .exportResults:hover { background:#29292e; }
 @media(max-width:500px) { .sectionHeading { flex-wrap:wrap; } }
+.resultsSummary { border:1px solid #39393f; border-radius:10px; background:#17171b; overflow:hidden; }
+.resultsMetrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.resultsMetrics > div { display:grid; gap:8px; padding:20px; }
+.resultsMetrics > div + div { border-left:1px solid #39393f; }
+.resultsMetrics span { color:#bcbcc4; font-size:11px; font-weight:600; letter-spacing:.06em; }
+.resultsMetrics strong { font-size:26px; }.resultsMetrics small { color:#bcbcc4; font-size:15px; font-weight:400; }
+.resultsBands,.itemResults { border-top:1px solid #39393f; padding:20px; }
+.resultsBands h3 { margin:0; font:600 15px var(--font-geist-sans),sans-serif; }.resultsBands p,.itemResults p { margin:7px 0 14px; color:#bcbcc4; font-size:13px; line-height:1.5; }
+.resultsBands > div { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }.resultsBands > div > div { display:grid; gap:6px; padding:12px; background:#222227; border:1px solid #39393f; border-radius:7px; font-size:13px; }.resultsBands span { color:#d4d4da; }.resultsBands strong { font-size:14px; }
+.itemResults summary { min-height:44px; display:flex; align-items:center; cursor:pointer; font-size:14px; font-weight:600; text-decoration:underline; text-underline-offset:4px; }.itemResults summary:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.resultsTableWrap { overflow-x:auto; }.resultsTableWrap table { width:100%; border-collapse:collapse; font-size:14px; }.resultsTableWrap th,.resultsTableWrap td { text-align:left; padding:12px; border-top:1px solid #39393f; vertical-align:top; }.resultsTableWrap thead th { color:#bcbcc4; font-size:12px; }.resultsTableWrap tbody th { font-weight:600; }.resultsTableWrap small { display:block; margin-top:5px; color:#bcbcc4; font-size:12px; line-height:1.4; font-weight:400; overflow-wrap:anywhere; }
+@media(max-width:700px) { .resultsBands > div { grid-template-columns:repeat(2,minmax(0,1fr)); }.resultsTableWrap table { min-width:420px; } }

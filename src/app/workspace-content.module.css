@@ -32,3 +32,8 @@
 .actionPrimary > .primaryCta:last-child { display:inline-flex; align-items:center; gap:18px; margin-top:14px; padding:11px 15px; border-radius:7px; background:#ff7a29; color:#fff; font-size:13px; font-weight:700; }
 .action:focus-visible { outline:3px solid #ff9b63; outline-offset:3px; }
 @media(max-width:760px) { .actionGrid { grid-template-columns:1fr; grid-template-rows:auto; } .actionPrimary { grid-row:auto; min-height:220px; padding:22px; } .actionPrimary .actionTop { width:100%; } .actionPrimary .actionTop > span:last-child { display:grid; } }
+.librarySearch { display:grid; gap:8px; max-width:460px; margin-top:30px; }
+.librarySearch label { color:#e9e9ed; font-size:14px; font-weight:600; }
+.librarySearch input { width:100%; min-height:44px; padding:10px 12px; color:var(--field-text); background:var(--field-bg); border:1px solid var(--field-border); border-radius:7px; font:inherit; }
+.librarySearch input:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.librarySearch p { margin:0; color:#bcbcc4; font-size:12px; }

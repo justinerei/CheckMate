@@ -9,6 +9,7 @@ import { paperDestination } from "@/lib/workspace-navigation";
 import WorkspaceFrame from "../../../workspace-frame";
 import styles from "./quiz-overview.module.css";
 import BatchDeletedDialog from "./batch-deleted-dialog";
+import PaperList from "./paper-list";
 
 export const instant = false;
 
@@ -42,11 +43,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
     <Link href="/quizzes" className="back-navigation">All quizzes</Link>
     <header className={styles.header}><div><p className={styles.eyebrow}>{quiz.source === "EXISTING" ? "Saved answer key" : "Created in CheckMate"}</p><h1>{quiz.title}</h1><p>{questions.length} {questions.length === 1 ? "question" : "questions"} · {maximum} points</p></div><Link className={styles.primary} href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>+ Upload papers</Link></header>
     <section className={styles.section} aria-labelledby="papers-heading"><div className={styles.sectionHeading}><div><h2 id="papers-heading">Student papers</h2><p>{finalized} finalized · {quiz.submissions.length - finalized} in progress</p></div>{finalized > 0 && <a className={styles.exportResults} href={`/api/quizzes/${encodeURIComponent(id)}/results`}>Export finalized scores · CSV</a>}</div>
-      {quiz.submissions.length ? <div className={styles.paperList}>{quiz.submissions.map(paper => {
-        const read = !!paper.expectedPages && paper.pages.length === paper.expectedPages && paper.pages.every(page => page.status === "COMPLETE");
-        const status = paperProgress(paper.status, paper.expectedPages, paper.pages).label;
-        return <Link className={styles.paper} href={paperDestination(paper.id, paper.status, read, "quiz")} key={paper.id}><span className={styles.paperIcon} aria-hidden="true">▤</span><span className={styles.paperName}><strong>{paper.paperName || paper.student?.name || "Unnamed paper"}</strong><small>Updated {date.format(paper.updatedAt)}</small></span><span className={styles.status}>{status}</span><span className={styles.score}>{paper.status === "FINALIZED" && paper.totalScore !== null ? `${paper.totalScore.toString()} / ${maximum}` : "—"}</span><span className={styles.arrow} aria-hidden="true">→</span></Link>;
-      })}</div> : <div className={styles.empty}><strong>No papers yet</strong><p>Upload the first student paper when you’re ready.</p><Link href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>Upload papers →</Link></div>}
+      {quiz.submissions.length ? <PaperList papers={quiz.submissions.map(paper => { const read = !!paper.expectedPages && paper.pages.length === paper.expectedPages && paper.pages.every(page => page.status === "COMPLETE"); return { id: paper.id, name: paper.paperName || paper.student?.name || "Unnamed paper", linkedName: paper.student?.name ?? null, status: paper.status, statusLabel: paperProgress(paper.status, paper.expectedPages, paper.pages).label, updated: date.format(paper.updatedAt), score: paper.status === "FINALIZED" && paper.totalScore !== null ? `${paper.totalScore.toString()} / ${maximum}` : "—", href: paperDestination(paper.id, paper.status, read, "quiz") }; })} /> : <div className={styles.empty}><strong>No papers yet</strong><p>Upload the first student paper when you’re ready.</p><Link href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>Upload papers →</Link></div>}
     </section>
     <section className={styles.section} aria-labelledby="results-summary-heading"><div className={styles.sectionHeading}><div><h2 id="results-summary-heading">Results summary</h2><p>Based on finalized papers only. Papers in review are excluded.</p></div></div>
       {summary.paperCount ? <div className={styles.resultsSummary}><div className={styles.resultsMetrics}><div><span>FINALIZED PAPERS WITH SCORES</span><strong>{summary.paperCount}</strong></div><div><span>AVERAGE SCORE</span><strong>{summary.average} <small>/ {maximum}</small></strong></div></div>

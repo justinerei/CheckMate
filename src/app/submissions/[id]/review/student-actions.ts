@@ -1,7 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { studentLinkProblem } from "@/lib/student-paper-link";
+import { studentLinkProblem, studentLinkStatuses } from "@/lib/student-paper-link";
 import { revalidatePath } from "next/cache";
 
 export async function assignPaperStudent(id: string, _state: { message: string; ok: boolean }, form: FormData) {
@@ -12,13 +12,13 @@ export async function assignPaperStudent(id: string, _state: { message: string; 
   const studentId = raw || null;
   try {
     const issue = await db.$transaction(async tx => {
-      const paper = await tx.submission.findFirst({ where: { id, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, select: { id: true, quizId: true } });
+      const paper = await tx.submission.findFirst({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, select: { id: true, quizId: true } });
       const allowed = !studentId || !!(await tx.teacherStudent.findUnique({ where: { teacherId_studentId: { teacherId: teacher.id, studentId } }, select: { studentId: true } }));
       const duplicate = !!(studentId && paper && await tx.submission.findFirst({ where: { quizId: paper.quizId, studentId, id: { not: id } }, select: { id: true } }));
       const error = studentLinkProblem(!!paper, allowed, duplicate);
       if (error) return error;
-      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: "IN_REVIEW", quiz: { teacherId: teacher.id } }, data: { studentId } });
-      return updated.count === 1 ? null : "This paper is unavailable or already finalized.";
+      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, data: { studentId } });
+      return updated.count === 1 ? null : "This paper is unavailable. Refresh and try again.";
     }, { isolationLevel: "Serializable" });
     if (issue) return { message: issue, ok: false };
   } catch (error) {

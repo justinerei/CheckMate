@@ -12,3 +12,9 @@ test("duplicate student papers are rejected while unlinking is allowed", () => {
   assert.match(studentLinkProblem(true, true, true), /already.*paper/i);
   assert.equal(studentLinkProblem(true, true, false), null);
 });
+
+test("student links can change on finalized papers as well as papers in review", async () => {
+  const { studentLinkStatuses } = await import("../src/lib/student-paper-link.ts");
+  assert.deepEqual(studentLinkStatuses, ["IN_REVIEW", "FINALIZED"]);
+  assert.equal(studentLinkStatuses.includes("DRAFT"), false);
+});

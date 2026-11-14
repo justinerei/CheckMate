@@ -376,3 +376,14 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .reviewPhotoLink:focus-visible { outline:2px solid #ffac70; outline-offset:3px; }
 .reviewPhotoLink { display:inline-flex; align-items:center; min-height:44px; color:#e1e1e6; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
 .reviewPhotoLink:hover { color:#fff; }
+.reopenPaper { border:1px solid #45454d; border-radius:8px; padding:14px 16px; background:#202025; }
+.reopenPaper summary { cursor:pointer; font-weight:600; color:#f4f4f5; }
+.reopenPaper p { color:#c3c3ca; line-height:1.5; font-size:14px; }
+.reopenPaper form,.reopenPaper label { display:grid; gap:10px; }
+.reopenPaper label { font-size:14px; font-weight:600; }
+.reopenPaper textarea { width:100%; padding:10px; color:var(--field-text); background:var(--field-bg); border:1px solid var(--field-border); border-radius:6px; font:inherit; resize:vertical; }
+.resultHistory { border:1px solid #39393f; border-radius:8px; padding:14px 16px; }
+.resultHistory summary { cursor:pointer; font-weight:600; }
+.resultHistory ul { display:grid; gap:10px; margin:14px 0 0; padding:0; list-style:none; }
+.resultHistory li { display:grid; gap:4px; font-size:14px; overflow-wrap:anywhere; }
+.resultHistory small { color:#c3c3ca; line-height:1.4; }

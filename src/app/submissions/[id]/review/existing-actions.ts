@@ -8,6 +8,7 @@ import { sumCriterionScores } from "@/lib/rubric";
 import { automaticDecision } from "@/lib/auto-review";
 import { builtAnswerStyle, normalizeBuiltReading } from "@/lib/built-review";
 import { pagesComplete } from "@/lib/submission-upload";
+import { reopenReason, canFinalizeSavedAnswer } from "@/lib/result-revision";
 
 export async function saveExistingAnswer(submissionId: string, questionId: string, _state: { message: string; ok: boolean }, form: FormData) {
   const teacher = await getTeacher(); if (!teacher) return { message: "Please sign in again.", ok: false };
@@ -72,16 +73,16 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
           automatic.push({ questionId: q.id, text, decision, points, version: q.answerKey.version }); objective += points;
           continue;
         }
-        if (answer.reviewStatus !== "CONFIRMED" || answer.confirmedText === null) return "Review all flagged answers and essays before finalizing.";
+        if (!canFinalizeSavedAnswer(answer.reviewStatus, answer.confirmedText)) return "Review all flagged answers and essays before finalizing.";
         if (!["FOLLOWED", "VIOLATION"].includes(answer.instructionDecision ?? "")) return "Confirm whether every answer followed the instructions.";
         if (q.type === "ESSAY") { if (answer.teacherScore === null) return "Enter a score for every essay."; essay += answer.instructionDecision === "VIOLATION" ? 0 : Number(answer.teacherScore); }
-        else { if (!q.answerKey?.acceptedAnswers.length) return "An answer key is missing."; const score = objectivePoints(answer.confirmedText, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision); objective += score; }
+        else { if (!q.answerKey?.acceptedAnswers.length) return "An answer key is missing."; const score = objectivePoints(answer.confirmedText!, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision); objective += score; }
       }
       for (const item of automatic) await tx.submissionAnswer.create({ data: { submissionId, questionId: item.questionId, confirmedText: item.text, reviewStatus: "AUTO_CHECKED", instructionDecision: item.decision, objectiveScore: item.points, keyVersion: item.version } });
       for (const q of questions) { const answer = submission.answers.find(a => a.questionId === q.id); if (q.type !== "ESSAY" && answer && q.answerKey) await tx.submissionAnswer.update({ where: { id: answer.id }, data: { objectiveScore: objectivePoints(answer.confirmedText!, q.answerKey.acceptedAnswers, Number(q.points), answer.instructionDecision), keyVersion: q.answerKey.version } }); }
       const total = Math.round((objective + essay) * 100) / 100;
       await tx.submission.update({ where: { id: submission.id }, data: { status: "FINALIZED", finalizedAt: new Date(), objectiveScore: objective, essayScore: essay, totalScore: total } });
-      await tx.resultHistory.create({ data: { submissionId: submission.id, changedById: teacher.id, reason: "Teacher finalized checked answers", newScore: total } }); return total;
+      await tx.resultHistory.create({ data: { submissionId: submission.id, changedById: teacher.id, reason: submission.totalScore === null ? "Teacher finalized checked answers" : "Teacher finalized revised answers", previousScore: submission.totalScore, newScore: total } }); return total;
     }, { isolationLevel: "Serializable" });
     if (typeof result === "string") return { error: result };
     revalidatePath(`/submissions/${submissionId}`); revalidatePath("/submissions"); return { error: "", total: result };
@@ -116,4 +117,24 @@ export async function confirmClearAnswers(submissionId: string, expectedItems: {
     if (!result.error) revalidatePath(`/submissions/${submissionId}/review`);
     return result;
   } catch { return { error: "Could not save these answers. Refresh and try again.", count: 0 }; }
+}
+
+export async function reopenFinalizedPaper(submissionId: string, _previous: { message: string; ok: boolean }, form: FormData) {
+  const teacher = await getTeacher();
+  if (!teacher) return { message: "Please sign in again.", ok: false };
+  const reason = reopenReason(form.get("reason"));
+  if (!reason) return { message: "Enter a reason of up to 500 characters.", ok: false };
+  try {
+    const reopened = await db.$transaction(async tx => {
+      const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "FINALIZED", quiz: { teacherId: teacher.id } }, select: { id: true, totalScore: true } });
+      if (!submission || submission.totalScore === null) return false;
+      const updated = await tx.submission.updateMany({ where: { id: submission.id, status: "FINALIZED" }, data: { status: "IN_REVIEW", finalizedAt: null } });
+      if (updated.count !== 1) return false;
+      await tx.resultHistory.create({ data: { submissionId, changedById: teacher.id, reason: `Reopened: ${reason}`, previousScore: submission.totalScore, newScore: submission.totalScore } });
+      return true;
+    }, { isolationLevel: "Serializable" });
+    if (!reopened) return { message: "This finalized paper is unavailable or has already been reopened.", ok: false };
+  } catch { return { message: "Could not reopen this paper. Refresh and try again.", ok: false }; }
+  revalidatePath(`/submissions/${submissionId}/review`); revalidatePath("/submissions"); revalidatePath("/batches/[id]", "page"); revalidatePath("/quizzes/[id]/overview", "page");
+  return { message: "Paper reopened. Review changes before finalizing again.", ok: true };
 }

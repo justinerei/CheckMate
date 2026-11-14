@@ -45,3 +45,20 @@ export async function linkStudent(_previous: ActionState, form: FormData): Promi
   revalidatePath("/students");
   return { kind: "success", message: "Student linked to your list." };
 }
+
+export async function removeStudentFromList(studentId: string): Promise<{ error: string }> {
+  const teacherId = await currentTeacherId();
+  if (!studentId || studentId.length > 200) return { error: "Student is unavailable." };
+  try {
+    const removed = await db.$transaction(async tx => {
+      const link = await tx.teacherStudent.findUnique({ where: { teacherId_studentId: { teacherId, studentId } }, select: { studentId: true } });
+      if (!link) return false;
+      await tx.submission.updateMany({ where: { teacherId, studentId, quiz: { teacherId } }, data: { studentId: null } });
+      await tx.teacherStudent.deleteMany({ where: { teacherId, studentId } });
+      return true;
+    }, { isolationLevel: "Serializable" });
+    if (!removed) return { error: "This student is no longer in your list." };
+  } catch { return { error: "Could not remove this student. Please refresh and try again." }; }
+  revalidatePath("/students"); revalidatePath("/dashboard"); revalidatePath("/quizzes/[id]/overview", "page"); revalidatePath("/batches/[id]", "page"); revalidatePath("/submissions/[id]/review", "page");
+  return { error: "" };
+}

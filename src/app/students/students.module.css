@@ -20,3 +20,6 @@
 /* WorkspaceFrame provides the shared page spacing and navigation. */
 .content { max-width:1100px; padding:0; }
 @media(max-width:760px) { .content { padding:0; } }
+.studentHeading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; }
+.removeStudent > button { min-height:44px; padding:8px 12px; border:1px solid #72524c; border-radius:7px; background:transparent; color:#ffd0c3; font:inherit; font-size:13px; cursor:pointer; }
+.removeStudent > button:hover { background:#382620; }.removeStudent > button:disabled { opacity:.6; cursor:wait; }.removeStudent > button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

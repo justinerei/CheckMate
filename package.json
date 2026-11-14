@@ -8,7 +8,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed": "node --experimental-strip-types prisma/seed.mjs"
   },
   "dependencies": {
     "@next/env": "^16.4.5",

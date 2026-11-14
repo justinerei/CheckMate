@@ -117,6 +117,22 @@ Open [http://localhost:3000](http://localhost:3000), click **Continue with Googl
 
 Each groupmate's local PostgreSQL database starts empty. Cloning the repo does not copy someone else's accounts, quizzes, or student data. Signing in for the first time creates a teacher account in your own local database.
 
+### Email and password sign-in
+
+Teachers may also create an account from the sign-in page using their name, email, and a password of at least 12 characters. Existing Google accounts continue to use Google sign-in. Accounts with the same email are not linked automatically. After five failed password attempts, the account is temporarily locked for 15 minutes. Email verification and password reset are not yet available, so keep your password safe.
+
+### Local demo data
+
+After applying migrations, set a local demo password (12–128 characters) and run the seeder in PowerShell:
+
+```powershell
+$env:CHECKMATE_DEMO_PASSWORD = 'Choose-a-demo-password-here'
+npm run seed
+Remove-Item Env:CHECKMATE_DEMO_PASSWORD
+```
+
+Sign in with `demo@checkmate.test` and your chosen password. The demo account contains three students and a sample science quiz with an answer key. The seeder only connects to local databases, refuses production mode, and can be rerun without resetting existing demo records or the password. It does not create paper photos or graded submissions.
+
 On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet. **Remove student** removes the student from your list and unlinks your papers, while retaining the shared student record and your papers and scores.
 
 Choose **Check a paper** on the dashboard or **Upload papers** from a quiz to start a batch; no student record is required. Each batch contains up to five papers, and each paper has one to three JPEG or PNG photos, up to 8 MB each. Check the page order before starting. The server reads pages in the background and saves each successful reading. Review and finalize results per paper.

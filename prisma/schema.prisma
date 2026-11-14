@@ -35,6 +35,9 @@ enum PageStatus {
 model User {
   id            String             @id @default(cuid())
   googleId      String             @unique
+  passwordHash  String?
+  failedLogins  Int                @default(0)
+  lockedUntil   DateTime?
   email         String             @unique
   name          String
   role          UserRole           @default(TEACHER)

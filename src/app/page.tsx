@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import styles from "./page.module.css";
+import PasswordForm from "./password-form";
 
 export const instant = false;
 
@@ -23,6 +24,8 @@ export default async function Home() {
       <div className={styles.symbol} aria-hidden="true">✓</div>
       <h2 id="sign-in-title">Welcome to CheckMate.</h2><p>Sign in to create quizzes and review submissions.</p>
       {session && !user?.enabled && <p className={styles.warning} role="alert">This account is unavailable. Contact your administrator.</p>}
+      <PasswordForm />
+      <div className={styles.divider}><span>or</span></div>
       <form action={async () => { "use server"; await signIn("google", { redirectTo: "/dashboard" }); }}>
         <button className={styles.button} type="submit"><span aria-hidden="true" className={styles.google}>G</span>Continue with Google <span aria-hidden="true">↗</span></button>
       </form><p className={styles.note}>Your students don’t need an account.</p>

@@ -27,3 +27,16 @@
 .intro h1, .dashboard h1, .card h2 { font-weight: 500; letter-spacing: 0; }
 .logo, .symbol { font-family: var(--font-display); font-weight: 500; }
 @media (max-width: 760px) { .shell { padding: 25px 22px; } .label { display: none; } .layout { grid-template-columns: 1fr; gap: 48px; padding: 80px 0; } .card { justify-self: stretch; max-width: none; } .steps { margin-top: 40px; gap: 20px; } .footer { flex-wrap: wrap; } }
+.authForm { display: grid; gap: 13px; margin-top: 24px; }
+.authForm label { display: grid; gap: 7px; color: #d4d4d8; font-size: 13px; font-weight: 600; }
+.authForm input { width: 100%; background: #101013; color: #f4f4f5; border: 1px solid #52525b; border-radius: 7px; padding: 11px 12px; font: inherit; }
+.authForm input:focus-visible { outline: 2px solid #ff8b40; outline-offset: 2px; }
+.authSubmit { border: 0; border-radius: 8px; padding: 13px; background: #f4f4f5; color: #111; font-weight: 600; cursor: pointer; }
+.authSubmit:disabled { opacity: .65; cursor: wait; }
+.card .passwordHint { font-size: 12px; margin: -5px 0 0; }
+.card .authToggle { margin: 16px 0; font-size: 13px; }
+.authToggle button { color: #ff9c61; text-decoration: underline; background: none; border: 0; padding: 3px; cursor: pointer; font: inherit; }
+.divider { color: #a3a3aa; display: flex; align-items: center; gap: 12px; font-size: 12px; }
+.divider::before, .divider::after { content: ""; height: 1px; background: #3f3f46; flex: 1; }
+.divider + form .button { margin-top: 16px; background: transparent; color: #f4f4f5; border: 1px solid #52525b; }
+.divider + form .button:hover { background: #27272a; }

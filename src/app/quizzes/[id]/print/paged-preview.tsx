@@ -4,7 +4,7 @@ import Link from "next/link";
 import { paginate } from "@/lib/pagination";
 import styles from "./print.module.css";
 
-type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[] };
+type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[]; rubric: { id: string; title: string; description: string; points: string }[] };
 type Section = { id: string; title: string; instructions: string; questions: Question[] };
 type Block = { kind: "header"; title: string } | { kind: "instructions"; text: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] };
 type Paper = { page: string; width: string; height: string; label: string };
@@ -16,7 +16,7 @@ function BlockContent({ block }: { block: Block }) {
   return <div className={block.questions.length === 2 ? styles.pair : styles.row}>{block.questions.map(({ question, number }) => <div className={styles.question} key={question.id}>
     <div className={styles.prompt}>{(question.type === "TRUE_FALSE" || question.type === "IDENTIFICATION") && <span className={question.type === "TRUE_FALSE" ? styles.shortBlank : styles.longBlank} />}<span>{number}. {question.text}</span></div>
     {question.type === "MULTIPLE_CHOICE" && <div className={styles.choices}>{question.choices.map(choice => <span key={choice.id}>{choice.label}. {choice.text}</span>)}</div>}
-    {question.type === "ESSAY" && <div className={styles.lines}>{Array.from({ length: question.essayLineCount ?? 7 }, (_, n) => <div key={n} />)}</div>}
+    {question.type === "ESSAY" && <><div className={styles.lines}>{Array.from({ length: question.essayLineCount ?? 7 }, (_, n) => <div key={n} />)}</div>{question.rubric.length > 0 && <table className={styles.rubric}><caption>Scoring criteria</caption><thead><tr><th scope="col">Criterion</th><th scope="col">Description</th><th scope="col">Points</th></tr></thead><tbody>{question.rubric.map(criterion => <tr key={criterion.id}><td>{criterion.title}</td><td>{criterion.description}</td><td>{criterion.points}</td></tr>)}</tbody></table>}</>}
   </div>)}</div>;
 }
 
@@ -62,7 +62,7 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
   return <main className={styles.preview}><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
     <div className={styles.toolbar}><Link className="back-navigation" href={back.href}>{back.label}</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>
       <p className={styles.hint}>Pages are arranged automatically. Check the pages below, then print at 100% scale with browser headers and footers turned off. The code identifies the quiz, not the version; reprint all pages after edits.</p>
-      {layout && layout.oversized.length > 0 && <p className={styles.warning} role="alert">A question or section is too long to fit on one page. Shorten its text, reduce its essay lines, or turn off side-by-side layout before printing.</p>}
+      {layout && layout.oversized.length > 0 && <p className={styles.warning} role="alert">A question or section is too long to fit on one page. Shorten its text or rubric descriptions, reduce its essay lines, or turn off side-by-side layout before printing.</p>}
     </div>
     <div className={styles.measure} aria-hidden="true" ref={measureRef}><div className={styles.paper} style={dimensions}><div className={styles.pageBody} data-page-body>{blocks.map((block, index) => <div data-block key={index} className={styles.block}><BlockContent block={block} /></div>)}</div></div></div>
     <div className={styles.stack}>{!layout ? <p className={styles.loading}>Preparing page preview…</p> : layout.pages.map((page, pageIndex) => <article className={styles.paper} style={dimensions} key={pageIndex} aria-label={`Page ${pageIndex + 1} of ${layout.pages.length}`}><div className={styles.pageBody}>{page.map(index => <div className={styles.block} key={index}><BlockContent block={blocks[index]} /></div>)}</div>{labels && <footer className={styles.pageFooter}>{code} · Page {pageIndex + 1} of {layout.pages.length}</footer>}</article>)}</div>

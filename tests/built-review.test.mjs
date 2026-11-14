@@ -14,3 +14,16 @@ test("built readings preserve section and translate detected mark shape", () => 
   assert.equal(result.observedStyle, "circle");
   assert.equal(normalizeBuiltReading({ number: 1, section: null, status: "clear", answer: "T", note: "" }, "TRUE_FALSE").observedStyle, "unknown");
 });
+
+
+test("clear written true-false readings can be scored while missing or uncertain styles stay flagged", async () => {
+  const { automaticDecision } = await import("../src/lib/auto-review.ts");
+  const { objectivePoints } = await import("../src/lib/scoring.ts");
+  const reading = { number: 2, section: 1, status: "clear", answer: "T", note: "", observedStyle: "written", erasure: "none" };
+  const candidate = normalizeBuiltReading(reading, "TRUE_FALSE");
+  const decision = automaticDecision([candidate], builtAnswerStyle("TRUE_FALSE"), "TRUE_FALSE", ["T"]);
+  assert.equal(decision, "FOLLOWED");
+  assert.equal(objectivePoints(candidate.answer, ["T"], 1, decision), 1);
+  assert.equal(automaticDecision([{ ...candidate, observedStyle: "unknown" }], "written", "TRUE_FALSE", ["T"]), null);
+  assert.equal(automaticDecision([{ ...candidate, status: "unclear" }], "written", "TRUE_FALSE", ["T"]), null);
+});

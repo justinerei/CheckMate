@@ -72,6 +72,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
         else if (observed && observed !== "unknown" && observed !== expected)
           reason = `Expected ${expected}; detected ${observed}. Check the mark on the paper.`;
         else if (question.type === "ESSAY") reason = "Score the essay using the teacher’s criteria.";
+        else if (single?.status === "clear" && (!observed || observed === "unknown")) reason = "The answer was read, but its marking style could not be confirmed. Check the photo before confirming.";
         else reason = single?.note || (candidates.length > 1 ? "Multiple readings. Compare the pages before confirming." : "Verify the response against the paper.");
       }
       const form = <article>

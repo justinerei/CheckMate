@@ -29,3 +29,7 @@
 .shell :is(a,button,select,summary):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 @media(max-width:700px) { .header { padding:0 20px; }.content { padding:40px 20px 70px; }.heading { align-items:start; flex-direction:column; gap:20px; }.count { padding-left:14px; }.sectionHeader { padding:20px; }.row { padding:18px 20px; grid-template-columns:40px minmax(0,1fr) auto; gap:12px; }.reviewInfo { grid-column:2; }.rowAction { grid-column:3; grid-row:1 / span 2; }.row .deleteControl { grid-column:2; }.addArea { padding:20px; } }
 @media(max-width:420px) { .row { grid-template-columns:40px minmax(0,1fr); }.rowAction { grid-column:2; grid-row:auto; justify-self:start; }.reviewInfo { grid-column:2; }.addControls select,.addControls button { width:100%; } }
+.checkingMate { display:flex; align-items:center; gap:18px; margin:-12px 0 24px; padding:12px 18px; border:1px solid #59443a; border-radius:10px; background:#211b19; }
+.mateImage { width:82px; height:82px; object-fit:contain; image-rendering:pixelated; flex:none; }
+.checkingMate strong { color:#f4f4f5; font-size:14px; }.checkingMate p { margin:6px 0 0; color:#d1c4bd; font-size:13px; line-height:1.5; }
+@media(max-width:480px) { .checkingMate { gap:12px; padding:12px; }.mateImage { width:64px; height:64px; } }

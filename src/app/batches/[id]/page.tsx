@@ -6,6 +6,7 @@ import { requiresUnmatchedReview } from "@/lib/review-safety";
 import { objectivePoints } from "@/lib/scoring";
 import { paperProgress } from "@/lib/paper-progress";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
@@ -31,6 +32,10 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const questions = batch.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: batch.quiz.numbering === "CONTINUOUS" ? ++number : position + 1, section: index + 1, instructions: section.instructions, answerStyle: batch.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
   const maximum = questions.reduce((sum, question) => sum + Number(question.points), 0);
   const active = batch.submissions.some(p => p.status === "IN_REVIEW" && p.pages.some(page => page.status === "PENDING" || page.status === "PROCESSING" || (page.status === "FAILED" && page.retryAt)));
+  const activePages = batch.submissions.filter(p => p.status === "IN_REVIEW").flatMap(p => p.pages);
+  const reading = activePages.some(page => page.status === "PROCESSING");
+  const waiting = activePages.some(page => page.status === "FAILED" && page.retryAt);
+  const progressLabel = reading ? "Reading a page" : waiting ? "Waiting to retry" : "Pages queued for checking";
   const finalized = batch.submissions.filter(p => p.status === "FINALIZED").length;
   const full = batch.submissions.length >= 5;
 
@@ -39,6 +44,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
     <div className={styles.content}>
       <div className={styles.heading}><div><p className={styles.kicker}>Checking papers</p><h1>{batch.quiz.title}</h1><p className={styles.intro}>Add papers as you go. Checking continues while you work.</p></div><div className={styles.count}><strong>{batch.submissions.length}<span> / 5</span></strong><span>papers in this batch</span></div></div>
       <Refresh active={active} />
+      {active && <div className={styles.checkingMate}><Image src="/images/mate/focused.png" width={82} height={82} alt="" aria-hidden="true" className={styles.mateImage} /><div><strong>{progressLabel}</strong><p>Checking continues in the background. Review each paper when it is ready.</p></div></div>}
       <section className={styles.workspace} aria-labelledby="batch-papers">
         <div className={styles.sectionHeader}><div><h2 id="batch-papers">Papers</h2><p>{finalized} finalized · {batch.submissions.length - finalized} in progress</p></div>{!full && <span className={styles.capacity}>{5 - batch.submissions.length} {5 - batch.submissions.length === 1 ? "spot" : "spots"} left</span>}</div>
         <div className={styles.list}>

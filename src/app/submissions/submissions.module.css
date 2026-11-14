@@ -391,3 +391,5 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .paperStudent p { margin:8px 0 12px; }
 .paperStudent a { color:#ffd0aa; text-underline-offset:3px; }
 .paperStudent select { max-width:100%; }
+.successMate { display:block; width:104px; height:104px; object-fit:contain; image-rendering:pixelated; }
+@media(max-width:480px) { .successMate { width:80px; height:80px; } }

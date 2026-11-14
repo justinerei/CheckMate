@@ -37,3 +37,6 @@
 .librarySearch input { width:100%; min-height:44px; padding:10px 12px; color:var(--field-text); background:var(--field-bg); border:1px solid var(--field-border); border-radius:7px; font:inherit; }
 .librarySearch input:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
 .librarySearch p { margin:0; color:#bcbcc4; font-size:12px; }
+.emptyWithMate { display:flex; align-items:center; gap:20px; }
+.emptyMate { width:112px; height:112px; object-fit:contain; flex:none; image-rendering:pixelated; }
+@media(max-width:480px) { .emptyWithMate { gap:14px; }.emptyMate { width:76px; height:76px; } }

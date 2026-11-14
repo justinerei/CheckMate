@@ -153,7 +153,7 @@ Uploaded photos are stored in the ignored `.private/uploads/` folder, outside `p
 
 ### Batch checking
 
-Start a batch from **Check a paper** and choose a saved quiz or answer key. Each batch holds up to five papers, and each paper can have one to three photos. Confirm the first paper's pages to start checking; use **Add another paper** on the batch page to add the rest. Review and finalize each result individually.
+Start a batch from **Check a paper** and choose a saved quiz or answer key. Each batch holds up to five papers, and each paper can have one to three photos. Confirm the first paper's pages to start checking; use **Add another paper** on the batch page to add the rest. Review and finalize each result individually. On the quiz overview, choose **Export finalized scores · CSV** to download the names, scores, maximum points, and finalization timestamps (UTC) for finalized papers. Papers still in review are excluded.
 
 The local Next.js server processes queued pages in the background, one at a time. Keep the server and PostgreSQL running; the browser can be closed. If the server stops, restart it to resume pending pages. Rate-limited pages wait and retry; other failed pages can be retried from their photo page. Review all AI readings against the original paper, including answers that appear clear.
 

@@ -35,7 +35,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
     {batchDeleted === "1" && <BatchDeletedDialog quizId={id} />}
     <Link href="/quizzes" className="back-navigation">All quizzes</Link>
     <header className={styles.header}><div><p className={styles.eyebrow}>{quiz.source === "EXISTING" ? "Saved answer key" : "Created in CheckMate"}</p><h1>{quiz.title}</h1><p>{questions.length} {questions.length === 1 ? "question" : "questions"} · {maximum} points</p></div><Link className={styles.primary} href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>+ Upload papers</Link></header>
-    <section className={styles.section} aria-labelledby="papers-heading"><div className={styles.sectionHeading}><div><h2 id="papers-heading">Student papers</h2><p>{finalized} finalized · {quiz.submissions.length - finalized} in progress</p></div></div>
+    <section className={styles.section} aria-labelledby="papers-heading"><div className={styles.sectionHeading}><div><h2 id="papers-heading">Student papers</h2><p>{finalized} finalized · {quiz.submissions.length - finalized} in progress</p></div>{finalized > 0 && <a className={styles.exportResults} href={`/api/quizzes/${encodeURIComponent(id)}/results`}>Export finalized scores · CSV</a>}</div>
       {quiz.submissions.length ? <div className={styles.paperList}>{quiz.submissions.map(paper => {
         const read = !!paper.expectedPages && paper.pages.length === paper.expectedPages && paper.pages.every(page => page.status === "COMPLETE");
         const status = paperProgress(paper.status, paper.expectedPages, paper.pages).label;

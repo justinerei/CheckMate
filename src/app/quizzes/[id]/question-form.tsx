@@ -9,7 +9,7 @@ type Initial = { type: string; text: string; points: string; choices: { label: s
 type Criterion = { id: number; title: string; description: string; points: string };
 function Submit({ editing }: { editing: boolean }) {
   const { pending } = useFormStatus();
-  return <button className={styles.primary} disabled={pending} type="submit">{pending ? "Saving…" : editing ? "Save changes" : "Save question"}</button>;
+  return <button className={styles.primary} disabled={pending} aria-busy={pending} type="submit">{pending ? "Saving…" : editing ? "Save changes" : "Save question"}</button>;
 }
 
 export default function QuestionForm({ action, defaultPoints, initial, cancelHref, sharedRubric }: { sharedRubric?: { rubric: string; points: string }; action: (data: FormData) => void | Promise<void>; defaultPoints: string; initial?: Initial; cancelHref?: string }) {

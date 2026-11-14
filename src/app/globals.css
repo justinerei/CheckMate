@@ -22,4 +22,14 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   main { animation: page-arrive .22s ease-out both; }
   button:not(:disabled):active, a:active { scale: .985; }
   @keyframes page-arrive { from { opacity: .88; } to { opacity: 1; } }
+
+  :where(button, a, summary) { transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+  details[open] > :not(summary) { animation: reveal-content .2s ease-out; }
+  [data-save-confirmed="true"] { animation: saved-highlight 1.5s ease-out; }
+  button[aria-busy="true"]::before { animation: busy-spin .8s linear infinite; }
+  @keyframes reveal-content { from { opacity: .8; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes saved-highlight { 0%, 20% { box-shadow: 0 0 0 2px #7ab68b80; } 100% { box-shadow: 0 0 0 2px transparent; } }
+  @keyframes busy-spin { to { transform: rotate(360deg); } }
 }
+
+button[aria-busy="true"]::before { content: ""; display: inline-block; width: .85em; height: .85em; margin-right: .55em; vertical-align: -.08em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }

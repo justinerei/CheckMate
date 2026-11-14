@@ -2,21 +2,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { currentPagination, paginate, type Pagination } from "@/lib/pagination";
+import { groupSectionRubrics } from "@/lib/print-rubrics";
 import styles from "./print.module.css";
 
 type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[]; rubric: { id: string; title: string; description: string; points: string }[] };
 type Section = { id: string; title: string; instructions: string; questions: Question[] };
-type Block = { kind: "header"; title: string } | { kind: "instructions"; text: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] };
+type Block = { kind: "header"; title: string } | { kind: "instructions"; text: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] } | { kind: "rubric"; rubric: Question["rubric"]; numbers: number[] };
 type Paper = { page: string; width: string; height: string; label: string };
 
 function BlockContent({ block }: { block: Block }) {
   if (block.kind === "header") return <header className={styles.paperHeader}><h1>{block.title}</h1><div className={styles.fields}><div>Name: <span /></div><div>Date: <span /></div><div>Section: <span /></div></div></header>;
   if (block.kind === "instructions") return <div className={styles.generalInstructions}><strong>Instructions:</strong> {block.text}</div>;
   if (block.kind === "section") return <div className={styles.sectionHeading}><h2>{block.number}. {block.title}</h2>{block.instructions && <p>{block.instructions}</p>}</div>;
+  if (block.kind === "rubric") return <table className={styles.rubric}><caption>Scoring criteria · {block.numbers.length === 1 ? "Question" : "Questions"} {block.numbers.join(", ")}</caption><thead><tr><th scope="col">Criterion</th><th scope="col">Description</th><th scope="col">Points</th></tr></thead><tbody>{block.rubric.map(criterion => <tr key={criterion.id}><td>{criterion.title}</td><td>{criterion.description}</td><td>{criterion.points}</td></tr>)}</tbody></table>;
   return <div className={block.questions.length === 2 ? styles.pair : styles.row}>{block.questions.map(({ question, number }) => <div className={styles.question} key={question.id}>
     <div className={styles.prompt}>{(question.type === "TRUE_FALSE" || question.type === "IDENTIFICATION") && <span className={question.type === "TRUE_FALSE" ? styles.shortBlank : styles.longBlank} />}<span>{number}. {question.text}</span></div>
     {question.type === "MULTIPLE_CHOICE" && <div className={styles.choices}>{question.choices.map(choice => <span key={choice.id}>{choice.label}. {choice.text}</span>)}</div>}
-    {question.type === "ESSAY" && <><div className={styles.lines}>{Array.from({ length: question.essayLineCount ?? 7 }, (_, n) => <div key={n} />)}</div>{question.rubric.length > 0 && <table className={styles.rubric}><caption>Scoring criteria</caption><thead><tr><th scope="col">Criterion</th><th scope="col">Description</th><th scope="col">Points</th></tr></thead><tbody>{question.rubric.map(criterion => <tr key={criterion.id}><td>{criterion.title}</td><td>{criterion.description}</td><td>{criterion.points}</td></tr>)}</tbody></table>}</>}
+    {question.type === "ESSAY" && <div className={styles.lines}>{Array.from({ length: question.essayLineCount ?? 7 }, (_, n) => <div key={n} />)}</div>}
   </div>)}</div>;
 }
 
@@ -38,6 +40,7 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
         if (section.questions[current].besideNext && section.questions[i + 1]) { i++; row.push({ question: section.questions[i], number: start + i + 1 }); }
         output.push({ kind: "row", questions: row });
       }
+      for (const group of groupSectionRubrics(section.questions, start)) output.push({ kind: "rubric", ...group });
     });
     return output;
   }, [title, generalInstructions, numbering, sections]);

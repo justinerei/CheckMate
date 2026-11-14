@@ -5,6 +5,7 @@ import { answerKeyPrintSections } from "@/lib/answer-key-print";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
 import PrintButton from "./print-button";
+import PrintDocumentTitle from "../../print-document-title";
 import styles from "./print-key.module.css";
 
 export const instant = false;
@@ -24,6 +25,7 @@ export default async function PrintAnswerKey({ params }: { params: Promise<{ id:
   const pageSize = quiz.paperSize === "LETTER" ? "letter" : quiz.paperSize === "LONG" ? "8.5in 13in" : "A4";
 
   return <main className={styles.preview}>
+    <PrintDocumentTitle title={quiz.title} kind="answer-key" />
     <style>{`@page { size: ${pageSize}; margin: 15mm 0; }`}</style>
     <div className={styles.toolbar}>
       <Link className="back-navigation" href={`/quizzes/${encodeURIComponent(id)}/overview`}>Back to quiz</Link>

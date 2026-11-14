@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { currentPagination, paginate, type Pagination } from "@/lib/pagination";
 import { groupSectionRubrics } from "@/lib/print-rubrics";
+import PrintDocumentTitle from "../print-document-title";
 import styles from "./print.module.css";
 
 type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[]; rubric: { id: string; title: string; description: string; points: string }[] };
@@ -63,7 +64,7 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
     return () => { cancelled = true; window.removeEventListener("resize", measure); };
   }, [blocks, paper.width, paper.height]);
   const dimensions = { "--paper-width": paper.width, "--paper-height": paper.height } as React.CSSProperties;
-  return <main className={styles.preview}><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
+  return <main className={styles.preview}><PrintDocumentTitle title={title} kind="quiz" /><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
     <div className={styles.toolbar}><Link className="back-navigation" href={back.href}>{back.label}</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>
       <p className={styles.hint}>Pages are arranged automatically. In the print dialog, select the same paper size shown above, set margins to None and scale to 100%, and turn off browser headers and footers. The code identifies the quiz, not the version; reprint all pages after edits.</p>
       {layout && layout.oversized.length > 0 && <p className={styles.warning} role="alert">A question or section is too long to fit on one page. Shorten its text or rubric descriptions, reduce its essay lines, or turn off side-by-side layout before printing.</p>}

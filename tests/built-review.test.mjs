@@ -12,7 +12,7 @@ test("built readings preserve section and translate detected mark shape", () => 
   const result = normalizeBuiltReading({ number: 1, section: 2, status: "clear", answer: "A", note: "", markShape: "circle" }, "MULTIPLE_CHOICE");
   assert.equal(result.section, 2);
   assert.equal(result.observedStyle, "circle");
-  assert.equal(normalizeBuiltReading({ number: 1, section: null, status: "clear", answer: "T", note: "" }, "TRUE_FALSE").observedStyle, "unknown");
+  assert.equal(normalizeBuiltReading({ number: 1, section: null, status: "clear", answer: "T", note: "" }, "TRUE_FALSE").observedStyle, "written");
 });
 
 
@@ -26,4 +26,20 @@ test("clear written true-false readings can be scored while missing or uncertain
   assert.equal(objectivePoints(candidate.answer, ["T"], 1, decision), 1);
   assert.equal(automaticDecision([{ ...candidate, observedStyle: "unknown" }], "written", "TRUE_FALSE", ["T"]), null);
   assert.equal(automaticDecision([{ ...candidate, status: "unclear" }], "written", "TRUE_FALSE", ["T"]), null);
+});
+
+
+test("clear written-blank answers without style are scored against the key, but uncertain marks stay flagged", async () => {
+  const { automaticDecision } = await import("../src/lib/auto-review.ts");
+  const { objectivePoints } = await import("../src/lib/scoring.ts");
+  const reading = { number: 2, section: 1, status: "clear", answer: "T", note: "", erasure: "none" };
+  const candidate = normalizeBuiltReading(reading, "TRUE_FALSE");
+  const decision = automaticDecision([candidate], "written", "TRUE_FALSE", ["T"]);
+  assert.equal(decision, "FOLLOWED");
+  assert.equal(objectivePoints(candidate.answer, ["T"], 1, decision), 1);
+  assert.equal(objectivePoints(candidate.answer, ["F"], 1, decision), 0);
+  assert.equal(normalizeBuiltReading({ ...reading, observedStyle: "unknown" }, "TRUE_FALSE").observedStyle, "unknown");
+  assert.equal(normalizeBuiltReading({ ...reading, status: "unclear" }, "TRUE_FALSE").observedStyle, "unknown");
+  assert.equal(normalizeBuiltReading({ ...reading, markShape: "box" }, "TRUE_FALSE").observedStyle, "box");
+  assert.equal(normalizeBuiltReading(reading, "ESSAY").observedStyle, "unknown");
 });

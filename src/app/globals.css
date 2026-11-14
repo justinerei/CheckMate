@@ -8,3 +8,11 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
 
 :where(input, textarea, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 :where(input, textarea)::placeholder { color: #aaaab4; opacity: 1; }
+
+/* Shared navigation for returning to a parent screen. */
+.back-navigation { display:inline-flex; align-items:center; gap:9px; min-height:44px; max-width:100%; padding:9px 13px; border:1px solid #45454d; border-radius:8px; background:transparent; color:#f4f4f5; font-size:14px; font-weight:600; line-height:1.3; text-decoration:none; transition:background-color .15s, border-color .15s; }
+.back-navigation::before { content:'←'; color:#ffac70; font-size:18px; line-height:1; }
+.back-navigation:hover { background:#242429; border-color:#777780; }
+.back-navigation:focus-visible { outline:2px solid #ffac70; outline-offset:3px; }
+@media(max-width:400px) { .back-navigation { padding-inline:10px; font-size:13px; } }
+@media(prefers-reduced-motion:reduce) { .back-navigation { transition:none; } }

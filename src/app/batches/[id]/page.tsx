@@ -35,7 +35,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const full = batch.submissions.length >= 5;
 
   return <main className={styles.shell}>
-    <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={`/quizzes/${encodeURIComponent(batch.quizId)}/overview`} className={styles.back}>← Back to quiz</Link></header>
+    <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={`/quizzes/${encodeURIComponent(batch.quizId)}/overview`} className="back-navigation">Back to quiz</Link></header>
     <div className={styles.content}>
       <div className={styles.heading}><div><p className={styles.kicker}>Checking papers</p><h1>{batch.quiz.title}</h1><p className={styles.intro}>Add papers as you go. Checking continues while you work.</p></div><div className={styles.count}><strong>{batch.submissions.length}<span> / 5</span></strong><span>papers in this batch</span></div></div>
       <Refresh active={active} />

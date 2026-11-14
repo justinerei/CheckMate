@@ -373,11 +373,6 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 @media(max-width:700px) { .questionType { margin-inline:16px; max-width:none; }.rubricIntro { flex-direction:column; } }
 
 /* One contextual exit for paper review, with a separate photo-management action. */
-.reviewBack { display:inline-flex; align-items:center; gap:9px; min-height:44px; padding:9px 13px; border:1px solid #45454d; border-radius:8px; color:#f4f4f5; font-size:14px; font-weight:600; text-decoration:none; transition:background-color .15s, border-color .15s; }
-.reviewBack span { color:#ffac70; font-size:18px; line-height:1; }
-.reviewBack:hover { background:#242429; border-color:#777780; }
-.reviewBack:focus-visible,.reviewPhotoLink:focus-visible { outline:2px solid #ffac70; outline-offset:3px; }
+.reviewPhotoLink:focus-visible { outline:2px solid #ffac70; outline-offset:3px; }
 .reviewPhotoLink { display:inline-flex; align-items:center; min-height:44px; color:#e1e1e6; font-size:14px; text-decoration:underline; text-underline-offset:4px; }
 .reviewPhotoLink:hover { color:#fff; }
-@media(max-width:400px) { .reviewBack { padding-inline:10px; font-size:13px; } }
-@media(prefers-reduced-motion:reduce) { .reviewBack { transition:none; } }

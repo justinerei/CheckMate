@@ -58,7 +58,7 @@ export default function PagedPreview({ id, title, code, paper, numbering, sectio
   }, [blocks]);
   const dimensions = { "--paper-width": paper.width, "--paper-height": paper.height } as React.CSSProperties;
   return <main className={styles.preview}><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
-    <div className={styles.toolbar}><Link href={`/quizzes/${id}`}>← Back to editor</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>
+    <div className={styles.toolbar}><Link className="back-navigation" href={`/quizzes/${id}`}>Editor</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>
       <p className={styles.hint}>Pages are arranged automatically. Check the pages below, then print at 100% scale with browser headers and footers turned off. The code identifies the quiz, not the version; reprint all pages after edits.</p>
       {layout && layout.oversized.length > 0 && <p className={styles.warning} role="alert">A question or section is too long to fit on one page. Shorten its text, reduce its essay lines, or turn off side-by-side layout before printing.</p>}
     </div>

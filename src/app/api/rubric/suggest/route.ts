@@ -4,12 +4,12 @@ import { getTeacher } from "@/lib/teacher";
 import { imageFormat } from "@/lib/submission-upload";
 import { rubricFromAI } from "@/lib/rubric";
 import { retryDelayMs } from "@/lib/extraction";
+import { geminiText } from "@/lib/gemini";
 
 export async function POST(request: Request) {
   if (!await getTeacher()) return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
   try { if (!request.headers.get("origin") || new URL(request.headers.get("origin")!).host !== request.headers.get("host")) throw new Error(); }
   catch { return NextResponse.json({ error: "Invalid request origin." }, { status: 403 }); }
-  if (!process.env.GROQ_API_KEY) return NextResponse.json({ error: "Add GROQ_API_KEY and restart the app." }, { status: 503 });
   if (Number(request.headers.get("content-length") || 0) > 9_000_000) return NextResponse.json({ error: "The quiz page must be under 8 MB." }, { status: 413 });
   try {
     const form = await request.formData();
@@ -28,6 +28,16 @@ export async function POST(request: Request) {
       const jpeg = await sharp(bytes, { limitInputPixels: 40_000_000 }).rotate().resize({ width: 2000, height: 2000, fit: "inside", withoutEnlargement: true }).jpeg().toBuffer();
       content.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${jpeg.toString("base64")}` } });
     }
+    if (!(image instanceof File && image.size)) {
+      const result = await geminiText((content[0] as { text: string }).text);
+      if (result.kind === "limited") return NextResponse.json({ error: "Gemini reached a rate limit. Your current rubric is unchanged; retry later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
+      if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY and restart the app." : "Could not suggest a rubric with Gemini. Your current rubric is unchanged." }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
+      const data = result.data as { criteria?: unknown } | null;
+      const criteria = rubricFromAI(data?.criteria, points);
+      if (!criteria) return NextResponse.json({ error: "Gemini could not return the expected criteria. Try again or edit manually." }, { status: 502 });
+      return NextResponse.json({ criteria });
+    }
+    if (!process.env.GROQ_API_KEY) return NextResponse.json({ error: "Add GROQ_API_KEY and restart the app to use a quiz-page photo." }, { status: 503 });
     let response: Response;
     try { response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(60000), body: JSON.stringify({ model: process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b", temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content }] }) }); }
     catch { return NextResponse.json({ error: "Could not connect to Groq or the request timed out. Your current rubric is unchanged; check your connection and try again." }, { status: 502 }); }

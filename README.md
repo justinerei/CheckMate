@@ -151,6 +151,8 @@ For quizzes built in CheckMate, use **General instructions** in the editor to ad
 
 `GEMINI_API_KEY` enables text-based question and rubric suggestions; `GEMINI_TEXT_MODEL` defaults to `gemini-3.5-flash-lite` and can be changed to a model available to your project. Gemini free-tier limits and availability depend on the account and may change. Configure a free-tier project without paid billing if you do not want charges. Google may use free-tier inputs and outputs to improve its services; do not send personal, sensitive, or confidential information.
 
+From a quiz overview, choose **Print answer key** to preview and print or save a separate teacher copy with current answers, points, and essay rubrics. The student quiz printout does not include the answer key.
+
 ### Check a quiz made elsewhere
 
 Choose **Check an existing quiz** on the dashboard. Upload a PDF (up to 10 pages and 10 MB), JPEG, or PNG of the answer key, or enter answers manually. Reading an uploaded key requires `GROQ_API_KEY`; its pages are sent to Groq. Review and correct all detected answers against the original preview, select the expected answer style for each section, set points, and save the key. Questions must currently use consecutive numbers starting at 1, and all questions in a section must use the same answer style. Use `|` between alternative accepted answers. The preview is temporary: the answer key file is not retained after leaving the page.

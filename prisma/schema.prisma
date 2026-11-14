@@ -77,6 +77,7 @@ model Quiz {
   id            String        @id @default(cuid())
   teacherId     String
   title         String
+  generalInstructions String @default("")
   paperSize     String        @default("A4")
   numbering     String        @default("CONTINUOUS")
   source        String        @default("BUILT")

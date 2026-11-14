@@ -22,5 +22,5 @@ export default async function PrintQuiz({ params, searchParams }: { params: Prom
   if (!questions.length || questions.some(question => !questionIsComplete(question))) redirect(`/quizzes/${encodeURIComponent(id)}?error=incomplete`);
   const paper = quiz.paperSize === "LETTER" ? { page: "letter", width: "8.5in", height: "11in", label: "Letter" } : quiz.paperSize === "LONG" ? { page: "8.5in 13in", width: "8.5in", height: "13in", label: "Long bond" } : { page: "A4", width: "210mm", height: "297mm", label: "A4" };
   const sections = quiz.sections.map(section => ({ id: section.id, title: section.title, instructions: section.instructions, questions: section.questions.map(question => ({ id: question.id, type: question.type, text: question.text, besideNext: question.besideNext, essayLineCount: question.essayLineCount, choices: question.choices.map(choice => ({ id: choice.id, label: choice.label, text: choice.text })) })) }));
-  return <PagedPreview back={quizChildBackDestination(id, from)} title={quiz.title} code={quizPrintCode(quiz.id)} paper={paper} numbering={quiz.numbering} sections={sections} />;
+  return <PagedPreview back={quizChildBackDestination(id, from)} title={quiz.title} generalInstructions={quiz.generalInstructions} code={quizPrintCode(quiz.id)} paper={paper} numbering={quiz.numbering} sections={sections} />;
 }

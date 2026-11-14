@@ -7,3 +7,5 @@
 .sectionHeading { padding-top:4mm; }.sectionHeading h2 { font-size:11pt; margin:0 0 3mm; }.sectionHeading p { margin:0; white-space:pre-wrap; line-height:1.4; }.pair { display:grid; grid-template-columns:1fr 1fr; gap:8mm; }.prompt { display:flex; align-items:baseline; gap:2mm; white-space:pre-wrap; line-height:1.45; overflow-wrap:anywhere; }.shortBlank,.longBlank { flex:0 0 14mm; border-bottom:1px solid #333; }.longBlank { flex-basis:32mm; }.choices { padding:3mm 0 0 7mm; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3mm; line-height:1.4; overflow-wrap:anywhere; }.lines div { height:8mm; border-bottom:1px solid #888; }.lines { margin-top:3mm; }
 @media screen and (max-width:850px) { .stack { align-items:flex-start; }.preview { padding:12px; } }
 @media print { .preview { padding:0; background:#fff; }.toolbar,.measure { display:none; }.stack { display:block; overflow:visible; }.paper { margin:0; box-shadow:none; break-after:page; page-break-after:always; }.paper:last-child { break-after:auto; page-break-after:auto; } }
+
+.generalInstructions { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.4; }

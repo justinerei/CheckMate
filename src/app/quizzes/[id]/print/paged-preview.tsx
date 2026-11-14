@@ -6,11 +6,12 @@ import styles from "./print.module.css";
 
 type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[] };
 type Section = { id: string; title: string; instructions: string; questions: Question[] };
-type Block = { kind: "header"; title: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] };
+type Block = { kind: "header"; title: string } | { kind: "instructions"; text: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] };
 type Paper = { page: string; width: string; height: string; label: string };
 
 function BlockContent({ block }: { block: Block }) {
   if (block.kind === "header") return <header className={styles.paperHeader}><h1>{block.title}</h1><div className={styles.fields}><div>Name: <span /></div><div>Date: <span /></div><div>Section: <span /></div></div></header>;
+  if (block.kind === "instructions") return <div className={styles.generalInstructions}><strong>Instructions:</strong> {block.text}</div>;
   if (block.kind === "section") return <div className={styles.sectionHeading}><h2>{block.number}. {block.title}</h2>{block.instructions && <p>{block.instructions}</p>}</div>;
   return <div className={block.questions.length === 2 ? styles.pair : styles.row}>{block.questions.map(({ question, number }) => <div className={styles.question} key={question.id}>
     <div className={styles.prompt}>{(question.type === "TRUE_FALSE" || question.type === "IDENTIFICATION") && <span className={question.type === "TRUE_FALSE" ? styles.shortBlank : styles.longBlank} />}<span>{number}. {question.text}</span></div>
@@ -19,12 +20,13 @@ function BlockContent({ block }: { block: Block }) {
   </div>)}</div>;
 }
 
-export default function PagedPreview({ title, code, paper, numbering, sections, back }: { title: string; code: string; paper: Paper; numbering: string; sections: Section[]; back: { href: string; label: string } }) {
+export default function PagedPreview({ title, generalInstructions, code, paper, numbering, sections, back }: { title: string; generalInstructions: string; code: string; paper: Paper; numbering: string; sections: Section[]; back: { href: string; label: string } }) {
   const [labels, setLabels] = useState(true);
   const [layout, setLayout] = useState<ReturnType<typeof paginate> | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const blocks = useMemo<Block[]>(() => {
     const output: Block[] = [{ kind: "header", title }];
+    if (generalInstructions.trim()) output.push({ kind: "instructions", text: generalInstructions });
     let total = 0;
     sections.forEach((section, index) => {
       const start = numbering === "RESET_PER_SECTION" ? 0 : total;
@@ -38,7 +40,7 @@ export default function PagedPreview({ title, code, paper, numbering, sections, 
       }
     });
     return output;
-  }, [title, numbering, sections]);
+  }, [title, generalInstructions, numbering, sections]);
   useEffect(() => {
     let cancelled = false;
     const measure = () => {

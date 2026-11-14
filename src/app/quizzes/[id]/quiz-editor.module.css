@@ -17,3 +17,5 @@
 .keyCorrectionLink:hover { background:#51372a; }
 .correctAnswerLink,.correctAnswerLink:visited { display:inline-flex; align-items:center; min-height:44px; color:#ffc7a4; font-size:13px; font-weight:600; text-underline-offset:4px; }
 .keyCorrectionLink:focus-visible,.correctAnswerLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+
+.instructionField { display:grid; gap:12px; }.instructionField small { margin-top:0; }.instructionField button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

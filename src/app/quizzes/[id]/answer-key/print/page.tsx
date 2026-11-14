@@ -24,7 +24,7 @@ export default async function PrintAnswerKey({ params }: { params: Promise<{ id:
   const pageSize = quiz.paperSize === "LETTER" ? "letter" : quiz.paperSize === "LONG" ? "8.5in 13in" : "A4";
 
   return <main className={styles.preview}>
-    <style>{`@page { size: ${pageSize}; margin: 15mm; }`}</style>
+    <style>{`@page { size: ${pageSize}; margin: 15mm 0; }`}</style>
     <div className={styles.toolbar}>
       <Link className="back-navigation" href={`/quizzes/${encodeURIComponent(id)}/overview`}>Back to quiz</Link>
       <span>Teacher copy · Current answers</span>

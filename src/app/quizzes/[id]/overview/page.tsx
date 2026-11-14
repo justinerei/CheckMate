@@ -1,5 +1,7 @@
 import { summarizeResults } from "@/lib/quiz-results-summary";
 import { paperProgress } from "@/lib/paper-progress";
+import { paperReviewSummary } from "@/lib/paper-review-summary";
+import { builtAnswerStyle } from "@/lib/built-review";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
@@ -26,12 +28,15 @@ export default async function QuizOverview({ params, searchParams }: { params: P
       _count: { select: { submissions: true } },
       sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } },
       batches: { where: { teacherId: teacher.id }, orderBy: { createdAt: "desc" }, include: { _count: { select: { submissions: { where: { teacherId: teacher.id } } } } } },
-      submissions: { where: { teacherId: teacher.id }, orderBy: { updatedAt: "desc" }, include: { student: true, pages: { select: { status: true, retryAt: true } } } },
+      submissions: { where: { teacherId: teacher.id }, orderBy: { updatedAt: "desc" }, include: { student: true, pages: { select: { status: true, retryAt: true, extraction: true, pageNumber: true } }, answers: true } },
     },
   });
   if (!quiz) notFound();
   const questions = quiz.sections.flatMap(section => section.questions);
   const maximum = questions.reduce((sum, question) => sum + Number(question.points), 0);
+  let reviewNumber = 0;
+  const reviewQuestions = quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: quiz.numbering === "CONTINUOUS" ? ++reviewNumber : position + 1, section: index + 1, instructions: section.instructions, answerStyle: quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
+
   const finalized = quiz.submissions.filter(paper => paper.status === "FINALIZED").length;
   const scoredPapers = await db.submission.findMany({ where: { quizId: id, teacherId: teacher.id, status: "FINALIZED", quiz: { teacherId: teacher.id } }, select: { status: true, totalScore: true, answers: { select: { questionId: true, objectiveScore: true, teacherScore: true, instructionDecision: true } } } });
   const summary = summarizeResults(questions.map(question => ({ id: question.id, maximum: Number(question.points), type: question.type })), scoredPapers.map(paper => ({ status: paper.status, score: paper.totalScore === null ? null : Number(paper.totalScore), answers: paper.answers.map(answer => ({ ...answer, objectiveScore: answer.objectiveScore === null ? null : Number(answer.objectiveScore), teacherScore: answer.teacherScore === null ? null : Number(answer.teacherScore) })) })), maximum);
@@ -44,7 +49,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
     <Link href="/quizzes" className="back-navigation">All quizzes</Link>
     <header className={styles.header}><div><p className={styles.eyebrow}>{quiz.source === "EXISTING" ? "Saved answer key" : "Created in CheckMate"}</p><h1>{quiz.title}</h1><p>{questions.length} {questions.length === 1 ? "question" : "questions"} · {maximum} points</p></div><Link className={styles.primary} href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>+ Upload papers</Link></header>
     <section className={styles.section} aria-labelledby="papers-heading"><div className={styles.sectionHeading}><div><h2 id="papers-heading">Student papers</h2><p>{finalized} finalized · {quiz.submissions.length - finalized} in progress</p></div>{finalized > 0 && <a className={styles.exportResults} href={`/api/quizzes/${encodeURIComponent(id)}/results`}>Export finalized scores · CSV</a>}</div>
-      {quiz.submissions.length ? <PaperList papers={quiz.submissions.map(paper => { const read = !!paper.expectedPages && paper.pages.length === paper.expectedPages && paper.pages.every(page => page.status === "COMPLETE"); return { id: paper.id, name: paper.paperName || paper.student?.name || "Unnamed paper", linkedName: paper.student?.name ?? null, status: paper.status, statusLabel: paperProgress(paper.status, paper.expectedPages, paper.pages).label, updated: date.format(paper.updatedAt), score: paper.status === "FINALIZED" && paper.totalScore !== null ? `${paper.totalScore.toString()} / ${maximum}` : "—", href: paperDestination(paper.id, paper.status, read, "quiz") }; })} /> : <div className={`${styles.empty} ${styles.emptyWithMate}`}><Image src="/images/mate/empty.png" width={96} height={96} alt="" aria-hidden="true" className={styles.emptyMate} /><div><strong>No papers yet</strong><p>Upload the first student paper when you’re ready.</p><Link href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>Upload papers →</Link></div></div>}
+      {quiz.submissions.length ? <PaperList papers={quiz.submissions.map(paper => { const read = !!paper.expectedPages && paper.pages.length === paper.expectedPages && paper.pages.every(page => page.status === "COMPLETE"); const progress = paperProgress(paper.status, paper.expectedPages, paper.pages, paper.status === "IN_REVIEW" ? paperReviewSummary(paper, reviewQuestions, quiz.source) : undefined); return { id: paper.id, name: paper.paperName || paper.student?.name || "Unnamed paper", linkedName: paper.student?.name ?? null, status: paper.status, statusLabel: progress.label, updated: date.format(paper.updatedAt), score: paper.status === "FINALIZED" && paper.totalScore !== null ? `${paper.totalScore.toString()} / ${maximum}` : "—", href: paperDestination(paper.id, paper.status, read || progress.review, "quiz") }; })} /> : <div className={`${styles.empty} ${styles.emptyWithMate}`}><Image src="/images/mate/empty.png" width={96} height={96} alt="" aria-hidden="true" className={styles.emptyMate} /><div><strong>No papers yet</strong><p>Upload the first student paper when you’re ready.</p><Link href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>Upload papers →</Link></div></div>}
     </section>
     <section className={styles.section} aria-labelledby="results-summary-heading"><div className={styles.sectionHeading}><div><h2 id="results-summary-heading">Results summary</h2><p>Based on finalized papers only. Papers in review are excluded.</p></div></div>
       {summary.paperCount ? <div className={styles.resultsSummary}><div className={styles.resultsMetrics}><div><span>FINALIZED PAPERS WITH SCORES</span><strong>{summary.paperCount}</strong></div><div><span>AVERAGE SCORE</span><strong>{summary.average} <small>/ {maximum}</small></strong></div></div>

@@ -75,3 +75,20 @@ test("no-erasure rules only penalize clear erasures when the section forbids the
   assert.equal(automaticDecision([item], "circle", "ESSAY", ["B"], "No erasures."), null);
   assert.equal(objectivePoints("B", ["B"], 1, automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures.")), 0);
 });
+
+
+test("review explanations identify the actual reason without flagging clearly scored answers", async () => {
+  const { analyzeAutomaticReview } = await import("../src/lib/auto-review.ts");
+  const clear = { status: "clear", answer: "T", observedStyle: "written", note: "", erasure: "none" };
+  const analyze = (items, directions = "") => analyzeAutomaticReview(items, "written", "TRUE_FALSE", ["T"], directions);
+  assert.match(analyze([]).reason, /No answer was matched/);
+  assert.match(analyze([clear, clear]).reason, /More than one reading/);
+  assert.match(analyze([{ ...clear, status: "unclear" }]).reason, /could not be read clearly/);
+  assert.match(analyze([{ ...clear, status: "multiple" }]).reason, /More than one answer/);
+  assert.match(analyze([{ ...clear, observedStyle: "unknown" }]).reason, /marking style/);
+  assert.match(analyze([{ ...clear, note: "Possibly T" }]).reason, /uncertain/);
+  assert.match(analyze([{ ...clear, erasure: "uncertain" }], "No erasures.").reason, /erasure/);
+  assert.equal(analyze([clear]).decision, "FOLLOWED");
+  assert.equal(analyze([clear]).reason, null);
+  assert.match(analyzeAutomaticReview([clear], "written", "ESSAY").reason, /teacher/);
+});

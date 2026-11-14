@@ -1,10 +1,6 @@
-import { automaticDecision } from "@/lib/auto-review";
-import { builtAnswerStyle, normalizeBuiltReading } from "@/lib/built-review";
-import { matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
-import { reviewPoints } from "@/lib/review-points";
-import { requiresUnmatchedReview } from "@/lib/review-safety";
-import { objectivePoints } from "@/lib/scoring";
+import { builtAnswerStyle } from "@/lib/built-review";
 import { paperProgress } from "@/lib/paper-progress";
+import { paperReviewSummary } from "@/lib/paper-review-summary";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
@@ -51,32 +47,15 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
           {batch.submissions.map((paper, index) => {
             const failed = paper.pages.some(p => p.status === "FAILED" && !p.retryAt);
             const complete = paper.pages.length === paper.expectedPages && paper.pages.every(p => p.status === "COMPLETE");
-            const progress = paperProgress(paper.status, paper.expectedPages, paper.pages);
-            const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
-            let unmatched = 0;
-            if (complete && paper.status === "IN_REVIEW") for (const page of paper.pages) {
-              const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;
-              if (!parsed) continue;
-              const mapped = matchCandidates(questions, batch.quiz.source === "EXISTING" ? parsed.items.map(item => ({ ...item, section: null })) : parsed.items);
-              unmatched += mapped.unmatched.length;
-              for (const [id, items] of Object.entries(mapped.byQuestion)) {
-                const question = questions.find(q => q.id === id)!;
-                (suggestions[id] ??= []).push(...items.map(item => batch.quiz.source === "BUILT" ? normalizeBuiltReading(item, question.type) : item));
-              }
-            }
-            const points = complete && paper.status === "IN_REVIEW" ? questions.map(question => {
-              const saved = paper.answers.find(answer => answer.questionId === question.id);
-              const items = suggestions[question.id] ?? [];
-              const automatic = !saved ? automaticDecision(items, question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions) : null;
-              return reviewPoints(saved, false, question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, items[0]?.answer ?? "", objectivePoints);
-            }) : [];
-            const flagged = points.filter(point => point === null).length;
-            const unmatchedBlocked = requiresUnmatchedReview(unmatched, questions, paper.answers);
-            const proposed = points.reduce<number>((sum, point) => sum + (point ?? 0), 0);
+            const summary = paper.status === "IN_REVIEW" ? paperReviewSummary(paper, questions, batch.quiz.source) : null;
+            const progress = paperProgress(paper.status, paper.expectedPages, paper.pages, summary ?? undefined);
+            const flagged = summary?.flagged ?? 0;
+            const unmatchedBlocked = summary?.unmatchedBlocked ?? false;
+            const proposed = summary?.proposed ?? 0;
             const state = progress.label;
             const action = progress.action;
             const href = progress.review ? `/submissions/${encodeURIComponent(paper.id)}/review?from=batch` : `/submissions/${encodeURIComponent(paper.id)}?from=batch`;
-            const stateClass = failed || (complete && paper.status === "IN_REVIEW" && (flagged > 0 || unmatchedBlocked || !paper.nameReviewed)) ? styles.attention : paper.status === "FINALIZED" || complete ? styles.ready : styles.pending;
+            const stateClass = progress.label === "Ready to finalize" || paper.status === "FINALIZED" ? styles.ready : failed || (complete && paper.status === "IN_REVIEW" && (flagged > 0 || unmatchedBlocked || !paper.nameReviewed)) ? styles.attention : styles.pending;
             return <article className={styles.row} key={paper.id}>
               <span className={styles.paperNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <div className={styles.paperDetails}><h3>{paper.paperName || `Paper ${index + 1}`}</h3><p>{paper.pages.filter(p => p.status === "COMPLETE").length} of {paper.expectedPages ?? "?"} pages read</p></div>

@@ -7,8 +7,8 @@ type Item = { id: string; number: number; flagged: boolean; detected: number[]; 
 type Page = { id: string; pageNumber: number };
 type View = "review" | "all" | "score";
 
-export default function ReviewWorkspace({ id, items, pages, name, score, finalized, nameReviewed, reviewBlocked }: {
-  id: string; items: Item[]; pages: Page[]; name: ReactNode; score: ReactNode; finalized: boolean; nameReviewed: boolean; reviewBlocked: boolean;
+export default function ReviewWorkspace({ id, items, pages, name, score, finalized, nameReviewed, reviewBlocked, finalizationReason }: {
+  id: string; items: Item[]; pages: Page[]; name: ReactNode; score: ReactNode; finalized: boolean; nameReviewed: boolean; reviewBlocked: boolean; finalizationReason: string | null;
 }) {
   const flagged = items.filter(item => item.flagged);
   const [view, setView] = useState<View>(finalized || !flagged.length ? "score" : "review");
@@ -47,6 +47,6 @@ export default function ReviewWorkspace({ id, items, pages, name, score, finaliz
         </section>
       </div>}
     </div>
-    {!finalized && <p role="status">{flagged.length ? `${flagged.length} answers awaiting confirmation.` : "No matched answers need attention."} {!nameReviewed ? "Confirm the student name to finish." : reviewBlocked ? "Confirm all answers to resolve unmatched readings." : !flagged.length && "Ready to finalize in Score."}</p>}
+    {!finalized && <p role="status">{flagged.length ? `${flagged.length} answers awaiting confirmation.` : "No matched answers need attention."} {!nameReviewed ? "Confirm the student name to finish." : reviewBlocked ? "Confirm all answers to resolve unmatched readings." : finalizationReason ? finalizationReason : !flagged.length && "Ready to finalize in Score."}</p>}
   </div>;
 }

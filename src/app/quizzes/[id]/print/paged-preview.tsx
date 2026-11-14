@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { paginate } from "@/lib/pagination";
+import { currentPagination, paginate, type Pagination } from "@/lib/pagination";
 import styles from "./print.module.css";
 
 type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[]; rubric: { id: string; title: string; description: string; points: string }[] };
@@ -22,7 +22,7 @@ function BlockContent({ block }: { block: Block }) {
 
 export default function PagedPreview({ title, generalInstructions, code, paper, numbering, sections, back }: { title: string; generalInstructions: string; code: string; paper: Paper; numbering: string; sections: Section[]; back: { href: string; label: string } }) {
   const [labels, setLabels] = useState(true);
-  const [layout, setLayout] = useState<ReturnType<typeof paginate> | null>(null);
+  const [measurement, setMeasurement] = useState<{ blocks: Block[]; width: string; height: string; layout: Pagination } | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const blocks = useMemo<Block[]>(() => {
     const output: Block[] = [{ kind: "header", title }];
@@ -41,6 +41,7 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
     });
     return output;
   }, [title, generalInstructions, numbering, sections]);
+  const layout = currentPagination(measurement, blocks, paper.width, paper.height);
   useEffect(() => {
     let cancelled = false;
     const measure = () => {
@@ -51,13 +52,13 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
       if (elements.length !== blocks.length) return;
       const capacity = body.getBoundingClientRect().height - 2;
       const measurements = elements.map((element, index) => ({ height: element.getBoundingClientRect().height, keepWithNext: blocks[index].kind === "section" && blocks[index].keepWithNext }));
-      if (!cancelled && capacity > 0) setLayout(paginate(measurements, capacity));
+      if (!cancelled && capacity > 0) setMeasurement({ blocks, width: paper.width, height: paper.height, layout: paginate(measurements, capacity) });
     };
     measure();
     document.fonts.ready.then(measure);
     window.addEventListener("resize", measure);
     return () => { cancelled = true; window.removeEventListener("resize", measure); };
-  }, [blocks]);
+  }, [blocks, paper.width, paper.height]);
   const dimensions = { "--paper-width": paper.width, "--paper-height": paper.height } as React.CSSProperties;
   return <main className={styles.preview}><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
     <div className={styles.toolbar}><Link className="back-navigation" href={back.href}>{back.label}</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>

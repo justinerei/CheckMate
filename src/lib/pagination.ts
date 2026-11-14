@@ -1,4 +1,9 @@
 export type MeasuredBlock = { height: number; keepWithNext?: boolean };
+export type Pagination = ReturnType<typeof paginate>;
+
+export function currentPagination<T>(measurement: { blocks: readonly T[]; width: string; height: string; layout: Pagination } | null, blocks: readonly T[], width: string, height: string): Pagination | null {
+  return measurement?.blocks === blocks && measurement.width === width && measurement.height === height ? measurement.layout : null;
+}
 
 export function paginate(blocks: MeasuredBlock[], capacity: number) {
   const pages: number[][] = [[]];

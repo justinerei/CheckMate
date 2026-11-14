@@ -21,3 +21,9 @@ test("quiz child navigation returns to its declared parent", () => {
   assert.deepEqual(quizChildBackDestination("q/1", "editor"), { href: "/quizzes/q%2F1", label: "Back to quiz editor" });
   assert.deepEqual(quizChildBackDestination("q/1", "unexpected"), { href: "/quizzes/q%2F1/overview", label: "Back to quiz" });
 });
+
+test("student history opens a paper and returns to that student's history", () => {
+  assert.equal(paperReviewUrl("p/1", "students"), "/submissions/p%2F1/review?from=students");
+  assert.deepEqual(paperBackDestination({ id: "p", quizId: "q", batchId: "b", studentId: "s/1" }, "students"), { href: "/students?student=s%2F1#student-s%2F1", label: "Back to student history" });
+  assert.deepEqual(paperBackDestination({ id: "p", quizId: "q", batchId: null, studentId: null }, "students"), { href: "/students", label: "Back to students" });
+});

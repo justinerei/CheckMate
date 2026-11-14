@@ -9,7 +9,7 @@ import { makeSuggestionDraft, restoreSuggestionDrafts, type DraftEdit, type Sugg
 import SuggestionCard from "./suggestion-card";
 import styles from "./module-workshop.module.css";
 
-type Slot = { id: string; type: string; number: number; points: string; text: string };
+type Slot = { id: string; type: string; number: number; points: string; text: string; rubric: { title: string; description: string; points: string }[] };
 type Section = { id: string; title: string; questions: Slot[] };
 
 async function readPdf(file: File, progress: (value: string) => void): Promise<ModulePage[]> {

@@ -6,10 +6,10 @@ import { parseQuestion } from "@/lib/question-input";
 import type { SuggestedQuestion } from "@/lib/suggested-questions";
 import styles from "./module-workshop.module.css";
 
-type Slot = { id: string; type: string; number: number; points: string };
+type Slot = { id: string; type: string; number: number; points: string; rubric: { title: string; description: string; points: string }[] };
 export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, onEdit, onDiscard, onSaved, onRegenerate, onSavingChange }: { quizId: string; slot: Slot; suggestion: SuggestedQuestion; edit: DraftEdit; busy: boolean; onEdit: (patch: Partial<DraftEdit>) => void; onDiscard: (id: string) => void; onSaved: (id: string) => void; onRegenerate: (id: string) => void; onSavingChange: (saving: boolean) => void }) {
   const router = useRouter();
-  const { text, choices, answer, points, criteria, lines } = edit;
+  const { text, choices, answer, points, lines } = edit;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [sourceOpen, setSourceOpen] = useState(false);
@@ -31,6 +31,7 @@ export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, o
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
+    if (slot.type === "ESSAY" && !slot.rubric.length) { setError("Save the shared essay rubric in Edit section before saving this suggestion."); return; }
     if (!parseQuestion(form)) { setError("Complete the question and answer. For an essay, rubric points must add up to the question points."); return; }
     setSaving(true); onSavingChange(true); setError("");
     try { const response = await fetch(`/api/quizzes/${encodeURIComponent(quizId)}/questions/${encodeURIComponent(slot.id)}/accept`, { method: "POST", body: form }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not save question."); onSaved(slot.id); router.refresh(); }
@@ -44,8 +45,8 @@ export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, o
     {slot.type === "MULTIPLE_CHOICE" && <><div className={styles.choices}>{["A","B","C","D"].map((label, index) => <label key={label}>Choice {label}<input name={`choice${label}`} value={choices[index] ?? ""} onChange={e => onEdit({ choices: choices.map((choice, i) => i === index ? e.target.value : choice) })} maxLength={500} required /></label>)}</div><label>Correct answer<select name="answer" value={answer} onChange={e => onEdit({ answer: e.target.value })} required><option value="">Choose an answer</option>{["A","B","C","D"].map(label => <option key={label}>{label}</option>)}</select></label></>}
     {slot.type === "TRUE_FALSE" && <label>Correct answer<select name="answer" value={answer} onChange={e => onEdit({ answer: e.target.value })} required><option value="">Choose an answer</option><option value="T">True</option><option value="F">False</option></select></label>}
     {slot.type === "IDENTIFICATION" && <label>Accepted answers<input name="answer" value={answer} onChange={e => onEdit({ answer: e.target.value })} maxLength={1000} placeholder="Separate alternatives with commas" required /></label>}
-    <label>Points<input name="points" type="number" min="0.01" max="9999" step="0.01" value={points} onChange={e => onEdit({ points: e.target.value })} required /></label>
-    {slot.type === "ESSAY" && <><label>Answer lines<input type="number" name="lines" min="1" max="30" value={lines} onChange={e => onEdit({ lines: e.target.value })} required /></label><div className={styles.rubric}><strong>Essay rubric</strong><p>Edit the suggested criteria. Their points must add up to the question points.</p>{criteria.map((criterion, index) => <fieldset key={index}><legend>Criterion {index + 1}</legend><label>Title<input value={criterion.title} onChange={e => onEdit({ criteria: criteria.map((c,i) => i === index ? { ...c, title: e.target.value } : c) })} maxLength={120} required /></label><label>Description<input value={criterion.description} onChange={e => onEdit({ criteria: criteria.map((c,i) => i === index ? { ...c, description: e.target.value } : c) })} maxLength={500} required /></label><label>Points<input type="number" min="0.01" max="9999" step="0.01" value={criterion.points} onChange={e => onEdit({ criteria: criteria.map((c,i) => i === index ? { ...c, points: e.target.value } : c) })} required /></label>{criteria.length > 1 && <button className={styles.textButton} type="button" onClick={() => onEdit({ criteria: criteria.filter((_, i) => i !== index) })}>Remove criterion</button>}</fieldset>)}<button className={styles.textButton} type="button" disabled={criteria.length >= 20} onClick={() => onEdit({ criteria: [...criteria, { title: "", description: "", points: "" }] })}>＋ Add criterion</button><input type="hidden" name="rubric" value={criteria.map(c => `${c.title.trim()} | ${c.description.trim()} | ${c.points.trim()}`).join("\n")} /></div></>}
+    <label>Points<input name="points" type="number" min="0.01" max="9999" step="0.01" value={slot.type === "ESSAY" ? slot.points : points} onChange={e => onEdit({ points: e.target.value })} readOnly={slot.type === "ESSAY"} required /></label>
+    {slot.type === "ESSAY" && <><label>Answer lines<input type="number" name="lines" min="1" max="30" value={lines} onChange={e => onEdit({ lines: e.target.value })} required /></label><p>Uses the shared essay rubric. Set it in Edit section.</p><input type="hidden" name="rubric" value={slot.rubric.map(c => `${c.title} | ${c.description} | ${c.points}`).join("\n")} /></>}
     {error && <p className={styles.error} role="alert">{error}</p>}<button className={styles.secondary} type="submit" disabled={busy || saving}>{saving ? "Saving…" : "Save question"}</button>
   </form>;
 }

@@ -69,7 +69,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             const proposed = points.reduce<number>((sum, point) => sum + (point ?? 0), 0);
             const state = progress.label;
             const action = progress.action;
-            const href = progress.review ? `/submissions/${paper.id}/review` : `/submissions/${paper.id}`;
+            const href = progress.review ? `/submissions/${encodeURIComponent(paper.id)}/review?from=batch` : `/submissions/${encodeURIComponent(paper.id)}?from=batch`;
             const stateClass = failed || (complete && paper.status === "IN_REVIEW" && (flagged > 0 || unmatchedBlocked || !paper.nameReviewed)) ? styles.attention : paper.status === "FINALIZED" || complete ? styles.ready : styles.pending;
             return <article className={styles.row} key={paper.id}>
               <span className={styles.paperNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>

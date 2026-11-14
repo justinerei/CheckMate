@@ -16,7 +16,7 @@ export default async function NewSubmission({ searchParams }: { searchParams: Pr
   const selected = quizzes.some(q => q.id === quizId);
   const selecting = selected || (choose === "saved" && quizzes.length > 0) || quizzes.length > 0;
   return <main className={styles.shell}>
-    <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href="/dashboard" className="back-navigation">Dashboard</Link></header>
+    <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={selected ? `/quizzes/${encodeURIComponent(quizId!)}/overview` : "/dashboard"} className="back-navigation">{selected ? "Back to quiz" : "Back to dashboard"}</Link></header>
     <div className={styles.narrow}>
       <p className={styles.eyebrow}>CHECK PAPERS</p><h1>Start checking</h1>
       {selecting ? <>

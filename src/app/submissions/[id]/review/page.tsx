@@ -10,6 +10,7 @@ import { matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/ext
 import ReviewBackLink, { ReviewPhotosLink } from "./review-back-link";
 import NextPaperButton from "../next-paper-button";
 import NameForm from "./name-form";
+import PaperStudent from "./paper-student";
 import { ExistingAnswerForm, FinalizeButton, ReopenPaper } from "./existing-form";
 import styles from "../../submissions.module.css";
 import { objectivePoints } from "@/lib/scoring";
@@ -27,6 +28,8 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
   const { from } = await searchParams;
   const submission = await db.submission.findFirst({ where: { id, teacherId: teacher.id, quiz: { teacherId: teacher.id } }, include: { resultHistory: { orderBy: { changedAt: "desc" }, take: 20 }, student: true, pages: { orderBy: { pageNumber: "asc" } }, answers: { include: { assessments: true } }, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true, rubricCriteria: { orderBy: { position: "asc" } } } } } } } } } });
   if (!submission) notFound();
+  const studentLinks = submission.status === "IN_REVIEW" ? await db.teacherStudent.findMany({ where: { teacherId: teacher.id }, orderBy: { student: { name: "asc" } }, select: { student: { select: { id: true, name: true, code: true } } } }) : [];
+  const students = studentLinks.map(({ student }) => ({ id: student.id, name: student.name, codeSuffix: student.code.slice(-4) }));
   const unfinished = submission.pages.filter(page => page.status !== "COMPLETE");
   let counter = 0;
   const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, sectionTitle: section.title, answerStyle: submission.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle, instructions: section.instructions })));
@@ -42,7 +45,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
     unmatched.push(...mapped.unmatched.map(item => ({ item, page: page.pageNumber })));
   }
   const nameSuggestion = new Set(nameSuggestions).size === 1 ? nameSuggestions[0] : null;
-  const nameReview = submission.status === "IN_REVIEW" ? <NameForm id={id} value={submission.paperName ?? submission.student?.name ?? null} suggestion={nameSuggestion} reviewed={submission.nameReviewed} /> : null;
+  const nameReview = <>{submission.status === "IN_REVIEW" && <NameForm id={id} value={submission.paperName} suggestion={nameSuggestion} reviewed={submission.nameReviewed} />}{submission.status !== "DRAFT" && <PaperStudent id={id} selectedId={submission.studentId} selectedName={submission.student?.name ?? null} students={students} finalized={submission.status === "FINALIZED"} />}</>;
   {
     const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
     const autoDecision = (question: typeof questions[number]) => unfinished.length ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions);

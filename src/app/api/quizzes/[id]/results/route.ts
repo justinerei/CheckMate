@@ -15,6 +15,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   });
   if (!quiz) return new Response("Quiz not found.", { status: 404 });
   const maximum = quiz.sections.flatMap(section => section.questions).reduce((sum, question) => sum + Number(question.points), 0);
-  const csv = resultsCsv(quiz.submissions.map(paper => ({ name: paper.paperName || paper.student?.name || "Unnamed paper", score: paper.totalScore?.toString() ?? "", maximum: String(Math.round(maximum * 100) / 100), finalizedAt: paper.finalizedAt })));
+  const csv = resultsCsv(quiz.submissions.map(paper => ({ name: paper.student?.name || paper.paperName || "Unnamed paper", score: paper.totalScore?.toString() ?? "", maximum: String(Math.round(maximum * 100) / 100), finalizedAt: paper.finalizedAt })));
   return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="checkmate-results.csv"', "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" } });
 }

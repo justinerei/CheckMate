@@ -387,3 +387,7 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .resultHistory ul { display:grid; gap:10px; margin:14px 0 0; padding:0; list-style:none; }
 .resultHistory li { display:grid; gap:4px; font-size:14px; overflow-wrap:anywhere; }
 .resultHistory small { color:#c3c3ca; line-height:1.4; }
+.paperStudent { padding:0 16px 16px; color:#d0d0d7; font-size:14px; line-height:1.5; }
+.paperStudent p { margin:8px 0 12px; }
+.paperStudent a { color:#ffd0aa; text-underline-offset:3px; }
+.paperStudent select { max-width:100%; }

@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { MAX_GENERATE_COUNT, MAX_MODULES, MAX_MODULE_PAGES, MAX_MODULE_CHARS, MAX_PAGE_CHARS, MAX_PDF_BYTES, type ModuleSummary, type ModulePage } from "@/lib/module-content";
 import type { SuggestedQuestion } from "@/lib/suggested-questions";
 import { defaultEssayRubric } from "@/lib/rubric";
+import { parseQuestion } from "@/lib/question-input";
 import { makeSuggestionDraft, restoreSuggestionDrafts, type DraftEdit, type SuggestionDraft } from "@/lib/suggestion-drafts";
 import SuggestionCard from "./suggestion-card";
 import styles from "./module-workshop.module.css";
@@ -39,6 +41,7 @@ async function readPdf(file: File, progress: (value: string) => void): Promise<M
 }
 
 export default function ModuleWorkshop({ quizId, teacherId, initialModules, sections }: { quizId: string; teacherId: string; initialModules: ModuleSummary[]; sections: Section[] }) {
+  const router = useRouter();
   const [modules, setModules] = useState(initialModules);
   const [selected, setSelected] = useState<string[]>(() => initialModules.map(module => module.id));
   const [excluded, setExcluded] = useState<string[]>([]);
@@ -54,6 +57,7 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
   const [saved, setSaved] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [savingOne, setSavingOne] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const rotation = useRef(0);
@@ -157,6 +161,32 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
   function discardDraft(id: string) { if (!window.confirm("Discard this draft and its edits?")) return; const next = { ...draftsRef.current }; delete next[id]; updateDrafts(next); setMessage("Draft discarded."); }
   function savedQuestion(id: string) { setSaved(old => [...old, id]); const next = { ...draftsRef.current }; delete next[id]; updateDrafts(next); setMessage("Question saved to the quiz and answer key."); }
 
+  async function saveAllSuggestions() {
+    if (busy || uploading || savingOne) return;
+    const forms = Array.from(document.querySelectorAll<HTMLFormElement>("form[data-suggestion-id]"));
+    const allSlots = sections.flatMap(item => item.questions);
+    const pending = forms.map(form => ({ form, id: form.dataset.suggestionId! })).filter(({ id }) => !!draftsRef.current[id]);
+    if (!pending.length) return;
+    // Capture edits before the first request; successful drafts are removed as they are saved.
+    const entries = pending.map(({ form, id }) => ({ id, valid: form.checkValidity(), data: new FormData(form), slot: allSlots.find(question => question.id === id) }));
+    setBusy(true); setError(""); setMessage("");
+    let count = 0; const failures: string[] = [];
+    for (const entry of entries) {
+      const label = entry.slot ? `Question ${entry.slot.number}` : "A question";
+      if (!entry.valid || !parseQuestion(entry.data)) { failures.push(`${label}: complete the question, answer and rubric points.`); continue; }
+      try {
+        const response = await fetch(`/api/quizzes/${encodeURIComponent(quizId)}/questions/${encodeURIComponent(entry.id)}/accept`, { method: "POST", body: entry.data });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Could not save.");
+        const next = { ...draftsRef.current }; delete next[entry.id]; updateDrafts(next);
+        setSaved(old => [...old, entry.id]); count++;
+      } catch (err) { failures.push(`${label}: ${err instanceof Error ? err.message : "Could not save."}`); }
+    }
+    if (count) { setMessage(`${count} ${count === 1 ? "question saved" : "questions saved"} to the quiz and answer key.`); router.refresh(); }
+    if (failures.length) setError(`${failures.join(" ")} These drafts are still available to edit and retry.`);
+    setBusy(false);
+  }
+
   return <details className={styles.workshop} open={workshopOpen} onToggle={event => setWorkshopOpen(event.currentTarget.open)}><summary><span><strong>Suggest questions from modules</strong><small>Optional · PDF lessons → editable question drafts</small></span><span className={styles.summaryArrow}>＋</span></summary><div className={styles.body}>
     <div className={styles.intro}><span className={styles.kicker}>01 / SOURCE MATERIAL</span><h2>Add your modules</h2><p>Upload up to 3 text-based PDFs. CheckMate extracts and stores their text and page references; the original PDFs are not stored. Scanned pages may not be readable.</p><label className={styles.upload}>＋ Add PDFs<input type="file" accept="application/pdf,.pdf" multiple disabled={uploading || busy || modules.length >= MAX_MODULES} onChange={upload} /></label><small>Up to 10 MB and 150 pages per PDF · 3 PDFs per quiz</small></div>
     {modules.length > 0 && <div className={styles.modules}>{modules.map(module => <article key={module.id} className={styles.module}><div className={styles.moduleTop}><label className={styles.moduleSelect}><input type="checkbox" checked={selected.includes(module.id)} disabled={busy || uploading} onChange={e => setSelected(old => e.target.checked ? [...old, module.id] : old.filter(id => id !== module.id))} /><span><strong>{module.name}</strong><small>{module.pages.filter(page => page.readable).length} of {module.pages.length} pages have readable text</small></span></label><button type="button" className={styles.textButton} disabled={busy || uploading} onClick={() => removeModule(module)}>Remove</button></div><details className={styles.headings}><summary>Review page headings and exclude pages</summary><p>Suggested headings are estimates and may not describe the whole page. Each checkbox includes or excludes the entire page, including any other sections on it.</p><div className={styles.pageList}>{module.pages.map(page => { const key = `${module.id}:${page.page}`; return <label key={key}><input type="checkbox" disabled={!page.readable || busy || uploading} checked={page.readable && !excluded.includes(key)} onChange={e => setExcluded(old => e.target.checked ? old.filter(value => value !== key) : [...old, key])} /><span><strong>Page {page.page}</strong> · {page.heading}</span></label>; })}</div></details></article>)}</div>}
@@ -164,6 +194,6 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
       {sections.length ? <><div className={styles.generatorFields}><label>Section<select value={section?.id ?? ""} disabled={busy || uploading} onChange={e => setSectionId(e.target.value)}>{sections.map(item => <option value={item.id} key={item.id}>{item.title} · {item.questions.length} questions</option>)}</select></label><label>Difficulty<select value={difficulty} disabled={busy || uploading} onChange={e => setDifficulty(e.target.value)}><option value="easy">Easy</option><option value="moderate">Moderate</option><option value="challenging">Challenging</option></select></label></div><div className={styles.generatorActions}><button type="button" className={styles.primary} disabled={!draftReady || busy || uploading || !selected.length || !missing.length} onClick={() => generate(missing.slice(0, 10).map(question => question.id), false)}>{missing.length ? `✦ Suggest next ${Math.min(10, missing.length)} ${missing.length === 1 ? "question" : "questions"}` : "No more empty slots"}</button>{pendingDrafts.length > 0 && <button type="button" className={styles.secondary} disabled={busy || uploading || !selected.length} onClick={() => generate(pendingDrafts.map(question => question.id), true)}>Regenerate section drafts</button>}</div><small>New suggestions: up to 10 per click, requested in groups of {MAX_GENERATE_COUNT}. Regenerating a whole section may use more requests. Existing saved questions are never replaced.</small>{!slots.length && <p className={styles.note}>No empty question slots in this section. Add an empty slot using the outline to generate suggestions.</p>}{slots.length > 0 && <p className={styles.note}>{slots.length} empty {slots.length === 1 ? "slot" : "slots"} · {pendingDrafts.length} unsaved {pendingDrafts.length === 1 ? "suggestion" : "suggestions"}</p>}</> : <p className={styles.note}>Create an outline with question slots first.</p>}
     </div>
     {!storageOk && <p className={styles.error} role="alert">This browser could not save your question drafts. Keep this page open and save each question, or enable browser storage.</p>}{message && <p className={styles.message} role="status">{message}</p>}{error && <p className={styles.error} role="alert">{error}</p>}
-    {sections.map(item => { const items = item.questions.filter(question => !question.text.trim() && !saved.includes(question.id) && drafts[question.id]); if (!items.length) return null; return <div key={item.id} hidden={item.id !== section?.id} className={styles.drafts}><div><span className={styles.kicker}>03 / REVIEW</span><h3>Your suggestions</h3><p>Drafts and edits are saved in this browser for this account, not synced to other devices. Anyone using this browser profile may access them. Use one tab for this quiz to avoid overwriting drafts. Review each source, then save each question to the quiz.</p></div>{items.map(slot => { const draft = drafts[slot.id]; return <SuggestionCard key={`${slot.id}-${draft.revision}`} quizId={quizId} slot={slot} suggestion={draft.suggestion} edit={draft.edit} busy={busy || uploading} onEdit={patch => editDraft(slot.id, patch)} onDiscard={discardDraft} onSaved={savedQuestion} onRegenerate={id => generate([id], true)} />; })}</div>; })}
+    {sections.map(item => { const items = item.questions.filter(question => !question.text.trim() && !saved.includes(question.id) && drafts[question.id]); if (!items.length) return null; return <div key={item.id} hidden={item.id !== section?.id} className={styles.drafts}><div><span className={styles.kicker}>03 / REVIEW</span><h3>Your suggestions</h3><p>Drafts and edits are saved in this browser for this account, not synced to other devices. Anyone using this browser profile may access them. Use one tab for this quiz to avoid overwriting drafts. Review each question, answer and source before saving.</p></div><button type="button" className={styles.primary} disabled={busy || uploading || savingOne > 0} onClick={saveAllSuggestions}>Save all suggestions ({Object.keys(drafts).length})</button><small>Saves suggestions across all sections. Questions that cannot be saved stay as drafts.</small>{items.map(slot => { const draft = drafts[slot.id]; return <SuggestionCard key={`${slot.id}-${draft.revision}`} quizId={quizId} slot={slot} suggestion={draft.suggestion} edit={draft.edit} busy={busy || uploading} onEdit={patch => editDraft(slot.id, patch)} onDiscard={discardDraft} onSaved={savedQuestion} onRegenerate={id => generate([id], true)} onSavingChange={saving => setSavingOne(n => n + (saving ? 1 : -1))} />; })}</div>; })}
   </div></details>;
 }

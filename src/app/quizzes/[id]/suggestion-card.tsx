@@ -7,7 +7,7 @@ import type { SuggestedQuestion } from "@/lib/suggested-questions";
 import styles from "./module-workshop.module.css";
 
 type Slot = { id: string; type: string; number: number; points: string };
-export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, onEdit, onDiscard, onSaved, onRegenerate }: { quizId: string; slot: Slot; suggestion: SuggestedQuestion; edit: DraftEdit; busy: boolean; onEdit: (patch: Partial<DraftEdit>) => void; onDiscard: (id: string) => void; onSaved: (id: string) => void; onRegenerate: (id: string) => void }) {
+export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, onEdit, onDiscard, onSaved, onRegenerate, onSavingChange }: { quizId: string; slot: Slot; suggestion: SuggestedQuestion; edit: DraftEdit; busy: boolean; onEdit: (patch: Partial<DraftEdit>) => void; onDiscard: (id: string) => void; onSaved: (id: string) => void; onRegenerate: (id: string) => void; onSavingChange: (saving: boolean) => void }) {
   const router = useRouter();
   const { text, choices, answer, points, criteria, lines } = edit;
   const [saving, setSaving] = useState(false);
@@ -32,11 +32,11 @@ export default function SuggestionCard({ quizId, slot, suggestion, edit, busy, o
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
     if (!parseQuestion(form)) { setError("Complete the question and answer. For an essay, rubric points must add up to the question points."); return; }
-    setSaving(true); setError("");
+    setSaving(true); onSavingChange(true); setError("");
     try { const response = await fetch(`/api/quizzes/${encodeURIComponent(quizId)}/questions/${encodeURIComponent(slot.id)}/accept`, { method: "POST", body: form }); const result = await response.json(); if (!response.ok) throw new Error(result.error || "Could not save question."); onSaved(slot.id); router.refresh(); }
-    catch (err) { setError(err instanceof Error ? err.message : "Could not save question."); } finally { setSaving(false); }
+    catch (err) { setError(err instanceof Error ? err.message : "Could not save question."); } finally { setSaving(false); onSavingChange(false); }
   }
-  return <form className={styles.suggestion} onSubmit={save}>
+  return <form className={styles.suggestion} data-suggestion-id={slot.id} inert={busy || undefined} onSubmit={save}>
     <div className={styles.suggestionHead}><div><span className={styles.kicker}>QUESTION {slot.number} · SUGGESTION</span><h4>Review and edit</h4></div><button type="button" className={styles.textButton} disabled={busy || saving} onClick={() => onRegenerate(slot.id)}>↻ Regenerate</button><button type="button" className={styles.textButton} disabled={busy || saving} onClick={() => onDiscard(slot.id)}>Discard draft</button></div>
     <div className={styles.source}><p>Suggested source: {suggestion.sourceName} · page {suggestion.sourcePage}. Check the source and answer before saving.</p><button type="button" className={styles.textButton} aria-expanded={sourceOpen} onClick={toggleSource}>{sourceOpen ? "Hide source excerpt" : "View source excerpt"}</button>{sourceOpen && <div className={styles.sourceExcerpt}>{sourceLoading ? "Loading…" : sourceError || sourceText}</div>}</div>
     <input type="hidden" name="type" value={slot.type} /><input type="hidden" name="moduleId" value={suggestion.sourceModuleId} /><input type="hidden" name="sourcePage" value={suggestion.sourcePage} />

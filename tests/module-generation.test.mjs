@@ -27,6 +27,17 @@ test("prefers lesson titles over repeated headers, page numbers, and generic lab
   assert.equal(pageHeading("Lesson 1\nUseful lesson content."), "Lesson 1");
   assert.equal(pageHeading(""), "No readable text");
 });
+test("shows the actual section heading after repeated module headers and page numbers", () => {
+  assert.equal(pageHeading("SCIENCE LEARNING MODULE 1\nPage 1 of 5\nLearning Objectives\nBy the end of this module, you can identify habitats."), "Learning Objectives");
+  assert.equal(pageHeading("SCIENCE LEARNING MODULE 1\nEcosystems and Living Things Page 1 of 6\nLearning Objectives\nModule 1: Ecosystems and Living Things"), "Learning Objectives");
+  assert.equal(pageHeading("SCIENCE LEARNING MODULE 1\nPage 2 of 5\nLesson 1: Ecosystems and Habitats\nAn ecosystem includes living and nonliving parts."), "Lesson 1: Ecosystems and Habitats");
+  assert.equal(pageHeading("SCIENCE LEARNING MODULE 1\nPage 4 of 5\nPractice Questions\n1. What is an ecosystem?"), "Practice Questions");
+  assert.equal(pageHeading("SCIENCE LEARNING MODULE 1\nPage 5 of 5\nTrivia and Reflection\nThink about a local habitat."), "Trivia and Reflection");
+});
+test("prefers lesson pages over practice pages with repeated module headers", () => {
+  const pages = [page(1, "SCIENCE MODULE 1\nPractice Questions\n" + "A question. ".repeat(10)), page(2, "SCIENCE MODULE 1\nLesson 1: Ecosystems\n" + "Lesson content. ".repeat(10))];
+  assert.equal(selectExcerpts([{ id: "m", name: "Science.pdf", pages }], [], 0)[0].page, 2);
+});
 test("only accepts complete suggestions with valid answers and supplied source IDs", () => {
   const sources=[{id:'S1',moduleId:'m',name:'Module.pdf',page:2}];
   const item={text:'Which is correct?',choices:['one','two','three','four'],answer:'B',source:'S1'};

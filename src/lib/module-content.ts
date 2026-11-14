@@ -21,8 +21,8 @@ export function validateModulePages(value: unknown): ModulePage[] | null {
   return pages.some(page => page.text.length >= 40) ? pages : null;
 }
 function rank(page: ModulePage) {
-  const heading = page.text.slice(0, 180);
-  if (/^\s*(?:activity|activities|exercise|assessment|reflection|references|answer key)\b/i.test(heading)) return 2;
+  const heading = pageHeading(page.text);
+  if (/^(?:learning objectives?|objectives?|activity|activities|exercise|practice|assessment|reflection|trivia|references|answer key)\b/i.test(heading)) return 2;
   if (/\b(?:lesson|discussion|overview|concept|topic|unit|chapter)\b/i.test(heading)) return 0;
   return 1;
 }
@@ -43,7 +43,7 @@ export function selectExcerpts(modules: SourceModule[], excluded: string[], rota
 export function pageHeading(text: string): string {
   const lines = text.split(/\n+/).map(line => line.replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, 40);
   const genericMarker = /^(?:(?:[a-z]+\s+)?(?:learning\s+)?modules?|lesson|unit|chapter)\s*(?:no\.?\s*|#\s*)?\d+[a-z]?\s*$/i;
-  const boilerplate = /^(?:page\s*)?\d+\s*$|^(?:learning objectives?|objectives?|lesson|practice|activities|activity|reflection|assessment|references|answer key)\s*:?[\s]*$/i;
+  const boilerplate = /^(?:page\s*)?\d+(?:\s+of\s+\d+)?\s*$|(?:^|\s)page\s*\d+\s+of\s+\d+\s*$|^lesson\s*:?\s*$/i;
   const candidate = lines.find(line => line.length >= 4 && line.length <= 90 && !genericMarker.test(line) && !boilerplate.test(line) && !/^[•●▪*\-–—]|^\d+[.)]\s/.test(line) && !/[.!]$/.test(line));
   const fallbackMarker = lines.find(line => /^(?:lesson|unit|chapter)\s*\d+[a-z]?\s*$/i.test(line));
   const fallback = lines.find(line => !genericMarker.test(line) && !boilerplate.test(line));

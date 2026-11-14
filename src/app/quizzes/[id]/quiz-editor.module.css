@@ -11,3 +11,9 @@
 .sectionListHeading .outlineAction:hover { background:#303036; border-color:#93939b; }
 .sectionListHeading .outlineAction:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 @media(max-width:480px) { .sectionListHeading { align-items:flex-start; gap:16px; flex-direction:column; }.sectionHeadingActions { justify-content:flex-start; } }
+.lockedNotice { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; line-height:1.5; }
+.lockedNotice p { margin:4px 0 0; color:#e8c7b1; font-size:14px; }
+.keyCorrectionLink,.keyCorrectionLink:visited { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:9px 14px; border:1px solid #e2a77e; border-radius:7px; color:#fff2e7; background:#3a2920; text-decoration:none; font-size:14px; font-weight:600; }
+.keyCorrectionLink:hover { background:#51372a; }
+.correctAnswerLink,.correctAnswerLink:visited { display:inline-flex; align-items:center; min-height:44px; color:#ffc7a4; font-size:13px; font-weight:600; text-underline-offset:4px; }
+.keyCorrectionLink:focus-visible,.correctAnswerLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
 import { adjustedScore, objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
+import { parseCorrectedAnswers } from "@/lib/key-correction";
 
 export async function updateKeyAnswer(quizId: string, questionId: string, _previous: { message: string; ok: boolean }, form: FormData) {
   const teacher = await getTeacher();
@@ -13,8 +14,10 @@ export async function updateKeyAnswer(quizId: string, questionId: string, _previ
   if (!answers.length) return { message: "Enter at least one correct answer.", ok: false };
   try {
     const outcome = await db.$transaction(async tx => {
-      const question = await tx.question.findFirst({ where: { id: questionId, section: { quizId, quiz: { teacherId: teacher.id, source: "EXISTING" } } }, include: { answerKey: true } });
+      const question = await tx.question.findFirst({ where: { id: questionId, section: { quizId, quiz: { teacherId: teacher.id } } }, include: { answerKey: true, choices: { select: { label: true } }, section: { include: { quiz: { select: { source: true } } } } } });
       if (!question?.answerKey || question.type === "ESSAY") return "This answer key is unavailable.";
+      const answers = parseCorrectedAnswers(raw, question.section.quiz.source, question.type, question.choices.map(choice => choice.label));
+      if (!answers) return "Enter a valid correct answer for this question type.";
       const key = question.answerKey;
       if (JSON.stringify(key.acceptedAnswers) === JSON.stringify(answers)) return "No changes to save.";
       const affected = await tx.submissionAnswer.findMany({ where: { questionId, submission: { quizId, teacherId: teacher.id, status: "FINALIZED" } }, include: { submission: true } });
@@ -34,6 +37,6 @@ export async function updateKeyAnswer(quizId: string, questionId: string, _previ
     }, { isolationLevel: "Serializable" });
     if (outcome) return { message: outcome, ok: false };
   } catch { return { message: "Could not update the key. Please refresh and try again.", ok: false }; }
-  revalidatePath(`/quizzes/existing/${quizId}`); revalidatePath(`/quizzes/existing/${quizId}/edit`); revalidatePath("/submissions"); revalidatePath("/submissions/[id]/review", "page");
+  revalidatePath(`/quizzes/existing/${quizId}`); revalidatePath(`/quizzes/existing/${quizId}/edit`); revalidatePath(`/quizzes/${quizId}/overview`); revalidatePath("/batches/[id]", "page"); revalidatePath("/submissions"); revalidatePath("/submissions/[id]/review", "page");
   return { message: "Correct answer saved. Finalized scores were updated.", ok: true };
 }

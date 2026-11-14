@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateModulePages, selectExcerpts, moduleSummary, MAX_PAGE_CHARS } from "../src/lib/module-content.ts";
+import { validateModulePages, selectExcerpts, moduleSummary, pageHeading, MAX_PAGE_CHARS } from "../src/lib/module-content.ts";
 import { parseSuggestedQuestions } from "../src/lib/suggested-questions.ts";
 const page = (n, text = `Lesson ${n}\n` + "Useful lesson content. ".repeat(10)) => ({ page:n, text });
 
@@ -19,6 +19,13 @@ test("samples bounded pages across selected modules and honors exclusions", () =
   assert.ok(excerpts.every(item=>item.text.length<=1600 && !(item.moduleId==='a'&&item.page===1)));
   assert.equal(selectExcerpts(modules,modules.flatMap(m=>m.pages.map(p=>`${m.id}:${p.page}`)),0).length,0);
   assert.ok(moduleSummary(modules[0]).pages[0].heading.includes('Lesson'));
+});
+test("prefers lesson titles over repeated headers, page numbers, and generic labels", () => {
+  assert.equal(pageHeading("ENGLISH LEARNING MODULES 1\nENGLISH MODULE 01\nSubject-Verb Agreement\nLEARNING OBJECTIVE\nChoose the correct verb."), "Subject-Verb Agreement");
+  assert.equal(pageHeading("ENGLISH LEARNING MODULES 2\nENGLISH MODULE 02\nSimple Past Tense\nLEARNING OBJECTIVE\nUse the simple past."), "Simple Past Tense");
+  assert.equal(pageHeading("Page 3\nLesson 2: Parts of Speech\nA noun is a word."), "Lesson 2: Parts of Speech");
+  assert.equal(pageHeading("Lesson 1\nUseful lesson content."), "Lesson 1");
+  assert.equal(pageHeading(""), "No readable text");
 });
 test("only accepts complete suggestions with valid answers and supplied source IDs", () => {
   const sources=[{id:'S1',moduleId:'m',name:'Module.pdf',page:2}];

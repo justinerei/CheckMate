@@ -40,7 +40,16 @@ export function selectExcerpts(modules: SourceModule[], excluded: string[], rota
   }
   return result;
 }
+export function pageHeading(text: string): string {
+  const lines = text.split(/\n+/).map(line => line.replace(/\s+/g, " ").trim()).filter(Boolean).slice(0, 40);
+  const genericMarker = /^(?:(?:[a-z]+\s+)?(?:learning\s+)?modules?|lesson|unit|chapter)\s*(?:no\.?\s*|#\s*)?\d+[a-z]?\s*$/i;
+  const boilerplate = /^(?:page\s*)?\d+\s*$|^(?:learning objectives?|objectives?|lesson|practice|activities|activity|reflection|assessment|references|answer key)\s*:?[\s]*$/i;
+  const candidate = lines.find(line => line.length >= 4 && line.length <= 90 && !genericMarker.test(line) && !boilerplate.test(line) && !/^[•●▪*\-–—]|^\d+[.)]\s/.test(line) && !/[.!]$/.test(line));
+  const fallbackMarker = lines.find(line => /^(?:lesson|unit|chapter)\s*\d+[a-z]?\s*$/i.test(line));
+  const fallback = lines.find(line => !genericMarker.test(line) && !boilerplate.test(line));
+  return (candidate || fallbackMarker || fallback || lines[0] || "No readable text").slice(0, 90);
+}
 export function moduleSummary(module: SourceModule) {
-  return { id: module.id, name: module.name, pages: module.pages.map(page => ({ page: page.page, readable: page.text.length >= 40, heading: page.text.split(/\n+/).map(line => line.trim()).find(Boolean)?.slice(0, 90) || "No readable text" })) };
+  return { id: module.id, name: module.name, pages: module.pages.map(page => ({ page: page.page, readable: page.text.length >= 40, heading: pageHeading(page.text) })) };
 }
 export type ModuleSummary = ReturnType<typeof moduleSummary>;

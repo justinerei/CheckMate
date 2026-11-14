@@ -117,9 +117,9 @@ Open [http://localhost:3000](http://localhost:3000), click **Continue with Googl
 
 Each groupmate's local PostgreSQL database starts empty. Cloning the repo does not copy someone else's accounts, quizzes, or student data. Signing in for the first time creates a teacher account in your own local database.
 
-On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet.
+On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet. **Remove student** removes the student from your list and unlinks your papers, while retaining the shared student record and your papers and scores.
 
-Open **Submissions** to choose a saved quiz or answer key and start a batch; no student record is required. Each batch contains up to five papers, and each paper has one to three JPEG or PNG photos, up to 8 MB each. Check the page order before starting. The server reads pages in the background and saves each successful reading. Review and finalize results per paper.
+Choose **Check a paper** on the dashboard or **Upload papers** from a quiz to start a batch; no student record is required. Each batch contains up to five papers, and each paper has one to three JPEG or PNG photos, up to 8 MB each. Check the page order before starting. The server reads pages in the background and saves each successful reading. Review and finalize results per paper.
 
 ### Create a quiz in CheckMate
 

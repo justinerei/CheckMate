@@ -57,7 +57,7 @@ export async function createNextPaper(previousId: string, _previous: CreateState
   const teacher = await getTeacher();
   if (!teacher) redirect("/");
   const previous = await db.submission.findFirst({ where: { id: previousId, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "FINALIZED" }, select: { quizId: true, expectedPages: true } });
-  if (!previous || !validPageCount(String(previous.expectedPages ?? ""))) return { error: "This paper cannot be reused. Start a new paper from Student papers." };
+  if (!previous || !validPageCount(String(previous.expectedPages ?? ""))) return { error: "This paper cannot be reused. Start a new paper from the dashboard." };
   let id: string;
   try {
     const next = await db.submission.create({ data: { quizId: previous.quizId, teacherId: teacher.id, expectedPages: previous.expectedPages }, select: { id: true } });

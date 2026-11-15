@@ -426,3 +426,6 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .criterionFeedback summary { color:#f6b48d; font-size:13px; font-weight:600; }
 .criterionFeedback textarea { min-height:52px; }
 @media(max-width:480px) { .criterionHead { grid-template-columns:minmax(0,1fr); } .criterionHead label { min-width:0; } }
+.viewerPageSelect { display:flex; align-items:center; gap:8px; color:#d7d7dd; font-size:13px; }
+.viewerPageSelect select { min-height:44px; padding:8px 10px; border:1px solid #66666e; border-radius:6px; background:#29292e; color:#f4f4f5; font:inherit; color-scheme:dark; }
+.viewerPageSelect select:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }

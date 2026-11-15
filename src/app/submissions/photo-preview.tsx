@@ -5,9 +5,9 @@ import { createPortal } from "react-dom";
 import styles from "./submissions.module.css";
 import { fitPhotoWidth, pinchZoom, zoomOffset } from "@/lib/photo-zoom";
 
-type Props = { src: string; alt: string; className?: string; onError?: () => void; onLoad?: () => void };
+type Props = { src: string; alt: string; className?: string; triggerClassName?: string; triggerLabel?: string; onError?: () => void; onLoad?: () => void; pageOptions?: number[]; selectedPage?: number; onPageChange?: (page: number) => void };
 
-export default function PhotoPreview({ src, alt, className, onError, onLoad }: Props) {
+export default function PhotoPreview({ src, alt, className, triggerClassName, triggerLabel = "View photo", onError, onLoad, pageOptions, selectedPage, onPageChange }: Props) {
   const [open, setOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [fitWidth, setFitWidth] = useState(0);
@@ -86,15 +86,16 @@ export default function PhotoPreview({ src, alt, className, onError, onLoad }: P
 
   function close() { setOpen(false); setZoom(100); requestAnimationFrame(() => trigger.current?.focus()); }
   return <>
-    <button ref={trigger} type="button" className={styles.photoPreviewButton} onClick={() => setOpen(true)} aria-label={`View ${alt}`}>
+    <button ref={trigger} type="button" className={`${styles.photoPreviewButton} ${triggerClassName ?? ""}`} onClick={() => setOpen(true)} aria-label={`View ${alt}`}>
       {/* These photos can be private API URLs or temporary camera blob URLs. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className={className} src={src} alt={alt} onError={onError} onLoad={onLoad} />
-      <span className={styles.photoPreviewHint}>View photo</span>
+      <span className={styles.photoPreviewHint}>{triggerLabel}</span>
     </button>
     {open && createPortal(<dialog ref={dialog} className={styles.photoViewer} aria-label={`Enlarged ${alt}`} onCancel={event => { event.preventDefault(); close(); }}>
       <div className={styles.photoViewerHeader}>
         <strong>{alt}</strong>
+        {pageOptions && pageOptions.length > 1 && onPageChange && <label className={styles.viewerPageSelect}>Page<select aria-label="Choose paper page" value={selectedPage} onChange={event => { setZoom(100); if (viewport.current) { viewport.current.scrollTop = 0; viewport.current.scrollLeft = 0; } onPageChange(Number(event.target.value)); }}>{pageOptions.map(page => <option key={page} value={page}>Page {page}</option>)}</select></label>}
         <button type="button" className={styles.secondary} onClick={close}>Close</button>
       </div>
       <div className={styles.photoViewerTools} aria-label="Photo zoom controls">

@@ -24,3 +24,11 @@
 .dialogActions button:last-child { border-color:#f4f4f5; background:#f4f4f5; color:#17171b; }
 .dialogActions button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 @media(max-width:480px) { .dialogActions { display:grid; } .dialogActions button { width:100%; } }
+@media(max-width:800px) {
+  .paper { display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px; padding:14px 18px; }
+  .paper > .row { flex:1 1 200px; gap:10px; }
+  .paper .photo { display:none; }
+  .paper .paperTrigger { display:inline-flex; align-items:center; justify-content:center; width:auto; min-height:44px; padding:8px 14px; border:1px solid #8d6a58; border-radius:7px; background:#30241f; cursor:pointer; }
+  .paper .paperTrigger span { padding:0; color:#ffe1ce; font-size:14px; }
+  .paper > small { flex-basis:100%; }
+}

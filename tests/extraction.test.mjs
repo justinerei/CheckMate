@@ -2,38 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseExtraction, matchCandidates, retryDelayMs, needsReview } from "../src/lib/extraction.ts";
 
-test("independent mark verification keeps matching circles and flags disagreement or missing verification", async () => {
-  const { verifyCircleReadings } = await import("../src/lib/extraction.ts");
-  const circle = { number: 4, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
-  const written = { ...circle, answer: "D", observedStyle: "written" };
-  assert.equal(verifyCircleReadings([circle], [circle])[0].status, "clear");
-  assert.equal(verifyCircleReadings([circle], [written])[0].status, "unclear");
-  assert.equal(verifyCircleReadings([circle], [])[0].status, "unclear");
-  assert.equal(verifyCircleReadings([circle], [circle, circle])[0].status, "unclear");
-  assert.equal(verifyCircleReadings([circle], [{ ...circle, note: "possibly circled" }])[0].status, "unclear");
-  assert.equal(verifyCircleReadings([{ ...circle, number: null }], [{ ...circle, number: null }])[0].status, "unclear");
-  assert.deepEqual(verifyCircleReadings([written], []), [written]);
-});
-
-test("targeted check accepts only one certain circle without a conflicting written letter", async () => {
-  const { targetedCircleReading } = await import("../src/lib/extraction.ts");
-  const item = { number: 4, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
-  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: null, circled_choices: ["A"], uncertain: false }).status, "clear");
-  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: "D", circled_choices: [], uncertain: false }).status, "unclear");
-  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: "D", circled_choices: ["A"], uncertain: false }).status, "unclear");
-  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: null, circled_choices: ["A"], uncertain: true }).status, "unclear");
-  assert.equal(targetedCircleReading(item, null).status, "unclear");
-});
-
-test("batched mark checks confirm unique matches and flag missing or duplicate results", async () => {
-  const { applyTargetedCircleChecks } = await import("../src/lib/extraction.ts");
-  const item = { number: 1, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
-  const observation = { number: 1, handwritten_next_to_number: null, circled_choices: ["A"], uncertain: false };
-  assert.equal(applyTargetedCircleChecks([item], { items: [observation] })[0].status, "clear");
-  assert.equal(applyTargetedCircleChecks([item], { items: [observation, observation] })[0].status, "unclear");
-  assert.equal(applyTargetedCircleChecks([item], null)[0].status, "unclear");
-});
-
 test("validates extraction structure and rejects malformed or fabricated statuses", () => {
   const parsed = parseExtraction(JSON.stringify({ items: [{ number: 1, section: null, answer: "B", status: "clear", note: "" }] }));
   assert.equal(parsed?.items[0].answer, "B");

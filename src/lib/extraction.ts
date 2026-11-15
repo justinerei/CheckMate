@@ -1,32 +1,4 @@
 export type ExtractionItem = { number: number | null; section: number | null; answer: string | null; status: "clear" | "blank" | "unclear" | "multiple" | "erased"; note: string; erasure?: "present" | "none" | "uncertain"; markShape?: "circle" | "box" | "triangle" | "unknown"; observedStyle?: "written" | "circle" | "shade" | "box" | "triangle" | "underline" | "other" | "unknown" };
-
-export function targetedCircleReading(item: ExtractionItem, input: unknown): ExtractionItem {
-  const data = input as { handwritten_next_to_number?: unknown; circled_choices?: unknown; uncertain?: unknown } | null;
-  const choices = data?.circled_choices;
-  const confirmed = data?.uncertain === false && data.handwritten_next_to_number === null && Array.isArray(choices) && choices.length === 1 && typeof choices[0] === "string" && /^[A-D]$/i.test(choices[0].trim()) && choices[0].trim().toUpperCase() === item.answer?.trim().toUpperCase();
-  return confirmed ? item : { ...item, status: "unclear", note: "The focused mark check did not confirm this circle. Check the photo." };
-}
-
-export function applyTargetedCircleChecks(items: ExtractionItem[], input: unknown): ExtractionItem[] {
-  const data = input as { items?: unknown } | null;
-  const checks = Array.isArray(data?.items) ? data.items : [];
-  return items.map(item => {
-    if (item.status !== "clear" || (item.observedStyle ?? item.markShape) !== "circle") return item;
-    const matches = checks.filter(check => check && typeof check === "object" && check.number === item.number);
-    const uniqueNumber = item.number !== null && items.filter(other => other.number === item.number).length === 1;
-    return targetedCircleReading(item, uniqueNumber && matches.length === 1 ? matches[0] : null);
-  });
-}
-
-export function verifyCircleReadings(items: ExtractionItem[], verification: ExtractionItem[]): ExtractionItem[] {
-  return items.map(item => {
-    if (item.status !== "clear" || (item.observedStyle ?? item.markShape) !== "circle") return item;
-    const matches = verification.filter(check => check.number === item.number && (check.section === null || item.section === null || check.section === item.section));
-    const check = matches[0];
-    if (item.number !== null && matches.length === 1 && check.status === "clear" && !/\b(?:unclear|uncertain|unsure|ambiguous|maybe|possibly|possible|probably|likely|faint|illegible|unreadable|smudged|multiple|overlap|guess|appears|seems)\b/i.test(check.note) && (check.observedStyle ?? check.markShape) === "circle" && !!item.answer?.trim() && check.answer?.trim().toUpperCase() === item.answer.trim().toUpperCase()) return item;
-    return { ...item, status: "unclear", note: "Independent mark reading did not confirm this circle and answer. Check the photo." };
-  });
-}
 export function parseExtraction(input: string): { items: ExtractionItem[]; studentName?: string | null } | null {
   try {
     const value = JSON.parse(input);

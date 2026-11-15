@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readPhoto } from "@/lib/private-photos";
-import { applyTargetedCircleChecks, parseExtraction, retryDelayMs } from "@/lib/extraction";
+import { parseExtraction, retryDelayMs } from "@/lib/extraction";
 
 export async function extractPage(teacherId: string, id: string, pageId: string) {
   const key = process.env.GROQ_API_KEY;
@@ -10,7 +10,7 @@ export async function extractPage(teacherId: string, id: string, pageId: string)
   const now = new Date();
   const token = randomUUID();
   const owner = { id: pageId, submissionId: id, submission: { teacherId: teacherId, quiz: { teacherId: teacherId }, status: "IN_REVIEW" as const } };
-  const claimed = await db.submissionPage.updateMany({ where: { ...owner, OR: [{ status: { in: ["PENDING", "FAILED"] }, OR: [{ retryAt: null }, { retryAt: { lte: now } }] }, { status: "PROCESSING", processingStartedAt: { lt: new Date(now.getTime() - 180000) } }] }, data: { status: "PROCESSING", processingToken: token, processingStartedAt: now, error: null, retryAt: null } });
+  const claimed = await db.submissionPage.updateMany({ where: { ...owner, OR: [{ status: { in: ["PENDING", "FAILED"] }, OR: [{ retryAt: null }, { retryAt: { lte: now } }] }, { status: "PROCESSING", processingStartedAt: { lt: new Date(now.getTime() - 120000) } }] }, data: { status: "PROCESSING", processingToken: token, processingStartedAt: now, error: null, retryAt: null } });
   if (!claimed.count) return NextResponse.json({ error: "Page is unavailable, already processed, or not ready to retry. Refresh and check its status." }, { status: 409 });
   const model = process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b";
   let message = "Could not read this page. Please try again.";
@@ -30,19 +30,6 @@ export async function extractPage(teacherId: string, id: string, pageId: string)
     const body = await response.json();
     const result = typeof body?.choices?.[0]?.message?.content === "string" ? parseExtraction(body.choices[0].message.content) : null;
     if (!result) { message = "Groq returned an unreadable result. Please retry this page."; throw new Error(); }
-    const numbers = result.items.filter(item => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle" && item.number !== null && result.items.filter(other => other.number === item.number).length === 1).slice(0, 12).map(item => item.number);
-    if (result.items.some(item => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle")) {
-      let observations: unknown = null;
-      if (numbers.length) try {
-        const checkPrompt = `For EACH question number ${numbers.join(", ")} independently, examine only its visible marks, not the correct answer. Inspect all choices and the margin beside the question number. A letter inside a circle at a printed choice is not a handwritten letter beside the question number. Return JSON {"items":[{"number":1,"handwritten_next_to_number":null,"circled_choices":["A"],"uncertain":false}]}. Use null if there is no handwritten letter beside the question number, and an empty array if there is no circled option. Never infer the answer from the question.`;
-        const runCheck = () => fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30000), body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: checkPrompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
-        let check = await runCheck();
-        const delay = check.status === 429 ? retryDelayMs(check.headers.get("retry-after"), Date.now()) : 0;
-        if (delay > 0 && delay <= 10000) { await new Promise(resolve => setTimeout(resolve, delay)); check = await runCheck(); }
-        if (check.ok) { const data = await check.json(); const parsed = JSON.parse(data?.choices?.[0]?.message?.content ?? "null"); observations = { items: Array.isArray(parsed?.items) ? parsed.items.filter((item: { number?: unknown }) => numbers.includes(item?.number as number)) : [] }; }
-      } catch { /* Unverified marks are flagged for teacher review. */ }
-      result.items = applyTargetedCircleChecks(result.items, observations);
-    }
     const saved = await db.submissionPage.updateMany({ where: { ...owner, status: "PROCESSING", processingToken: token }, data: { status: "COMPLETE", extraction: result, extractionModel: model, processingToken: null, processingStartedAt: null, error: null, retryAt: null } });
     if (!saved.count) return NextResponse.json({ error: "The request expired. Refresh before retrying." }, { status: 409 });
     return NextResponse.json({ ok: true });

@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { forbidsErasures, setNoErasures } from "../src/lib/auto-review.ts";
+import { forbidsErasures, setNoErasures, setQuizNoErasures } from "../src/lib/auto-review.ts";
+
+test("quiz-wide rule updates every section without losing directions", () => {
+  const rows = [{ directions: "Circle the answer." }, { directions: "Write the answer." }, { directions: "" }];
+  const enabled = setQuizNoErasures(rows, true);
+  assert.ok(enabled.every(row => forbidsErasures(row.directions)));
+  assert.deepEqual(setQuizNoErasures(enabled, false), rows);
+  assert.equal(rows[0].directions, "Circle the answer.");
+});
 
 test("the no-erasure option preserves other directions and stays compatible with checking", () => {
   const enabled = setNoErasures("Circle the answer", true);

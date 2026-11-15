@@ -19,6 +19,10 @@ export function setNoErasures(directions: string, enabled: boolean): string {
     .trim();
 }
 
+export function setQuizNoErasures<T extends { directions: string }>(rows: T[], enabled: boolean): T[] {
+  return rows.map(row => ({ ...row, directions: setNoErasures(row.directions, enabled) }));
+}
+
 export function analyzeAutomaticReview(items: Candidate[], expectedStyle: string, type: string, keys?: string[], directions?: string | null): { decision: "FOLLOWED" | "VIOLATION" | null; reason: string | null } {
   const review = (reason: string) => ({ decision: null, reason } as const);
   if (type === "ESSAY") return review("Essay answers need a teacher to score the response using the rubric.");

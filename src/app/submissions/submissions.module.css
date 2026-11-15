@@ -394,3 +394,11 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .paperStudent select { max-width:100%; }
 .successMate { display:block; width:104px; height:104px; object-fit:contain; image-rendering:pixelated; }
 @media(max-width:480px) { .successMate { width:80px; height:80px; } }
+.paperConfirmActions { display:flex; flex-wrap:wrap; gap:10px; }
+.paperConfirmActions button { max-width:100%; }
+.nextPaperOptions summary { width:max-content; max-width:100%; cursor:pointer; color:#f6b48d; min-height:44px; display:flex; align-items:center; }
+.nextPaperOptions summary:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
+.nextPaperOptions label { display:block; font-size:14px; font-weight:600; margin:4px 0 8px; }
+.nextPaperOptions select { min-height:44px; padding:10px; border:1px solid var(--field-border); border-radius:6px; background:var(--field-bg); color:var(--field-text); color-scheme:dark; font:inherit; }
+.paperConfirmHint { font-size:14px; }
+@media(max-width:600px) { .paperConfirmActions { display:grid; } .paperConfirmActions button { width:100%; } }

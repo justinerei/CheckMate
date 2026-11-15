@@ -74,7 +74,6 @@ export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [pending, startTransition] = useTransition();
-  const [checked, setChecked] = useState(false);
   const [nextPages, setNextPages] = useState(expectedPages);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -88,7 +87,7 @@ export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages
   const complete = pagesComplete(expectedPages, pages.map(page => page.pageNumber));
   const change = (reopen: boolean) => startTransition(async () => {
     setError("");
-    try { const result = await (reopen ? reopenSubmission(id) : confirmSubmission(id)); if (result.error) { setError(result.error); return; } setChecked(false); if (!reopen && batchId) { router.push(`/batches/${batchId}`); } else if (!reopen && existing) { await readAll(); } else router.refresh(); }
+    try { const result = await (reopen ? reopenSubmission(id) : confirmSubmission(id)); if (result.error) { setError(result.error); return; } if (!reopen && batchId) { router.push(`/batches/${batchId}`); } else if (!reopen && existing) { await readAll(); } else router.refresh(); }
     catch { setError("Something went wrong. Refresh and try again."); }
   });
   const addNextStudent = () => startTransition(async () => {
@@ -104,7 +103,7 @@ export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages
     const value = String(new FormData(event.currentTarget).get("count") ?? "");
     startTransition(async () => {
       setError(""); setNotice("");
-      try { const result = await updateExpectedPages(id, value); if (result.error) { setError(result.error); return; } setChecked(false); setNotice("Page count updated."); router.refresh(); }
+      try { const result = await updateExpectedPages(id, value); if (result.error) { setError(result.error); return; } setNotice("Page count updated."); router.refresh(); }
       catch { setError("Could not update the page count. Please retry."); }
     });
   };
@@ -119,11 +118,11 @@ export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages
       try { const body = new FormData(); body.set("photo", files[i]); body.set("pageNumber", String(free[i])); const response = await fetch(`/api/submissions/${id}/pages`, { method: "POST", body }); const result = await response.json(); if (!response.ok) failures.push(`Page ${free[i]}: ${result.error || "Upload failed"}`); }
       catch { failures.push(`Page ${free[i]}: connection lost. Check your connection, refresh to see what was saved, then retry the missing page.`); }
     }
-    setBatchProgress(""); setBatchBusy(false); setChecked(false); if (failures.length) setError(failures.join(" · ")); else setNotice("Photos uploaded. Check their order below."); router.refresh();
+    setBatchProgress(""); setBatchBusy(false); if (failures.length) setError(failures.join(" · ")); else setNotice("Photos uploaded. Check their order below."); router.refresh();
   }
   async function move(page: Page, other: Page | undefined) {
     if (!other) return; setBatchBusy(true); setError("");
-    try { const result = await swapPages(id, page.id, other.id); if (result.error) setError(result.error); else { setChecked(false); setNotice(`Page order updated. Photo ${page.pageNumber} is now page ${other.pageNumber}.`); router.refresh(); } }
+    try { const result = await swapPages(id, page.id, other.id); if (result.error) setError(result.error); else { setNotice(`Page order updated. Photo ${page.pageNumber} is now page ${other.pageNumber}.`); router.refresh(); } }
     catch { setError("Could not reorder pages. Refresh and try again."); } finally { setBatchBusy(false); }
   }
   async function readAll() {
@@ -167,5 +166,19 @@ export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages
         return <PageSlot key={page.id} submissionId={id} batchId={batchId} number={page.pageNumber} page={page} editable={editable} disabled={batchBusy || pending} canExtract={status === "IN_REVIEW" && !batchBusy} onEarlier={earlier ? () => move(page, earlier) : undefined} onLater={later ? () => move(page, later) : undefined} />;
       })}
     </div>}
-    {editable && complete ? <div className={`${styles.confirm} ${styles.paperConfirm}`}><h2>Check page order</h2><p>Make sure every photo belongs to this student and quiz, and matches its page number. Add other students as separate papers.</p><label className={styles.check}><input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={!complete || pending} /> I checked that all pages are present and in the correct order.</label>{(batchId || existing) && <p>Starting sends these page photos to Groq for reading.</p>}<button className={styles.primary} type="button" disabled={!complete || !checked || pending || batchBusy} onClick={() => change(false)}>{pending || batchBusy ? "Starting…" : batchId || existing ? "Start checking" : "Confirm pages"}</button>{batchId && canAddPaper(batchPaperCount) && <div className={styles.nextBatchPaper}><h3>Add another student</h3><p>This paper will start checking while you upload the next one. {MAX_BATCH_PAPERS - batchPaperCount} {MAX_BATCH_PAPERS - batchPaperCount === 1 ? "spot" : "spots"} left in this batch.</p><label htmlFor="next-paper-pages">Pages in the next student’s paper</label><div className={styles.nextBatchControls}><select id="next-paper-pages" value={nextPages} onChange={event => setNextPages(Number(event.target.value))} disabled={pending || batchBusy}><option value={1}>1 page</option><option value={2}>2 pages</option><option value={3}>3 pages</option></select><button className={styles.secondary} type="button" disabled={!checked || pending || batchBusy} onClick={addNextStudent}>{pending ? "Starting…" : "Start checking & add next student"}</button></div></div>}{batchId && !canAddPaper(batchPaperCount) && <p>Batch full: {MAX_BATCH_PAPERS} papers. Start checking to return to the batch.</p>}</div> : !editable ? <div className={styles.confirm}><h2>{batchId ? "Paper progress" : "Read and review"}</h2><p>{batchId ? "Checking continues in the background. Return to the batch to add or review other papers." : existing ? "Review flagged answers and essays before finalizing." : "Check suggestions against the original photo. No scores are assigned yet."}</p>{!batchId && status === "IN_REVIEW" && <button type="button" className={styles.primary} disabled={batchBusy || !pages.some(page => page.status === "PENDING" || page.status === "FAILED")} onClick={readAll}>{batchBusy ? "Reading…" : "Retry unread pages"}</button>}<Link className={styles.secondary} href={paperReviewUrl(id, reviewOrigin)}>Review answers</Link>{status === "IN_REVIEW" && <button type="button" className={styles.secondary} disabled={pending} onClick={() => change(true)}>{pending ? "Opening…" : "Reopen page uploads"}</button>}</div> : null}</>;
+    {editable && complete ? <div className={`${styles.confirm} ${styles.paperConfirm}`}>
+      <h2>Ready to check?</h2>
+      <p>Make sure these photos belong to the same student and are in page order.{(batchId || existing) && " Starting sends the photos to Groq for reading."}</p>
+      {batchId && canAddPaper(batchPaperCount) && <details className={styles.nextPaperOptions}>
+        <summary>Next paper: {nextPages} {nextPages === 1 ? "page" : "pages"} · Change</summary>
+        <label htmlFor="next-paper-pages">Pages in the next student’s paper</label>
+        <select id="next-paper-pages" value={nextPages} onChange={event => setNextPages(Number(event.target.value))} disabled={pending || batchBusy}><option value={1}>1 page</option><option value={2}>2 pages</option><option value={3}>3 pages</option></select>
+      </details>}
+      <div className={styles.paperConfirmActions}>
+        {batchId && canAddPaper(batchPaperCount) && <button className={styles.primary} type="button" disabled={pending || batchBusy} onClick={addNextStudent}>{pending || batchBusy ? "Starting…" : "Start checking & add next student"}</button>}
+        <button className={batchId && canAddPaper(batchPaperCount) ? styles.secondary : styles.primary} type="button" disabled={pending || batchBusy} onClick={() => change(false)}>{pending || batchBusy ? "Starting…" : batchId ? "Start checking & return to batch" : existing ? "Start checking" : "Confirm pages"}</button>
+      </div>
+      {batchId && canAddPaper(batchPaperCount) && <p className={styles.paperConfirmHint}>This paper checks in the background. {MAX_BATCH_PAPERS - batchPaperCount} {MAX_BATCH_PAPERS - batchPaperCount === 1 ? "spot" : "spots"} left in this batch.</p>}
+      {batchId && !canAddPaper(batchPaperCount) && <p>Batch full: {MAX_BATCH_PAPERS} papers.</p>}
+    </div> : !editable ? <div className={styles.confirm}><h2>{batchId ? "Paper progress" : "Read and review"}</h2><p>{batchId ? "Checking continues in the background. Return to the batch to add or review other papers." : existing ? "Review flagged answers and essays before finalizing." : "Check suggestions against the original photo. No scores are assigned yet."}</p>{!batchId && status === "IN_REVIEW" && <button type="button" className={styles.primary} disabled={batchBusy || !pages.some(page => page.status === "PENDING" || page.status === "FAILED")} onClick={readAll}>{batchBusy ? "Reading…" : "Retry unread pages"}</button>}<Link className={styles.secondary} href={paperReviewUrl(id, reviewOrigin)}>Review answers</Link>{status === "IN_REVIEW" && <button type="button" className={styles.secondary} disabled={pending} onClick={() => change(true)}>{pending ? "Opening…" : "Reopen page uploads"}</button>}</div> : null}</>;
 }

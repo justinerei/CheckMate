@@ -402,3 +402,10 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .nextPaperOptions select { min-height:44px; padding:10px; border:1px solid var(--field-border); border-radius:6px; background:var(--field-bg); color:var(--field-text); color-scheme:dark; font:inherit; }
 .paperConfirmHint { font-size:14px; }
 @media(max-width:600px) { .paperConfirmActions { display:grid; } .paperConfirmActions button { width:100%; } }
+.savedKeySection { max-width:680px; }
+.savedKeySection h2 { margin:0; font:600 21px var(--font-geist-sans),sans-serif; }
+.savedKeySection .form { margin-top:22px; }
+.inlineKeySection { margin-top:32px; }
+.inlineKeySection .keySetup { margin-top:0; }
+.keyDivider { display:flex; align-items:center; gap:14px; max-width:680px; margin-bottom:24px; color:#bcbcc4; font-size:12px; font-weight:600; letter-spacing:.08em; }
+.keyDivider::before,.keyDivider::after { content:""; height:1px; background:#39393f; flex:1; }

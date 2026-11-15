@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readPhoto } from "@/lib/private-photos";
-import { parseExtraction, retryDelayMs, targetedCircleReading } from "@/lib/extraction";
+import { applyTargetedCircleChecks, parseExtraction, retryDelayMs } from "@/lib/extraction";
 
 export async function extractPage(teacherId: string, id: string, pageId: string) {
   const key = process.env.GROQ_API_KEY;
@@ -30,25 +30,19 @@ export async function extractPage(teacherId: string, id: string, pageId: string)
     const body = await response.json();
     const result = typeof body?.choices?.[0]?.message?.content === "string" ? parseExtraction(body.choices[0].message.content) : null;
     if (!result) { message = "Groq returned an unreadable result. Please retry this page."; throw new Error(); }
-    const circles = result.items.map((item, index) => ({ item, index })).filter(({ item }) => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle");
-    // Limit extra calls and concurrency; unverified readings remain available for review.
-    let nextCircle = 0;
-    const checkCircle = async () => {
-      while (nextCircle < circles.length) {
-        const position = nextCircle++;
-        const { item, index } = circles[position];
-        let observation: unknown = null;
-        if (position < 12 && item.number !== null && result.items.filter(other => other.number === item.number).length === 1) {
-          try {
-            const checkPrompt = `Inspect question ${item.number} only. Report only visible handwriting and marks, not the answer to the question. Return JSON {"handwritten_next_to_number":"letter or null","circled_choices":["letters"],"uncertain":boolean}. Use JSON null when no handwriting is present. Inspect all choices and the margin. Do not infer an answer from the printed text.`;
-            const check = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(15000), body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: checkPrompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
-            if (check.ok) { const data = await check.json(); observation = JSON.parse(data?.choices?.[0]?.message?.content ?? "null"); }
-          } catch { /* Unverified marks are flagged for teacher review. */ }
-        }
-        result.items[index] = targetedCircleReading(item, observation);
-      }
-    };
-    await Promise.all([checkCircle(), checkCircle()]);
+    const numbers = result.items.filter(item => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle" && item.number !== null && result.items.filter(other => other.number === item.number).length === 1).slice(0, 12).map(item => item.number);
+    if (result.items.some(item => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle")) {
+      let observations: unknown = null;
+      if (numbers.length) try {
+        const checkPrompt = `For EACH question number ${numbers.join(", ")} independently, examine only its visible marks, not the correct answer. Inspect all choices and the margin beside the question number. A letter inside a circle at a printed choice is not a handwritten letter beside the question number. Return JSON {"items":[{"number":1,"handwritten_next_to_number":null,"circled_choices":["A"],"uncertain":false}]}. Use null if there is no handwritten letter beside the question number, and an empty array if there is no circled option. Never infer the answer from the question.`;
+        const runCheck = () => fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30000), body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: checkPrompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
+        let check = await runCheck();
+        const delay = check.status === 429 ? retryDelayMs(check.headers.get("retry-after"), Date.now()) : 0;
+        if (delay > 0 && delay <= 10000) { await new Promise(resolve => setTimeout(resolve, delay)); check = await runCheck(); }
+        if (check.ok) { const data = await check.json(); const parsed = JSON.parse(data?.choices?.[0]?.message?.content ?? "null"); observations = { items: Array.isArray(parsed?.items) ? parsed.items.filter((item: { number?: unknown }) => numbers.includes(item?.number as number)) : [] }; }
+      } catch { /* Unverified marks are flagged for teacher review. */ }
+      result.items = applyTargetedCircleChecks(result.items, observations);
+    }
     const saved = await db.submissionPage.updateMany({ where: { ...owner, status: "PROCESSING", processingToken: token }, data: { status: "COMPLETE", extraction: result, extractionModel: model, processingToken: null, processingStartedAt: null, error: null, retryAt: null } });
     if (!saved.count) return NextResponse.json({ error: "The request expired. Refresh before retrying." }, { status: 409 });
     return NextResponse.json({ ok: true });

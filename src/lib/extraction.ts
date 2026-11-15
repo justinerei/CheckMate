@@ -7,6 +7,17 @@ export function targetedCircleReading(item: ExtractionItem, input: unknown): Ext
   return confirmed ? item : { ...item, status: "unclear", note: "The focused mark check did not confirm this circle. Check the photo." };
 }
 
+export function applyTargetedCircleChecks(items: ExtractionItem[], input: unknown): ExtractionItem[] {
+  const data = input as { items?: unknown } | null;
+  const checks = Array.isArray(data?.items) ? data.items : [];
+  return items.map(item => {
+    if (item.status !== "clear" || (item.observedStyle ?? item.markShape) !== "circle") return item;
+    const matches = checks.filter(check => check && typeof check === "object" && check.number === item.number);
+    const uniqueNumber = item.number !== null && items.filter(other => other.number === item.number).length === 1;
+    return targetedCircleReading(item, uniqueNumber && matches.length === 1 ? matches[0] : null);
+  });
+}
+
 export function verifyCircleReadings(items: ExtractionItem[], verification: ExtractionItem[]): ExtractionItem[] {
   return items.map(item => {
     if (item.status !== "clear" || (item.observedStyle ?? item.markShape) !== "circle") return item;

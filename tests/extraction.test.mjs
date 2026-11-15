@@ -25,6 +25,15 @@ test("targeted check accepts only one certain circle without a conflicting writt
   assert.equal(targetedCircleReading(item, null).status, "unclear");
 });
 
+test("batched mark checks confirm unique matches and flag missing or duplicate results", async () => {
+  const { applyTargetedCircleChecks } = await import("../src/lib/extraction.ts");
+  const item = { number: 1, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
+  const observation = { number: 1, handwritten_next_to_number: null, circled_choices: ["A"], uncertain: false };
+  assert.equal(applyTargetedCircleChecks([item], { items: [observation] })[0].status, "clear");
+  assert.equal(applyTargetedCircleChecks([item], { items: [observation, observation] })[0].status, "unclear");
+  assert.equal(applyTargetedCircleChecks([item], null)[0].status, "unclear");
+});
+
 test("validates extraction structure and rejects malformed or fabricated statuses", () => {
   const parsed = parseExtraction(JSON.stringify({ items: [{ number: 1, section: null, answer: "B", status: "clear", note: "" }] }));
   assert.equal(parsed?.items[0].answer, "B");

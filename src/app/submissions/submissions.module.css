@@ -434,4 +434,31 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .scoreAnswers strong { font-size:14px; }
 .keyUncertain button,.formatToggle { min-height:44px; }
 .sectionSettings input,.sectionSettings select { min-height:44px; }
+
+/* Compact answer-key review: show answers first, with editing on demand. */
+.sectionOverview { display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:12px; padding:20px 20px 8px; background:#222227; }
+.sectionOverview > div { display:grid; gap:5px; }
+.sectionOverview span,.questionPoints { color:#c3c3ca; font-size:13px; }
+.sectionDisclosure { padding:0 20px 12px; background:#222227; border-bottom:1px solid #39393f; }
+.sectionDisclosure > summary,.sectionPointControls > summary { min-height:44px; display:flex; align-items:center; color:#f4d0b8; cursor:pointer; font-size:14px; }
+.sectionDisclosure .sectionSettings { padding:12px 0; border:0; }
+.sectionPointControls { max-width:100%; }
+.sectionPointControls > div { display:flex; flex-wrap:wrap; align-items:end; gap:8px; }
+.sectionPointControls label { flex-basis:100%; font-size:13px; }
+.sectionPointControls input { width:100px; min-height:44px; padding:8px; border:1px solid #686872; border-radius:6px; background:var(--field-bg); color:var(--field-text); font:inherit; }
+.sectionPointControls p { margin:8px 0; color:#c3c3ca; font-size:13px; line-height:1.5; }
+.keyEditor .keySummary { grid-template-columns:34px minmax(100px,1fr) minmax(110px,170px) auto; }
+.keyEditor .keyDetails .questionType { margin:12px 0; }
+.keyEditor .keyDetails .keyPoints { max-width:150px; margin:12px 0; }
+.keyEditor .keyDetails .keyPoints input { min-height:44px; padding:9px 11px; background:var(--field-bg); color:var(--field-text); border:1px solid var(--field-border); border-radius:6px; font:inherit; }
+.mobileKeyPreview { display:none; }
+@media(max-width:700px) {
+  .keyEditor .keySummary { grid-template-columns:34px minmax(0,1fr) auto; }
+  .keyEditor .keyAnswer { grid-column:2 / -1; }
+  .keyEditor .questionPoints { grid-column:3; grid-row:1; }
+  .mobileKeyPreview { display:block; padding:14px; border:1px solid #39393f; border-radius:9px; background:#1c1c20; }
+  .mobileKeyPreview summary { min-height:44px; cursor:pointer; }
+  .mobileKeyPreview img,.mobileKeyPreview iframe { display:block; width:100%; max-height:50vh; object-fit:contain; border:0; }
+  .keyEditor .keyPreview { display:none; }
+}
 @media(max-width:700px) { .answerForm :is(textarea,select,.keyInput),.keyEditor :is(input,select,textarea),.form :is(input,select) { font-size:16px; } }

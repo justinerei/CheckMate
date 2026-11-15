@@ -21,3 +21,9 @@
 .totalDisplay { min-width:170px; display:grid; gap:5px; }
 .totalDisplay strong { color:#f4f4f5; font-size:28px; line-height:1.2; }
 .totalDisplay small { color:#aaaab3; font-size:12px; }
+.eyebrow,.step,.counter small,.range span { font-size:12px; }
+.form label { font-size:14px; }
+.addRow p,.summary p { font-size:13px; color:#c3c3ca; }
+.summaryReady p { color:#cbe0d0; }
+.remove { min-height:44px; padding-inline:8px; font-size:13px; color:#f0c2b1; }
+@media(max-width:700px) { .form input,.form select { font-size:16px; } }

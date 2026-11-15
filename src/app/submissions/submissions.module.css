@@ -429,3 +429,9 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .viewerPageSelect { display:flex; align-items:center; gap:8px; color:#d7d7dd; font-size:13px; }
 .viewerPageSelect select { min-height:44px; padding:8px 10px; border:1px solid #66666e; border-radius:6px; background:#29292e; color:#f4f4f5; font:inherit; color-scheme:dark; }
 .viewerPageSelect select:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.eyebrow,.pageTop span,.keyHeading .keyEyebrow,.scoreBadge,.scoreAnswers span { font-size:12px; }
+.keyMeta span,.keyAnswer,.keyPoints,.keyFields label,.sectionSettings label,.sectionSettings div span,.reviewSummaryText span,.reviewStatus { font-size:14px; color:#c3c3ca; }
+.scoreAnswers strong { font-size:14px; }
+.keyUncertain button,.formatToggle { min-height:44px; }
+.sectionSettings input,.sectionSettings select { min-height:44px; }
+@media(max-width:700px) { .answerForm :is(textarea,select,.keyInput),.keyEditor :is(input,select,textarea),.form :is(input,select) { font-size:16px; } }

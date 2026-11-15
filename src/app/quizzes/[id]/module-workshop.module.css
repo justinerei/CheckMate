@@ -19,3 +19,10 @@
 .dialogScroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#777079 transparent; }.dialogScroll .body { border-top:0; max-width:900px; margin:auto; }
 .workshopProgress { margin:0!important; padding:12px; border-left:3px solid #ff9b63; background:#30241f; color:#ffe1ce!important; }
 @media(max-width:600px) { .workshopDialog { width:100%; height:100dvh; border:0; border-radius:0; }.dialogHeader { padding:16px 18px; }.dialogHeader h2 { font-size:17px; }.workshopTrigger { padding:16px 18px; } }
+.kicker { font-size:12px; }
+.body p,.body small,.moduleSelect,.headings summary,.headings p,.pageList label,.sourceExcerpt,.workshopTrigger small { font-size:14px!important; }
+.body small { color:#c3c3ca; }
+.headings summary { min-height:44px; padding-block:12px; }
+.textButton { min-height:44px; display:inline-flex; align-items:center; }
+.pageList label { min-height:44px; align-items:center!important; }
+@media(max-width:700px) { .body input:not([type=checkbox]):not([type=file]),.body select,.body textarea { font-size:16px; } }

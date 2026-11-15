@@ -62,6 +62,7 @@ export default function ImportQuizForm() {
   const [scanned, setScanned] = useState(false);
   const [filesChanged, setFilesChanged] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -108,7 +109,7 @@ export default function ImportQuizForm() {
   async function scan() {
     if (!quizFiles.length || busy) return;
     if (rows.length && !window.confirm("Scan again and replace your current review edits?")) return;
-    setBusy(true); setError(""); setNotice("");
+    setScanning(true); setBusy(true); setError(""); setNotice("");
     try {
       const pages = await imagePages(quizFiles, setProgress);
       const extracted: ImportRow[] = [];
@@ -142,7 +143,7 @@ export default function ImportQuizForm() {
       setScanned(true); setFilesChanged(false);
       setNotice(`${reviewed.length} questions found.${emptyPages ? ` No complete questions were found on ${emptyPages} page(s).` : ""} Compare every question, choice and answer with the original. Questions may be missing or split across pages.`);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not scan the files. Please try again."); }
-    finally { setBusy(false); setProgress(""); }
+    finally { setBusy(false); setScanning(false); setProgress(""); }
   }
   async function save() {
     if (busy || filesChanged) return;
@@ -158,7 +159,7 @@ export default function ImportQuizForm() {
   }
   const missing = rows.filter(row => row.type !== "ESSAY" && !row.answer.trim()).length;
   return <div className={styles.importer}>
-    <PendingScreen pending={busy} message={progress || "Processing your quiz…"} />
+    <PendingScreen pending={busy} mood={scanning ? "thinking" : "working"} message={progress || "Processing your quiz…"} />
     <fieldset className={styles.formFields} disabled={busy}>
     <section className={styles.panel} aria-labelledby="import-files-heading"><h2 id="import-files-heading">1 / Choose your files</h2>
       <label>Quiz title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Science Quiz 1" /></label>

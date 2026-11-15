@@ -38,6 +38,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [notification, setNotification] = useState<{ message: string; error: boolean } | null>(null);
   const reportUploadError = (message: string) => { setUploadError(message); setNotification(message ? { message, error: true } : null); };
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const mobile = useSyncExternalStore(subscribeDevice, mobileDevice, serverDevice);
   const [cameraTarget, setCameraTarget] = useState<number | "add" | null>(null);
   const [reviewStarted, setReviewStarted] = useState(false);
@@ -67,7 +68,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     setProgress("");
   }
   async function checkFiles(selected: File[]): Promise<KeyRow[] | null> {
-    setBusy(true);
+    setScanning(true); setBusy(true);
     const statuses: { name: string; message: string; ok: boolean }[] = [];
     const allRows: KeyRow[] = [];
     let totalPages = 0;
@@ -118,7 +119,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
       const failed = statuses.find(item => !item.ok);
       reportUploadError(failed ? `File ${statuses.indexOf(failed) + 1}: ${failed.message}` : "Some files need attention. Your current answers have not been changed.");
       return null;
-    } finally { setBusy(false); setProgress(""); }
+    } finally { setBusy(false); setScanning(false); setProgress(""); }
   }
   function replacePage(index: number, replacement: File) {
     const updated = files.map((item, i) => i === index ? replacement : item);
@@ -147,7 +148,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const styleNames: Record<string, string> = { written: "Write letter in blank", circle: "Circle", shade: "Shade", box: "Mark a box", text: "Written text" };
   const photoCount = files.filter(item => !isPdfFile(item)).length;
   const issues = rows.flatMap(row => parseDraftPoints(row.points) === null ? [{ number: row.number, message: "Enter points from 0.01 to 9999." }] : row.uncertain ? [{ number: row.number, message: "Check this reading against the key." }] : row.type !== "ESSAY" && !row.answer.trim() ? [{ number: row.number, message: "Enter a correct answer." }] : row.type === "ESSAY" && (!row.rubricConfirmed || !validateRubric(row.rubric ?? [], parseDraftPoints(row.points) ?? 0)) ? [{ number: row.number, message: "Review and confirm a rubric matching the points." }] : []);
-  return <div className={styles.keySetup}><PendingScreen pending={busy} message={progress || "Processing your answer key…"} />
+  return <div className={styles.keySetup}><PendingScreen pending={busy} mood={scanning ? "thinking" : "working"} message={progress || "Processing your answer key…"} />
     {fromChecking && <nav className={styles.keySteps} aria-label="Checking workflow"><span aria-current={!reviewStarted ? "step" : undefined}><b>1</b> Upload key</span><span aria-current={reviewStarted ? "step" : undefined}><b>2</b> Review answers</span><span><b>3</b> Upload student paper</span><span><b>4</b> Check results</span></nav>}
     {!reviewStarted && <section className={`${styles.keyPanel} ${styles.keyStage}`} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Set up your key</h2></div></div>

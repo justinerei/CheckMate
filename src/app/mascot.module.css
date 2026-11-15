@@ -1,7 +1,10 @@
-.concerned { display:inline-flex; flex:none; align-items:center; justify-content:center; }
-.concernedFrame { display:block; width:75%; height:100%; background:url('/images/mate/concerned-frames.png') 0 0 / 400% 100% no-repeat; }
+.sprite { display:inline-flex; flex:none; align-items:center; justify-content:center; }
+.spriteFrame { display:block; width:75%; height:100%; background-position:0 0; background-size:400% 100%; background-repeat:no-repeat; }
+.concerned { background-image:url('/images/mate/concerned-frames.png'); }
+.thinking { background-image:url('/images/mate/thinking-frames.png'); }
+.working { background-image:url('/images/mate/working-frames.png'); }
 @media (prefers-reduced-motion: no-preference) {
-  .concernedFrame { animation: concerned-blink 2.4s steps(1, end) infinite; }
+  .spriteFrame { animation: concerned-blink 2.4s steps(1, end) infinite; }
   @keyframes concerned-blink {
     0%, 100% { background-position:0 0; }
     50% { background-position:33.333% 0; }

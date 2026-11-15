@@ -25,7 +25,7 @@ export default function DeleteQuiz({ id, title, hasPapers, hasBatches, archived 
   }
   const canDelete = !hasPapers;
   return <div className={styles.deleteQuiz}>
-    <PendingScreen pending={busy} message="Updating quiz…" />
+    <PendingScreen pending={busy} mood="focused" message="Updating quiz…" />
     <div className={styles.quizManagement}>
       {archived ? <button type="button" disabled={busy} onClick={() => change("restore")}>Restore quiz</button> : <button type="button" disabled={busy} onClick={() => setChoice("archive")}>Archive quiz</button>}
       {canDelete && <button type="button" disabled={busy} onClick={() => setChoice("delete")}>Delete quiz</button>}

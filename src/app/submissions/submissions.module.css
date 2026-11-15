@@ -442,7 +442,7 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .sectionDisclosure { padding:0 20px 12px; background:#222227; border-bottom:1px solid #39393f; }
 .sectionDisclosure > summary,.sectionPointControls > summary { min-height:44px; display:flex; align-items:center; color:#f4d0b8; cursor:pointer; font-size:14px; }
 .sectionDisclosure .sectionSettings { padding:12px 0; border:0; }
-.sectionPointControls { display:grid; gap:6px; max-width:240px; }
+.sectionPointControls { display:grid; justify-items:end; gap:6px; max-width:240px; margin-left:auto; text-align:right; }
 .sectionPointControls label { font-size:13px; }
 .sectionPointControls input { width:100px; min-height:44px; padding:8px; border:1px solid #686872; border-radius:6px; background:var(--field-bg); color:var(--field-text); font:inherit; }
 .sectionPointControls p { margin:0; color:#c3c3ca; font-size:13px; line-height:1.5; }

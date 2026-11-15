@@ -37,3 +37,7 @@
   .paper .paperTrigger span { padding:0; color:#ffe1ce; font-size:14px; }
   .paper > small { flex-basis:100%; }
 }
+.dialogActions button:last-child { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }
+.dialogActions button:last-child:not(:disabled):hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }
+.dialogActions button.discard { background:var(--action-danger); border-color:var(--action-danger); color:var(--action-danger-text); }
+.dialogActions button.discard:hover { background:var(--action-danger-hover); border-color:var(--action-danger-hover); }

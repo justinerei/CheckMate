@@ -13,3 +13,5 @@
 .rubric caption { text-align:left; font-weight:bold; padding-bottom:2mm; }
 .rubric th,.rubric td { border:0.5pt solid #555; padding:1.5mm 2mm; text-align:left; vertical-align:top; overflow-wrap:anywhere; white-space:pre-wrap; }
 .rubric th:first-child { width:25%; }.rubric th:last-child { width:13%; }.rubric td:last-child { text-align:center; }
+.toolbar button { background:var(--action-primary); color:var(--action-primary-text); }
+.toolbar button:not(:disabled):hover { background:var(--action-primary-hover); }

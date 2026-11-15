@@ -32,6 +32,6 @@ export default function DeleteQuiz({ id, title, hasPapers, hasBatches, archived 
     </div>
     <p>{archived ? "Archived. You can still view its papers and restore it." : canDelete ? hasBatches ? "Archive to keep this quiz, or delete it along with its empty batches." : "Archive to keep this quiz, or delete it permanently." : "This quiz has papers. Archive it to keep its records."}</p>
     {error && <p role="alert">{error}</p>}
-    {choice && <ConfirmDialog mascot title={`${choice === "archive" ? "Archive" : "Delete"} ${title}?`} message={choice === "archive" ? "This moves the quiz to Archived quizzes and keys. Its papers and scores stay available, and you can restore it anytime." : "This permanently deletes the quiz, its questions, answer key, uploaded modules, and any empty batches. This cannot be undone."} confirmLabel={choice === "archive" ? "Archive quiz" : "Delete quiz"} onCancel={() => setChoice(null)} onConfirm={() => change(choice)} />}
+    {choice && <ConfirmDialog mascot destructive={choice === "delete"} title={`${choice === "archive" ? "Archive" : "Delete"} ${title}?`} message={choice === "archive" ? "This moves the quiz to Archived quizzes and keys. Its papers and scores stay available, and you can restore it anytime." : "This permanently deletes the quiz, its questions, answer key, uploaded modules, and any empty batches. This cannot be undone."} confirmLabel={choice === "archive" ? "Archive quiz" : "Delete quiz"} onCancel={() => setChoice(null)} onConfirm={() => change(choice)} />}
   </div>;
 }

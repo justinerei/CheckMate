@@ -69,3 +69,5 @@
 .sectionHeader .actions a,.sectionHeader .actions button,.textButton { display:inline-flex; align-items:center; min-height:44px; }
 .sectionHeader .actions :is(a,button):focus-visible,.textButton:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 @media(max-width:700px) { .form input:not([type=checkbox]),.form textarea,.form select,.quickPoints input { font-size:16px; } }
+.primary { background:var(--action-primary); color:var(--action-primary-text); }
+.primary:not(:disabled):hover { background:var(--action-primary-hover); }

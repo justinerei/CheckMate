@@ -27,3 +27,5 @@
 .summaryReady p { color:#cbe0d0; }
 .remove { min-height:44px; padding-inline:8px; font-size:13px; color:#f0c2b1; }
 @media(max-width:700px) { .form input,.form select { font-size:16px; } }
+.primary { background:var(--action-primary); color:var(--action-primary-text); }
+.primary:not(:disabled):hover { background:var(--action-primary-hover); }

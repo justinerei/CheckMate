@@ -47,7 +47,7 @@ export function ExistingAnswerForm({ formatConcern, advance, submissionId, quest
       <input type="hidden" name="instruction" value="FOLLOWED" />
       <button type="button" className={styles.formatToggle} onClick={() => { setFlagging(true); guard?.markDirty(questionId); }}>Flag an instruction issue</button>
     </>
-  )}<details open={comment ? true : undefined}><summary>Teacher comment</summary><label>Comment (optional)<textarea name="comment" defaultValue={comment ?? ""} maxLength={4000} rows={2} /></label></details><button className={styles.secondary} disabled={pending} aria-busy={pending}>{pending ? "Saving…" : advance ? "Confirm & continue" : "Confirm answer"}</button>{state.message && <p className={state.ok ? styles.success : styles.error} role="status">{state.message}</p>}</form>;
+  )}<details open={comment ? true : undefined}><summary>Teacher comment</summary><label>Comment (optional)<textarea name="comment" defaultValue={comment ?? ""} maxLength={4000} rows={2} /></label></details><button className={styles.primary} disabled={pending} aria-busy={pending}>{pending ? "Saving…" : advance ? "Confirm & continue" : "Confirm answer"}</button>{state.message && <p className={state.ok ? styles.success : styles.error} role="status">{state.message}</p>}</form>;
 }
 export function FinalizeButton({ batchId, id, name, quizTitle, maximum, ready, finalized, finalScore }: { batchId: string | null; id: string; name: string; quizTitle: string; maximum: number; ready: boolean; finalized: boolean; finalScore: string | null }) {
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const router = useRouter(); const dialog = useRef<HTMLDialogElement>(null);

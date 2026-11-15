@@ -37,3 +37,5 @@
 .status.backgroundStatus span { background:#ffad7d; box-shadow:0 0 0 0 #ffad7d80; animation:statusPulse 2s ease-out infinite; }
 @keyframes statusPulse { 0% { box-shadow:0 0 0 0 #ffad7d80; } 70%,100% { box-shadow:0 0 0 7px #ffad7d00; } }
 @media (prefers-reduced-motion: reduce) { .status.backgroundStatus span { animation:none; box-shadow:0 0 0 3px #ffad7d40; } }
+.addPaper summary,.addControls button { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }
+.addPaper summary:hover,.addPaper[open] summary,.addControls button:not(:disabled):hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }

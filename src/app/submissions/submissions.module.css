@@ -465,3 +465,14 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
   .keyEditor .keyPreview { display:none; }
 }
 @media(max-width:700px) { .answerForm :is(textarea,select,.keyInput),.keyEditor :is(input,select,textarea),.form :is(input,select) { font-size:16px; } }
+/* Action hierarchy: primary, secondary and destructive. */
+.primary,.photoFileButton { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }
+.empty a.primary { color:var(--action-primary-text); }
+.primary:visited { color:var(--action-primary-text); }
+.primary:not(:disabled):hover,.photoFileButton:not(:has(input:disabled)):hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }
+.secondary,.cameraFileButton { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
+.secondary:not(:disabled):hover,.cameraFileButton:not(:has(input:disabled)):hover { background:var(--action-secondary-hover); }
+.uploadForm input::file-selector-button { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
+.danger { display:inline-flex; align-items:center; justify-content:center; min-height:44px; width:max-content; padding:10px 16px; border:1px solid var(--action-danger); border-radius:7px; background:var(--action-danger); color:var(--action-danger-text); font:inherit; font-weight:600; cursor:pointer; }
+.danger:not(:disabled):hover { background:var(--action-danger-hover); border-color:var(--action-danger-hover); }
+@media(max-width:600px) { .confirmDialogActions .danger { width:100%; } }

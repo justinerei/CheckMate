@@ -40,3 +40,7 @@
 .quizManagement { display:flex; flex-wrap:wrap; gap:10px; }
 .resultsMetrics span { font-size:12px; }
 .resultsTableWrap :is(thead th,small),.paperFilters p { font-size:13px; }
+.primary,.primary:visited { background:var(--action-primary); color:var(--action-primary-text); }
+.primary:hover { background:var(--action-primary-hover); }
+.secondaryAction,.secondaryAction:visited { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
+.secondaryAction:hover { background:var(--action-secondary-hover); }

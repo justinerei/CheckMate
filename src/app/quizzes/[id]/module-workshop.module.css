@@ -26,3 +26,7 @@
 .textButton { min-height:44px; display:inline-flex; align-items:center; }
 .pageList label { min-height:44px; align-items:center!important; }
 @media(max-width:700px) { .body input:not([type=checkbox]):not([type=file]),.body select,.body textarea { font-size:16px; } }
+.primary { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }
+.primary:not(:disabled):hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }
+.secondary { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
+.secondary:not(:disabled):hover { background:var(--action-secondary-hover); }

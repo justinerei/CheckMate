@@ -47,3 +47,9 @@
 .metrics small,.rowMain small,.row time,.libraryMain time,.cardFooter,.librarySearch p { font-size:13px; color:#c3c3ca; }
 .viewAll,.empty a { display:inline-flex; align-items:center; min-height:44px; }
 .libraryCheck { display:inline-flex; align-items:center; min-height:44px; font-size:13px; }
+.button,.button:visited { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }
+.button:hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }
+.buttonSecondary,.buttonSecondary:visited { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
+.buttonSecondary:hover { background:var(--action-secondary-hover); }
+.actionPrimary > .primaryCta:last-child { background:var(--action-primary); color:var(--action-primary-text); }
+.actionPrimary:hover > .primaryCta:last-child { background:var(--action-primary-hover); }

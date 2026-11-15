@@ -6,6 +6,19 @@ export function forbidsErasures(directions: string | null | undefined): boolean 
   return (directions ?? "").split(/[.!?;\n]+/).some(clause => /^(?:no erasures?(?: (?:are )?allowed)?|erasures? (?:are |is )?not allowed)$/i.test(clause.trim()));
 }
 
+export function setNoErasures(directions: string, enabled: boolean): string {
+  if (enabled) {
+    if (forbidsErasures(directions)) return directions;
+    const text = directions.trim();
+    return text ? `${text}${/[.!?;]$/.test(text) ? "" : "."} No erasures.` : "No erasures.";
+  }
+  return Array.from(directions.matchAll(/([^.!?;\n]*)([.!?;\n]+|$)/g))
+    .filter(match => !forbidsErasures(match[1]))
+    .map(match => match[0])
+    .join("")
+    .trim();
+}
+
 export function analyzeAutomaticReview(items: Candidate[], expectedStyle: string, type: string, keys?: string[], directions?: string | null): { decision: "FOLLOWED" | "VIOLATION" | null; reason: string | null } {
   const review = (reason: string) => ({ decision: null, reason } as const);
   if (type === "ESSAY") return review("Essay answers need a teacher to score the response using the rubric.");

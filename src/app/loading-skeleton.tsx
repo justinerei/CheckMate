@@ -1,5 +1,6 @@
 import Link from "next/link";
 import styles from "./loading-skeleton.module.css";
+import { WorkspaceShell, type Active } from "./workspace-frame";
 
 type Variant = "home" | "dashboard" | "library" | "students" | "overview" | "form" | "editor" | "review" | "print";
 
@@ -15,10 +16,10 @@ export default function LoadingSkeleton({ variant = "form" }: { variant?: Varian
   const workspace = ["dashboard", "library", "students", "overview"].includes(variant);
   const home = variant === "home";
   const print = variant === "print";
-  const active = variant === "dashboard" ? "Overview" : variant === "students" ? "Students" : "Quizzes & keys";
+  const active: Active = variant === "dashboard" ? "overview" : variant === "students" ? "students" : "quizzes";
+  if (workspace) return <WorkspaceShell active={active}><span className={styles.status} role="status">Loading page…</span><div className={styles.workspaceContent} aria-busy="true" aria-hidden="true"><Line size="short" /><Line size="title" /><Line size="long" />{variant === "dashboard" ? <><div className={styles.dashboardCards}><div className={styles.panel}><Line size="short" /><Line size="title" /><Line size="long" /><Line size="button" /></div><Blocks count={2} /></div><Blocks /></> : <><div className={styles.toolbar}><Line size="medium" /><Line size="button" /></div><Blocks count={variant === "students" ? 2 : 3} /><div className={styles.list}><Blocks /></div></>}</div></WorkspaceShell>;
   return <div className={`${styles.shell} ${workspace ? styles.workspace : ""}`}>
     <span className={styles.status} role="status">Loading page…</span>
-    {workspace && <aside className={styles.rail} aria-hidden="true"><span className={styles.brand}>checkmate<span>.</span></span><p>WORKSPACE</p>{["Overview", "Quizzes & keys", "Students", "Create a quiz"].map(label => <span className={`${styles.navItem} ${label === active ? styles.active : ""}`} key={label}>{label}</span>)}</aside>}
     <div className={styles.body} aria-busy="true">
       <header className={styles.header}><Link href={home ? "/" : "/dashboard"} className={styles.brand}>checkmate<span>.</span></Link>{!home && <Line size="button" />}</header>
       <main className={`${styles.content} ${print ? styles.print : ""}`} aria-hidden="true">

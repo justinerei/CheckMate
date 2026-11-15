@@ -6,11 +6,15 @@ import Mascot from "@/app/mascot";
 import NextPaperButton from "../next-paper-button";
 import ConfirmDialog from "../../confirm-dialog";
 import { useRouter } from "next/navigation";
+import { useReviewDraftGuard } from "../../review-draft-context";
 import { saveExistingAnswer, finalizeExisting, confirmClearAnswers, reopenFinalizedPaper } from "./existing-actions";
 import styles from "../../submissions.module.css";
 type Criterion = { id: string; title: string; description: string; maxPoints: string; score: string; feedback: string };
 export function ExistingAnswerForm({ formatConcern, advance, submissionId, questionId, value, comment, essay, score, points, decision, criteria }: { formatConcern: boolean; advance: boolean; submissionId: string; questionId: string; value: string | null; comment: string | null; essay: boolean; score: string | null; points: string; decision: string | null; criteria: Criterion[] }) {
   const [state, action, pending] = useActionState(saveExistingAnswer.bind(null, submissionId, questionId), { message: "", ok: false });
+  const guard = useReviewDraftGuard();
+  const saveResult = guard?.saveResult;
+  useEffect(() => { if (state.message && !pending) saveResult?.(questionId, state.ok); }, [state, pending, questionId, saveResult]);
   const [blank, setBlank] = useState(value === ""); const [answer, setAnswer] = useState(value ?? "");
   const [ratings, setRatings] = useState(criteria); const [suggesting, setSuggesting] = useState(false); const [suggestionMessage, setSuggestionMessage] = useState("");
   const [openFeedback, setOpenFeedback] = useState<string[]>(() => criteria.filter(item => item.feedback.trim()).map(item => item.id));
@@ -20,10 +24,10 @@ export function ExistingAnswerForm({ formatConcern, advance, submissionId, quest
   async function suggest() {
     if (ratings.some(item => item.score || item.feedback) && !window.confirm("Replace the current criterion scores and feedback with AI suggestions?")) return;
     setSuggesting(true); setSuggestionMessage("");
-    try { const response = await fetch(`/api/submissions/${submissionId}/essay-suggestion`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionId, answer }) }); const result = await response.json(); if (!response.ok) { setSuggestionMessage(result.error); return; } setRatings(old => old.map(item => { const found = result.assessments.find((a: { id: string }) => a.id === item.id); return found ? { ...item, score: String(found.score), feedback: found.feedback } : item; })); setOpenFeedback(result.assessments.filter((item: { feedback?: string }) => item.feedback?.trim()).map((item: { id: string }) => item.id)); setSuggestionMessage("Review the suggested scores and feedback before confirming."); }
+    try { const response = await fetch(`/api/submissions/${submissionId}/essay-suggestion`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ questionId, answer }) }); const result = await response.json(); if (!response.ok) { setSuggestionMessage(result.error); return; } setRatings(old => old.map(item => { const found = result.assessments.find((a: { id: string }) => a.id === item.id); return found ? { ...item, score: String(found.score), feedback: found.feedback } : item; })); guard?.markDirty(questionId); setOpenFeedback(result.assessments.filter((item: { feedback?: string }) => item.feedback?.trim()).map((item: { id: string }) => item.id)); setSuggestionMessage("Review the suggested scores and feedback before confirming."); }
     catch { setSuggestionMessage("Could not suggest scores. Please retry or score manually."); } finally { setSuggesting(false); }
   }
-  return <form action={action} className={styles.answerForm} data-save-confirmed={state.ok && !pending ? "true" : undefined}><PendingScreen pending={pending || suggesting} message={suggesting ? "Suggesting scores…" : "Saving your review…"} /><details open={!value || essay || undefined}><summary>Edit student answer</summary><label>Student answer<textarea name="answer" value={answer} onChange={e => setAnswer(e.target.value)} maxLength={4000} rows={3} disabled={blank} /></label><input type="hidden" name="answer" value="" disabled={!blank} /><label className={styles.check}><input type="checkbox" name="blank" checked={blank} onChange={e => setBlank(e.target.checked)} /> Mark as blank</label></details>{essay && ratings.length > 0 && <section className={styles.compactRubric} aria-labelledby={`rubric-${questionId}`}>
+  return <form action={action} className={styles.answerForm} data-review-question={questionId} data-save-confirmed={state.ok && !pending ? "true" : undefined}><PendingScreen pending={pending || suggesting} message={suggesting ? "Suggesting scores…" : "Saving your review…"} /><details open={!value || essay || undefined}><summary>Edit student answer</summary><label>Student answer<textarea name="answer" value={answer} onChange={e => setAnswer(e.target.value)} maxLength={4000} rows={3} disabled={blank} /></label><input type="hidden" name="answer" value="" disabled={!blank} /><label className={styles.check}><input type="checkbox" name="blank" checked={blank} onChange={e => setBlank(e.target.checked)} /> Mark as blank</label></details>{essay && ratings.length > 0 && <section className={styles.compactRubric} aria-labelledby={`rubric-${questionId}`}>
     <div className={styles.rubricHeader}><div><h3 id={`rubric-${questionId}`}>Score this essay</h3><p>Give each criterion a score, then confirm.</p></div><span>{ratings.every(item => item.score.trim() !== "") ? Math.round(ratings.reduce((sum, item) => sum + (Number(item.score) || 0), 0) * 100) / 100 : "—"} / {points} points</span></div>
     <div className={styles.rubricAi}><button type="button" className={styles.secondary} disabled={suggesting || blank || !answer.trim()} onClick={suggest}>{suggesting ? "Suggesting…" : "Suggest scores with AI"}</button><small>Sends the answer and rubric to Gemini.</small></div>
     {suggestionMessage && <p className={styles.rubricMessage} role="status">{suggestionMessage}</p>}
@@ -41,7 +45,7 @@ export function ExistingAnswerForm({ formatConcern, advance, submissionId, quest
   ) : (
     <>
       <input type="hidden" name="instruction" value="FOLLOWED" />
-      <button type="button" className={styles.formatToggle} onClick={() => setFlagging(true)}>Flag an instruction issue</button>
+      <button type="button" className={styles.formatToggle} onClick={() => { setFlagging(true); guard?.markDirty(questionId); }}>Flag an instruction issue</button>
     </>
   )}<details open={comment ? true : undefined}><summary>Teacher comment</summary><label>Comment (optional)<textarea name="comment" defaultValue={comment ?? ""} maxLength={4000} rows={2} /></label></details><button className={styles.secondary} disabled={pending} aria-busy={pending}>{pending ? "Saving…" : advance ? "Confirm & continue" : "Confirm answer"}</button>{state.message && <p className={state.ok ? styles.success : styles.error} role="status">{state.message}</p>}</form>;
 }

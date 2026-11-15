@@ -46,3 +46,10 @@ export function canConfirmClearSuggestion(items: ExtractionItem[], expectedStyle
   const expected = expectedStyle === "text" ? "written" : expectedStyle;
   return item.status === "clear" && !!item.answer?.trim() && !!item.observedStyle && item.observedStyle !== "unknown" && item.observedStyle === expected;
 }
+
+// This is only a starting value for teacher review, never an automatic decision.
+export function preferredReviewCandidate<T extends { item: ExtractionItem }>(candidates: T[]): T | null {
+  if (candidates.length === 1) return candidates[0];
+  const clear = candidates.filter(candidate => candidate.item.status === "clear" && !!candidate.item.answer?.trim());
+  return clear.length === 1 && candidates.every(candidate => candidate === clear[0] || candidate.item.status === "blank") ? clear[0] : null;
+}

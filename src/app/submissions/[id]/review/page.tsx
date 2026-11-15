@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
+import { matchCandidates, parseExtraction, preferredReviewCandidate, type ExtractionItem } from "@/lib/extraction";
 import ReviewBackLink, { ReviewPhotosLink } from "./review-back-link";
 import NextPaperButton from "../next-paper-button";
 import NameForm from "./name-form";
@@ -58,7 +58,8 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
     const provisional = scored.reduce((sum, item) => sum + (item.points ?? 0), 0);
     const items = scored.map(({question, saved, points}) => {
       const candidates = suggestions[question.id] ?? [];
-      const single = candidates.length === 1 ? candidates[0].item : null;
+      const preferred = preferredReviewCandidate(candidates);
+      const single = preferred?.item ?? null;
       const suggestion = single?.status === "blank" ? "" : single?.status === "clear" ? single.answer : null;
       const automaticViolation = !saved && autoDecision(question) === "VIOLATION";
       const erasureViolation = automaticViolation && forbidsErasures(question.instructions) && single?.erasure === "present";
@@ -67,6 +68,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       if (points === null) {
         if (saved) reason = question.type === "ESSAY" && saved.teacherScore === null ? "The essay score has not been saved. Score it using the rubric." : "This answer has not been fully confirmed. Check the answer and save your decision.";
         else if (question.type === "ESSAY") reason = "Essay answers need a teacher to score the response using the rubric.";
+        else if (preferred && candidates.length > 1) reason = "One photo has a readable answer; another was reported blank. Check the paper before confirming.";
         else if (unfinished.length) reason = "Some paper pages have not finished checking. Read or retry those pages, or review answers manually.";
         else if (!question.answerKey?.acceptedAnswers.some(answer => answer.trim())) reason = "The answer key is missing for this question. Add the correct answer before scoring.";
         else reason = analyzeAutomaticReview(candidates.map(c => c.item), question.answerStyle, question.type, question.answerKey.acceptedAnswers, question.instructions).reason ?? "The answer could not be scored automatically. Check the response and confirm it.";
@@ -75,13 +77,13 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
         <h2>Question {question.number}</h2>
         {reason && <p className={styles.reviewWarning}><strong>Why review is needed: </strong>{reason}</p>}{automaticViolation && <p className={styles.reviewWarning}>{erasureViolation ? "Marked incorrect: an erasure was detected and this section says no erasures." : "Marked incorrect: the detected mark is not a circle, but the instruction requires one."} You can correct this decision after checking the photo.</p>}
         <div className={styles.scoreAnswers}>
-          <p><span>{saved ? "Confirmed answer" : "Detected answer"}</span><strong>{candidates.length > 1 && !saved ? "Conflicting readings" : value || (value === "" || single?.status === "blank" ? "Blank" : single?.answer || "Unreadable")}</strong></p>
+          <p><span>{saved ? "Confirmed answer" : "Detected answer"}</span><strong>{candidates.length > 1 && !saved && !preferred ? "Multiple readings to check" : value || (value === "" || single?.status === "blank" ? "Blank" : single?.answer || "Unreadable")}</strong></p>
           <p><span>{question.type === "ESSAY" ? "Reference answer" : "Answer key"}</span><strong>{question.answerKey?.acceptedAnswers.join(" / ") || "Not provided"}</strong></p>
         </div>
         {question.instructions && <p>{question.instructions}</p>}
-        {candidates.length > 1 && <ul>{candidates.map((c,i) => <li key={i}>Page {c.page}: {c.item.answer || "Unreadable"} {c.item.note}</li>)}</ul>}
+        {candidates.length > 1 && <ul>{candidates.map((c,i) => <li key={i}>Page {c.page}: {c.item.status === "blank" ? "Reported blank" : c.item.answer || "Unreadable"} {c.item.note}</li>)}</ul>}
         {submission.status === "FINALIZED" && question.type === "ESSAY" && question.rubricCriteria.map(c => { const assessment = saved?.assessments.find(a => a.criterionId === c.id); return <p key={c.id}>{c.title}: {assessment?.teacherScore?.toString() ?? "—"} / {c.maxPoints.toString()}{assessment?.teacherFeedback ? ` · ${assessment.teacherFeedback}` : ""}</p>; })}{submission.status === "FINALIZED" && question.type !== "ESSAY" && <p>Points awarded: {saved?.objectiveScore?.toString() ?? "0"}</p>}{submission.status === "IN_REVIEW" && <ExistingAnswerForm formatConcern={hasInstructionConcern(candidates.map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers) || (forbidsErasures(question.instructions) && candidates.some(c => c.item.erasure !== "none"))} advance={points === null} submissionId={id} questionId={question.id} value={saved?.confirmedText ?? suggestion} comment={saved?.teacherComment ?? null} essay={question.type === "ESSAY"} score={saved?.teacherScore?.toString() ?? null} points={question.points.toString()} decision={saved?.instructionDecision ?? null} criteria={question.rubricCriteria.map(c => ({ id: c.id, title: c.title, description: c.description, maxPoints: c.maxPoints.toString(), score: saved?.assessments.find(a => a.criterionId === c.id)?.teacherScore?.toString() ?? "", feedback: saved?.assessments.find(a => a.criterionId === c.id)?.teacherFeedback ?? "" }))} />}</article>;
-      return { id: question.id, number: question.number, flagged: points === null, detected: candidates.map(c => c.page), form };
+      return { id: question.id, number: question.number, flagged: points === null, detected: preferred ? [preferred.page, ...candidates.filter(c => c !== preferred).map(c => c.page)] : candidates.map(c => c.page), form };
     });
     const score = <section className={styles.keyPanel}><div className={styles.keyHeading}><div><span className={styles.keyEyebrow}>03 / SCORE</span><h2>{submission.status === "FINALIZED" ? "Score breakdown" : "Score preview"}</h2></div></div><div className={styles.scoreOverview}><div><span>{submission.status === "FINALIZED" ? "Final score" : "Total score"}</span>{ready ? <strong>{provisional} <small>/ {maximum}</small></strong> : <strong>Pending review</strong>}</div><p>{ready ? (submission.status === "FINALIZED" ? "This paper has been finalized." : "Review the answers before finalizing.") : `Remaining: ${[!submission.nameReviewed && "confirm student name", flagged.length > 0 && `review ${flagged.length} answers`, unmatchedBlocked && "verify all answers because a reading could not be matched", finalizationReason].filter(Boolean).join(" and ")}.`}</p></div>{submission.status === "IN_REVIEW" && <p>Finalizing locks the score for this paper.</p>}{submission.status === "FINALIZED" && <ReopenPaper id={id} />}{submission.resultHistory.length > 0 && <details className={styles.resultHistory}><summary>Result history</summary><ul>{submission.resultHistory.map(entry => <li key={entry.id}><span>{entry.reason}</span><small>{new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" }).format(entry.changedAt)} · {entry.previousScore !== null ? `${entry.previousScore.toString()} → ` : ""}{entry.newScore.toString()} points</small></li>)}</ul></details>}<FinalizeButton batchId={submission.batchId} id={id} name={submission.paperName || submission.student?.name || "Unnamed paper"} quizTitle={submission.quiz.title} maximum={maximum} ready={ready} finalized={submission.status === "FINALIZED"} finalScore={submission.totalScore?.toString() ?? null} /><div className={styles.scoreList} aria-label="Question scores">{scored.map(({ question, saved, points }) => {
       const maximumPoints = Number(question.points);

@@ -88,3 +88,14 @@ test("preserves erasure observations and rejects unknown values", () => {
   assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, erasure: "maybe" }] })), null);
   assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, erasure: undefined }] }))?.items[0].erasure, undefined);
 });
+
+test("suggests the only clear page reading for teacher review without resolving conflicts", async () => {
+  const { preferredReviewCandidate } = await import("../src/lib/extraction.ts");
+  const blank = { page: 1, item: { number: 7, section: null, status: "blank", answer: null, note: "" } };
+  const clear = { page: 2, item: { number: 7, section: null, status: "clear", answer: "C", note: "" } };
+  assert.equal(preferredReviewCandidate([blank, clear]), clear);
+  assert.equal(preferredReviewCandidate([clear, { ...clear, page: 3 }]), null);
+  assert.equal(preferredReviewCandidate([clear, { ...blank, item: { ...blank.item, status: "unclear" } }]), null);
+  assert.equal(preferredReviewCandidate([blank]), blank);
+  assert.equal(needsReview([blank.item, clear.item], false), true);
+});

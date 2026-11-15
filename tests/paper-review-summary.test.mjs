@@ -37,3 +37,10 @@ test("ready status is blocked by missing pages, invalid readings or answer keys"
   assert.match(paperReviewSummary({ ...paper(), pages: [{ pageNumber: 1, status: "COMPLETE", extraction: null }] }, [question], "BUILT").finalizationReason, /checking all pages/);
   assert.match(paperReviewSummary(paper(), [{ ...question, answerKey: null }], "BUILT").finalizationReason, /answer key/);
 });
+
+test("blank and clear readings from separate photos still require a teacher decision", () => {
+  const duplicate = { ...paper(), expectedPages: 2, pages: [page([{ ...reading, answer: null, status: "blank", observedStyle: "unknown" }]), { ...page([reading]), pageNumber: 2 }] };
+  const summary = paperReviewSummary(duplicate, [question], "BUILT");
+  assert.equal(summary.flagged, 1);
+  assert.equal(summary.proposed, 0);
+});

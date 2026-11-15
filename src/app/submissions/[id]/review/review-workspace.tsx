@@ -77,7 +77,7 @@ export default function ReviewWorkspace({ id, items, pages, name, score, finaliz
         <section className={styles.question}>
           <div className={styles.row}><span aria-live="polite">{index + 1} of {queue.length} {currentView === "review" ? "to review" : "answers"}</span>
             <select aria-label="Choose question" value={active.id} onChange={e => select(e.target.value)}>{queue.map(item => <option key={item.id} value={item.id}>Question {item.number}</option>)}</select></div>
-          {new Set(active.detected).size > 1 && <div className={styles.pageChoices} role="group" aria-label="Compare readings by page"><span>Compare readings:</span>{[...new Set(active.detected)].map(page => <button type="button" key={page} aria-pressed={photo?.pageNumber === page} onClick={() => setManualPage({ question: active.id, page })}>View page {page}</button>)}</div>}
+          {new Set(active.detected).size > 1 && <div className={styles.pageChoices} role="group" aria-label="Paper photos with readings"><span>Check paper photos:</span>{[...new Set(active.detected)].map(page => <button type="button" key={page} aria-pressed={photo?.pageNumber === page} onClick={() => setManualPage({ question: active.id, page })}>View page {page}</button>)}</div>}
           {dirty.includes(active.id) && <p className={styles.unsaved} role="status">Unsaved changes</p>}
           {items.map(item => <div key={`${item.id}:${versions[item.id] ?? 0}`} hidden={item.id !== active.id}>{item.form}</div>)}
           <div className={styles.row}><button disabled={index === 0} onClick={() => select(queue[index-1].id)}>← Previous</button><button disabled={index === queue.length-1} onClick={() => select(queue[index+1].id)}>Next →</button></div>

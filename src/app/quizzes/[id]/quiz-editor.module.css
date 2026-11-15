@@ -20,3 +20,14 @@
 .keyCorrectionLink:focus-visible,.correctAnswerLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 
 .instructionField { display:grid; gap:12px; }.instructionField small { margin-top:0; }.instructionField button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.sectionJump { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; color:#bcbcc4; font-size:13px; }
+.sectionJump a { display:inline-flex; align-items:center; min-height:44px; max-width:100%; padding:8px 12px; border:1px solid #4b4b53; border-radius:7px; color:#f4f4f5; text-decoration:none; overflow-wrap:anywhere; }
+.sectionJump a:hover { background:#29292e; }
+.quickPoints { display:grid; gap:7px; margin:16px 0; }
+.quickPoints label { color:#e6e6e9; font-size:13px; font-weight:600; }
+.quickPoints > div { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.quickPoints input { width:100px; min-height:44px; padding:8px 10px; background:var(--field-bg); color:var(--field-text); border:1px solid var(--field-border); border-radius:6px; font:inherit; color-scheme:dark; }
+.quickPoints button { min-height:44px; }
+.quickPoints small { color:#bcbcc4; line-height:1.5; }
+.rubricShortcut { display:inline-flex; align-items:center; min-height:44px; color:#ffb184; font-weight:600; }
+.quickPoints input:focus-visible,.quickPoints button:focus-visible,.sectionJump a:focus-visible,.rubricShortcut:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

@@ -28,7 +28,6 @@ export function analyzeAutomaticReview(items: Candidate[], expectedStyle: string
   if (requiresLetterReview(item.answer, expectedStyle, type, keys)) return review("The answer key expects a letter, but the reading is not a single letter. Check what the student wrote.");
   if (hasInstructionConcern(items, expectedStyle, type, keys)) return review(`The expected marking style is ${expectedStyle === "text" ? "written" : expectedStyle}, but the detected mark is ${item.observedStyle}. Check the paper.`);
   const expected = expectedStyle === "text" ? "written" : expectedStyle;
-  if (type === "MULTIPLE_CHOICE" && expected === "circle" && item.observedStyle === "circle") return review("Confirm the circled choice against the photo before scoring; AI can misread a mark.");
   if (item.observedStyle === expected) return { decision: "FOLLOWED", reason: null };
   return review("The marking style could not be confirmed. Check the mark on the paper.");
 }

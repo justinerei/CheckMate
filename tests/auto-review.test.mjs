@@ -3,17 +3,17 @@ import assert from "node:assert/strict";
 import { automaticDecision } from "../src/lib/auto-review.ts";
 import { objectivePoints } from "../src/lib/scoring.ts";
 
-test("circle instructions penalize clearly written or underlined answers and review unverified circles", () => {
+test("circle instructions penalize clearly written or underlined answers and accept clear circles", () => {
   const item = { status: "clear", answer: "A", observedStyle: "written", note: "" };
   assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["A"]), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "underline" }], "circle", "MULTIPLE_CHOICE", ["A"]), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "unknown" }], "circle", "MULTIPLE_CHOICE", ["A"]), null);
-  assert.equal(automaticDecision([{ ...item, observedStyle: "circle" }], "circle", "MULTIPLE_CHOICE", ["A"]), null);
+  assert.equal(automaticDecision([{ ...item, observedStyle: "circle" }], "circle", "MULTIPLE_CHOICE", ["A"]), "FOLLOWED");
 });
 
-test("circled responses require confirmation and clear violations can be checked automatically", () => {
+test("clear circles and clear violations can be checked automatically", () => {
   const item = { status: "clear", answer: "B", observedStyle: "circle", note: "" };
-  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE"), null);
+  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE"), "FOLLOWED");
   assert.equal(automaticDecision([{ ...item, observedStyle: "box" }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "triangle" }], "circle", "MULTIPLE_CHOICE"), "VIOLATION");
   assert.equal(automaticDecision([{ ...item, observedStyle: "unknown" }], "circle", "MULTIPLE_CHOICE"), null);
@@ -74,8 +74,8 @@ test("no-erasure rules only penalize clear erasures when the section forbids the
   assert.equal(forbidsErasures("Erasures are allowed."), false);
   assert.equal(forbidsErasures("No erasures required."), false);
   assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), "VIOLATION");
-  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], ""), null);
-  assert.equal(automaticDecision([{ ...item, erasure: "none" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
+  assert.equal(automaticDecision([item], "circle", "MULTIPLE_CHOICE", ["B"], ""), "FOLLOWED");
+  assert.equal(automaticDecision([{ ...item, erasure: "none" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), "FOLLOWED");
   assert.equal(automaticDecision([{ ...item, erasure: "uncertain" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
   assert.equal(automaticDecision([{ ...item, erasure: undefined }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);
   assert.equal(automaticDecision([{ ...item, note: "possibly an erasure" }], "circle", "MULTIPLE_CHOICE", ["B"], "No erasures."), null);

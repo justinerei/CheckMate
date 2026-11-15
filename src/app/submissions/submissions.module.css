@@ -408,3 +408,21 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .newKeyLink a { color:#ffb184; font-weight:600; text-underline-offset:3px; }
 .newKeyLink a:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 .newKeyEmpty p { margin:0; color:#c3c3ca; line-height:1.5; }
+.compactRubric { display:grid; gap:14px; margin:8px 0; padding:16px; border:1px solid #414149; border-radius:8px; }
+.rubricHeader { display:flex; justify-content:space-between; align-items:start; gap:12px; flex-wrap:wrap; }
+.rubricHeader h3 { margin:0; font-size:17px; }
+.rubricHeader p,.compactCriterion p { margin:5px 0 0; color:#c3c3ca; font-size:13px; line-height:1.45; }
+.rubricHeader > span { color:#e8d0bf; font-size:13px; font-weight:600; white-space:nowrap; }
+.rubricAi { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.rubricAi small { color:#c3c3ca; line-height:1.4; }
+.rubricMessage { margin:0; color:#e8d0bf; font-size:13px; }
+.criteriaList { border-top:1px solid #39393f; }
+.compactCriterion { padding:14px 0; border-bottom:1px solid #39393f; }
+.criterionHead { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:start; }
+.criterionHead strong { font-size:14px; overflow-wrap:anywhere; }
+.criterionHead label { min-width:130px; font-size:12px; }
+.scoreField { display:flex; align-items:center; gap:8px; color:#c3c3ca; white-space:nowrap; }
+.scoreField input { width:72px !important; min-width:0; }
+.criterionFeedback summary { color:#f6b48d; font-size:13px; font-weight:600; }
+.criterionFeedback textarea { min-height:52px; }
+@media(max-width:480px) { .criterionHead { grid-template-columns:minmax(0,1fr); } .criterionHead label { min-width:0; } }

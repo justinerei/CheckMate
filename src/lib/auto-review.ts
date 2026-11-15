@@ -24,10 +24,11 @@ export function analyzeAutomaticReview(items: Candidate[], expectedStyle: string
   if (item.status === "unclear") return review("The answer could not be read clearly. Check the photo and confirm the response.");
   if (item.status !== "clear" || !item.answer?.trim()) return review("The answer could not be read reliably. Check the photo and confirm the response.");
   if (!item.observedStyle || item.observedStyle === "unknown") return review("The answer was read, but its marking style could not be confirmed. Check the mark on the paper.");
-  if (expectedStyle === "circle" && type === "MULTIPLE_CHOICE" && ["box", "triangle"].includes(item.observedStyle)) return { decision: "VIOLATION", reason: null };
+  if (expectedStyle === "circle" && type === "MULTIPLE_CHOICE" && ["box", "triangle", "written", "underline", "shade"].includes(item.observedStyle)) return { decision: "VIOLATION", reason: null };
   if (requiresLetterReview(item.answer, expectedStyle, type, keys)) return review("The answer key expects a letter, but the reading is not a single letter. Check what the student wrote.");
   if (hasInstructionConcern(items, expectedStyle, type, keys)) return review(`The expected marking style is ${expectedStyle === "text" ? "written" : expectedStyle}, but the detected mark is ${item.observedStyle}. Check the paper.`);
   const expected = expectedStyle === "text" ? "written" : expectedStyle;
+  if (type === "MULTIPLE_CHOICE" && expected === "circle" && item.observedStyle === "circle") return review("Confirm the circled choice against the photo before scoring; AI can misread a mark.");
   if (item.observedStyle === expected) return { decision: "FOLLOWED", reason: null };
   return review("The marking style could not be confirmed. Check the mark on the paper.");
 }

@@ -73,7 +73,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       }
       const form = <article>
         <h2>Question {question.number}</h2>
-        {reason && <p className={styles.reviewWarning}><strong>Why review is needed: </strong>{reason}</p>}{automaticViolation && <p className={styles.reviewWarning}>{erasureViolation ? "Marked incorrect: an erasure was detected and this section says no erasures." : "Marked incorrect: the answer is boxed or triangular, but the instruction requires a circle."} You can correct this decision after checking the photo.</p>}
+        {reason && <p className={styles.reviewWarning}><strong>Why review is needed: </strong>{reason}</p>}{automaticViolation && <p className={styles.reviewWarning}>{erasureViolation ? "Marked incorrect: an erasure was detected and this section says no erasures." : "Marked incorrect: the detected mark is not a circle, but the instruction requires one."} You can correct this decision after checking the photo.</p>}
         <div className={styles.scoreAnswers}>
           <p><span>{saved ? "Confirmed answer" : "Detected answer"}</span><strong>{candidates.length > 1 && !saved ? "Conflicting readings" : value || (value === "" || single?.status === "blank" ? "Blank" : single?.answer || "Unreadable")}</strong></p>
           <p><span>{question.type === "ESSAY" ? "Reference answer" : "Answer key"}</span><strong>{question.answerKey?.acceptedAnswers.join(" / ") || "Not provided"}</strong></p>

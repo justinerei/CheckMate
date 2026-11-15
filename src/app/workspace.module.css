@@ -12,6 +12,7 @@
 .label { font-size:12px; color:#bcbcc4; }
 .railBottom p,.railBottom span { font-size:13px; color:#c3c3ca; }
 .signOut { min-height:44px; padding:10px 0; }
+.brand span { font-family:var(--font-pixel); }
 .skipLink { position:fixed; z-index:100; top:12px; left:12px; padding:12px 16px; border-radius:8px; background:#fff; color:#111; font-weight:700; transform:translateY(-150%); }
 .skipLink:focus { transform:translateY(0); }
 .main:focus { outline:none; }

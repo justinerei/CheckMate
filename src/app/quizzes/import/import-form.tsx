@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PendingScreen } from "@/app/pending-screen";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
-import { isPdfFile } from "@/lib/answer-key-file-policy";
+import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
 import { saveImportedQuiz } from "./actions";
 import styles from "./import.module.css";
 
@@ -90,6 +90,8 @@ export default function ImportQuizForm() {
     if (scanned) setFilesChanged(true);
   }
   function selectKey(files: File[]) {
+    if (!withinAnswerKeyPhotoLimit(files)) { setError("Choose at most 2 answer key photos. Your previous selection is unchanged."); if (keyInput.current) keyInput.current.value = ""; return; }
+    setError("");
     setKeyFiles(files);
     setKeyPreviews(files.map(file => ({ name: file.name, url: URL.createObjectURL(file), pdf: isPdfFile(file) })));
     if (scanned) setFilesChanged(true);
@@ -163,7 +165,7 @@ export default function ImportQuizForm() {
       <label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label>
       <label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label>
       {keyFiles.length > 0 && <button type="button" className={styles.secondary} disabled={busy} onClick={() => { if (keyInput.current) keyInput.current.value = ""; selectKey([]); }}>Remove answer key</button>}
-      <p>Up to 10 pages per upload. PDFs: 10 MB per file; photos: 8 MB each. Supports multiple choice (A–D), true/false, identification and essay questions. Files are sent to Groq for scanning; avoid uploading sensitive information.</p>
+      <p>Up to 10 pages per upload; answer keys can include at most 2 photos. PDFs: 10 MB per file; photos: 8 MB each. Supports multiple choice (A–D), true/false, identification and essay questions. Files are sent to Groq for scanning; avoid uploading sensitive information.</p>
       <button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"}</button>
     </section>
     {error && <p role="alert" className={styles.error}>{error}</p>}

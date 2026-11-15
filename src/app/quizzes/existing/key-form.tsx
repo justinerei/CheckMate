@@ -3,7 +3,7 @@ import { PendingScreen } from "@/app/pending-screen";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
-import { isPdfFile } from "@/lib/answer-key-file-policy";
+import { isPdfFile, MAX_ANSWER_KEY_PHOTOS, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
 import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
 import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
@@ -55,6 +55,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const update = (index: number, patch: Partial<KeyRow>) => setRows(old => old.map((r, i) => i === index ? { ...r, ...patch } : r));
   async function selectFiles(incoming: File[], append = false, updateSelection = false) {
     const selected = append ? [...files, ...incoming] : incoming;
+    if (!withinAnswerKeyPhotoLimit(selected)) { reportUploadError("Choose at most 2 answer key photos. Your previous selection is unchanged."); return; }
     if (selected.length > 10 || selected.some(f => !f.size || !(f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") || ["image/jpeg", "image/png"].includes(f.type)) || f.size > (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf") ? 10_000_000 : 8_000_000))) { reportUploadError("Choose up to 10 PDF, JPEG, or PNG files. PDFs must be under 10 MB and photos under 8 MB each."); return; }
     if (!append && !updateSelection && files.length && !window.confirm("Replace all selected answer key files?")) return;
     reportUploadError(""); setScanItems([]); setFiles(selected); setFile(selected[0] ?? null); setPreview(selected[0] ? URL.createObjectURL(selected[0]) : ""); setOtherPreviews(selected.slice(1).map(f => ({ name: f.name, url: URL.createObjectURL(f) })));
@@ -148,7 +149,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     {!reviewStarted && <section className={`${styles.keyPanel} ${styles.keyStage}`} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>
       <label className={styles.keyLabel}>Quiz title<input className={styles.keyInput} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} placeholder="e.g. Science quiz" /></label>
-      <FileDropzone hidden={!!file} title="Add answer key files" description="Choose a photo or PDF, then review the files before scanning." formats="PDF up to 10 MB · JPEG or PNG up to 8 MB each · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} showCamera={mobile} onCamera={() => setCameraTarget("add")} />
+      <FileDropzone hidden={!!file} title="Add answer key files" description="Choose up to 2 photos or a PDF, then review the files before scanning." formats="Up to 2 JPEG/PNG photos · 8 MB each · PDF up to 10 MB · 10 pages total" accept="application/pdf,image/jpeg,image/png" disabled={busy} onFiles={selectFiles} showCamera={mobile} onCamera={() => setCameraTarget("add")} />
       {notification && <ScanNotification message={notification.message} error={notification.error} onDismiss={() => setNotification(null)} />}
       {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key files">
         <div className={styles.uploadPreviewHeader}><div><strong>Review your files</strong><p>Check that the right pages are selected before scanning.</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
@@ -161,7 +162,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
             <div className={styles.previewPageBottom}><span className={status && !status.ok ? styles.scanWarning : styles.scanOkay}>{status ? status.ok ? "Scanned" : "Needs attention" : "Ready to scan"}</span><div className={styles.previewPageActions}><label className={styles.previewReplace}><span>Choose another</span><input type="file" accept="application/pdf,image/jpeg,image/png" disabled={busy} onChange={e => { const chosen = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (chosen) replacePage(index, chosen); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy} onClick={() => setCameraTarget(index)}>↻ Retake photo</button>}<button type="button" className={styles.previewRemove} disabled={busy} onClick={() => removePage(index)}>Remove</button></div></div>
           </article>;
         })}</div>
-        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy || files.length >= 10} onClick={() => setCameraTarget("add")}>+ Add photo</button>}<button className={styles.primary} type="button" onClick={extract} disabled={busy || !files.length}>{busy ? "Scanning…" : "Scan answer key →"}</button></div>
+        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add files</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy || files.length >= 10 || files.filter(item => !isPdfFile(item)).length >= MAX_ANSWER_KEY_PHOTOS} onClick={() => setCameraTarget("add")}>+ Add photo</button>}<button className={styles.primary} type="button" onClick={extract} disabled={busy || !files.length}>{busy ? "Scanning…" : "Scan answer key →"}</button></div>
         <p className={styles.help}>When you select Scan answer key, the selected pages are sent to Groq. Review the results before saving.</p>
         {progress && <p className={styles.help} role="status">{progress}</p>}
         {scanItems.some(item => !item.ok) && <button type="button" className={styles.retryCheck} disabled={busy} onClick={retryChecks}>↻ Retry scan</button>}

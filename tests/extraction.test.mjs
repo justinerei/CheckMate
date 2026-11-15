@@ -2,6 +2,19 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseExtraction, matchCandidates, retryDelayMs, needsReview } from "../src/lib/extraction.ts";
 
+test("independent mark verification keeps matching circles and flags disagreement or missing verification", async () => {
+  const { verifyCircleReadings } = await import("../src/lib/extraction.ts");
+  const circle = { number: 4, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
+  const written = { ...circle, answer: "D", observedStyle: "written" };
+  assert.equal(verifyCircleReadings([circle], [circle])[0].status, "clear");
+  assert.equal(verifyCircleReadings([circle], [written])[0].status, "unclear");
+  assert.equal(verifyCircleReadings([circle], [])[0].status, "unclear");
+  assert.equal(verifyCircleReadings([circle], [circle, circle])[0].status, "unclear");
+  assert.equal(verifyCircleReadings([circle], [{ ...circle, note: "possibly circled" }])[0].status, "unclear");
+  assert.equal(verifyCircleReadings([{ ...circle, number: null }], [{ ...circle, number: null }])[0].status, "unclear");
+  assert.deepEqual(verifyCircleReadings([written], []), [written]);
+});
+
 test("validates extraction structure and rejects malformed or fabricated statuses", () => {
   const parsed = parseExtraction(JSON.stringify({ items: [{ number: 1, section: null, answer: "B", status: "clear", note: "" }] }));
   assert.equal(parsed?.items[0].answer, "B");

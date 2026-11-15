@@ -25,7 +25,7 @@ async function processNext() {
     const waiting = await db.submissionPage.findFirst({ where: { submission: { batchId: { not: null }, status: "IN_REVIEW" }, status: "FAILED", retryAt: { gt: now } }, select: { id: true } });
     if (waiting) return;
     const page = await db.submissionPage.findFirst({
-      where: { submission: { batchId: { not: null }, status: "IN_REVIEW" }, OR: [{ status: "PENDING" }, { status: "FAILED", retryAt: { lte: now } }, { status: "PROCESSING", processingStartedAt: { lt: new Date(now.getTime() - 120000) } }] },
+      where: { submission: { batchId: { not: null }, status: "IN_REVIEW" }, OR: [{ status: "PENDING" }, { status: "FAILED", retryAt: { lte: now } }, { status: "PROCESSING", processingStartedAt: { lt: new Date(now.getTime() - 180000) } }] },
       orderBy: { createdAt: "asc" },
       select: { id: true, submissionId: true, submission: { select: { teacherId: true } } },
     });

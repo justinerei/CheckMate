@@ -4,6 +4,11 @@
 .tabs { border-bottom:1px solid #38383e; margin:16px 0; }
 .tabs button,.row button,.row select { min-height:44px; border:0; background:transparent; color:#c7c7cb; padding:8px 12px; cursor:pointer; }
 .tabs button[aria-pressed=true] { color:white; box-shadow:inset 0 -2px #fa974c; }
+@media (prefers-reduced-motion: no-preference) {
+  .tabs button { transition:color .16s ease-out, box-shadow .16s ease-out; }
+  .view:not([hidden]) { animation:review-view-arrive .22s cubic-bezier(.2,.8,.2,1); }
+  @keyframes review-view-arrive { from { opacity:.88; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+}
 .workspace button:disabled { opacity:.45; cursor:default; }
 .row { justify-content:space-between; color:#bfbfc5; font-size:14px; }
 .row select { background:#242429; color:white; border-radius:6px; }

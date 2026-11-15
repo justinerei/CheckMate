@@ -66,8 +66,8 @@ export default function ReviewWorkspace({ id, items, pages, name, score, finaliz
       {([["review", `Needs review (${flagged.length})`], ["all", `All answers (${items.length})`], ["score", "Score"]] as const).map(([key,label]) =>
         <button key={key} type="button" aria-pressed={currentView === key} disabled={key === "review" && !flagged.length} onClick={() => changeView(key)}>{label}</button>)}
     </nav>
-    <div hidden={currentView !== "score"}>{score}</div>
-    <div hidden={currentView === "score"}>
+    <div className={styles.view} hidden={currentView !== "score"}>{score}</div>
+    <div className={styles.view} hidden={currentView === "score"}>
       {active && <div className={styles.columns}>
         <aside className={styles.paper}>
           <div className={styles.row}><strong>Original paper</strong>{photo && <select aria-label="Paper page" value={photo.pageNumber} onChange={e => setManualPage({question:active.id,page:Number(e.target.value)})}>{pages.map(page => <option key={page.id} value={page.pageNumber}>Page {page.pageNumber}</option>)}</select>}</div>

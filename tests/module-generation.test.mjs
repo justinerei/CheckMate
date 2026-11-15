@@ -54,3 +54,12 @@ test("only accepts complete suggestions with valid answers and supplied source I
   assert.equal(parseSuggestedQuestions({questions:[{...item,answer:''}]},['q1'],'ESSAY',sources)?.[0].answer,'');
   assert.equal(parseSuggestedQuestions({questions:[]},['q1'],'ESSAY',sources),null);
 });
+
+test("validates draft question guidance against the requested slots", async () => {
+  const { parseQuestionDraftGuidance } = await import("../src/lib/suggested-questions.ts");
+  assert.deepEqual(parseQuestionDraftGuidance([{ id: "q1", text: "  Describe cells  " }], ["q1", "q2"]), [{ id: "q1", text: "Describe cells" }]);
+  assert.deepEqual(parseQuestionDraftGuidance(undefined, ["q1"]), []);
+  assert.equal(parseQuestionDraftGuidance([{ id: "other", text: "draft" }], ["q1"]), null);
+  assert.equal(parseQuestionDraftGuidance([{ id: "q1", text: "x".repeat(2001) }], ["q1"]), null);
+  assert.equal(parseQuestionDraftGuidance([{ id: "q1", text: "a" }, { id: "q1", text: "b" }], ["q1"]), null);
+});

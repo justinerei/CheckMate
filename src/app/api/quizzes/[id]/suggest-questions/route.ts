@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
 import { MAX_GENERATE_COUNT, MAX_MODULES, selectExcerpts, validateModulePages } from "@/lib/module-content";
-import { parseSuggestedQuestions, questionSuggestionPrompt } from "@/lib/suggested-questions";
+import { parseQuestionDraftGuidance, parseSuggestedQuestions, questionSuggestionPrompt } from "@/lib/suggested-questions";
 import { geminiText } from "@/lib/gemini";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +18,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { sectionId, questionIds, moduleIds, excluded, rotation, difficulty } = body ?? {};
     const validIds = (value: unknown, max: number) => Array.isArray(value) && value.length > 0 && value.length <= max && value.every(item => typeof item === "string" && item.length > 0 && item.length <= 200) && new Set(value).size === value.length;
     if (typeof sectionId !== "string" || !validIds(questionIds, MAX_GENERATE_COUNT) || !validIds(moduleIds, MAX_MODULES) || !Array.isArray(excluded) || excluded.length > 450 || excluded.some(item => typeof item !== "string" || item.length > 220) || !Number.isInteger(rotation) || rotation < 0 || rotation > 10000 || !["easy", "moderate", "challenging"].includes(difficulty)) return NextResponse.json({ error: "Check the selected questions and modules." }, { status: 400 });
+    const guidance = parseQuestionDraftGuidance(body.draftGuidance, questionIds);
+    if (!guidance) return NextResponse.json({ error: "Check the draft questions and try again." }, { status: 400 });
     const section = await db.quizSection.findFirst({ where: { id: sectionId, quizId: id, quiz: { teacherId: teacher.id, source: "BUILT" } }, include: { quiz: { select: { title: true, _count: { select: { submissions: true } } } }, questions: { where: { id: { in: questionIds } }, select: { id: true, type: true, text: true } } } });
     if (!section || section.quiz._count.submissions || section.questions.length !== questionIds.length || section.questions.some(question => question.text.trim()) || new Set(section.questions.map(question => question.type)).size !== 1) return NextResponse.json({ error: "These questions are unavailable, already filled, or have different types. Refresh and try again." }, { status: 409 });
     const modules = await db.quizModule.findMany({ where: { quizId: id, id: { in: moduleIds }, quiz: { teacherId: teacher.id } }, orderBy: { createdAt: "asc" } });
@@ -27,7 +29,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!sources.length) return NextResponse.json({ error: "No readable pages remain in the selected modules." }, { status: 400 });
     const type = section.questions[0].type;
     const prompt = questionSuggestionPrompt(questionIds.length, type, difficulty);
-    const result = await geminiText(`${prompt}\n${JSON.stringify({ quiz: section.quiz.title, section: section.title, excerpts: sources.map(source => ({ id: source.id, text: source.text })) })}`, 0.5);
+    const result = await geminiText(`${prompt}\n${JSON.stringify({ quiz: section.quiz.title, section: section.title, questionSlots: questionIds.map((id: string) => ({ draft: guidance.find(item => item.id === id)?.text ?? "" })), excerpts: sources.map(source => ({ id: source.id, text: source.text })) })}`, 0.5);
     if (result.kind === "limited") return NextResponse.json({ error: "Gemini reached a rate limit. Your other drafts are safe; try again later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
     if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY in .env.local and restart CheckMate." : `Could not generate questions with Gemini${result.kind === "upstream" ? ` (HTTP ${result.status})` : ""}. Your drafts are unchanged.` }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
     const suggestions = parseSuggestedQuestions(result.data, questionIds, type, sources);

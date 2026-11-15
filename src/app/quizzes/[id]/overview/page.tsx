@@ -13,6 +13,7 @@ import WorkspaceFrame from "../../../workspace-frame";
 import styles from "./quiz-overview.module.css";
 import BatchDeletedDialog from "./batch-deleted-dialog";
 import PaperList from "./paper-list";
+import DeleteQuiz from "./delete-quiz";
 
 export const instant = false;
 
@@ -61,5 +62,6 @@ export default async function QuizOverview({ params, searchParams }: { params: P
     <section className={styles.section}><div className={styles.answerKey}><details className={styles.keyDisclosure}><summary><span><strong>Answer key</strong><small>{questions.length} questions · {maximum} points</small></span><span className={styles.showKey}>View key</span></summary><div className={styles.keyContent}>{quiz.sections.length ? quiz.sections.map(section => <section className={styles.keySection} key={section.id}><h3>{section.title}</h3>{section.instructions && <p>{section.instructions}</p>}<ol>{section.questions.map((question, position) => { const number = quiz.numbering === "CONTINUOUS" ? ++questionNumber : position + 1; return <li key={question.id}><span>{number}.</span><strong>{question.type === "ESSAY" ? "Teacher-scored essay" : question.answerKey?.acceptedAnswers.join(" / ") || "Answer missing"}</strong><small>{question.points.toString()} pts</small></li>; })}</ol></section>) : <p>No questions added yet.</p>}</div></details>
       <div className={styles.keyActions}><Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}/answer-key/print`}>Print answer key</Link><Link className={styles.secondaryAction} href={`/quizzes/existing/${encodeURIComponent(id)}/edit`}>Edit correct answers</Link></div></div>
     </section>
+    <DeleteQuiz id={id} title={quiz.title} hasPapers={quiz._count.submissions > 0} hasBatches={quiz.batches.length > 0} archived={!!quiz.archivedAt} />
   </div></WorkspaceFrame>;
 }

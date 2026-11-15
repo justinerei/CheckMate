@@ -42,3 +42,4 @@
 .emptyWithMate { display:flex; align-items:center; gap:20px; }
 .emptyMate { width:112px; height:112px; object-fit:contain; flex:none; image-rendering:pixelated; }
 @media(max-width:480px) { .emptyWithMate { gap:14px; }.emptyMate { width:76px; height:76px; } }
+.archiveSection details { border:1px solid #3a3a42; border-radius:12px; padding:18px 20px; background:#17171b; }.archiveSection summary { cursor:pointer; font-weight:600; min-height:36px; }.archiveSection p { color:#bcbcc4; font-size:14px; line-height:1.5; }

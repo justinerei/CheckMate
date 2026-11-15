@@ -81,6 +81,7 @@ model Quiz {
   paperSize     String        @default("A4")
   numbering     String        @default("CONTINUOUS")
   source        String        @default("BUILT")
+  archivedAt    DateTime?
   expectedPages Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt

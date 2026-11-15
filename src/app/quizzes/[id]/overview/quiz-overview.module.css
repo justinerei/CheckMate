@@ -36,3 +36,5 @@
 .emptyWithMate { display:flex; align-items:center; gap:20px; }
 .emptyMate { width:96px; height:96px; object-fit:contain; image-rendering:pixelated; flex:none; }
 @media(max-width:480px) { .emptyWithMate { gap:14px; }.emptyMate { width:72px; height:72px; } }
+.deleteQuiz { margin-top:48px; padding-top:24px; border-top:1px solid #393940; }.deleteQuiz button { min-height:44px; padding:10px 15px; border:1px solid #8c5c50; border-radius:7px; background:#2c1d1b; color:#ffd3c5; font:inherit; font-weight:600; cursor:pointer; }.deleteQuiz button:hover { background:#452923; border-color:#d08a70; }.deleteQuiz button:disabled { opacity:.6; cursor:wait; }.deleteQuiz p { color:#c9b2ab; font-size:13px; line-height:1.5; }
+.quizManagement { display:flex; flex-wrap:wrap; gap:10px; }

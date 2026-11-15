@@ -18,10 +18,10 @@ export default async function Dashboard() {
   const paperWhere = { teacherId: teacher.id, quiz: { teacherId: teacher.id } };
   const [user, quizCount, inReview, finalized, quizzes, papers] = await Promise.all([
     db.user.findUnique({ where: { id: teacher.id }, select: { name: true } }),
-    db.quiz.count({ where: { teacherId: teacher.id } }),
+    db.quiz.count({ where: { teacherId: teacher.id, archivedAt: null } }),
     db.submission.count({ where: { ...paperWhere, status: "IN_REVIEW" } }),
     db.submission.count({ where: { ...paperWhere, status: "FINALIZED" } }),
-    db.quiz.findMany({ where: { teacherId: teacher.id }, orderBy: { updatedAt: "desc" }, take: 5, select: { id: true, title: true, source: true, updatedAt: true, _count: { select: { sections: true } } } }),
+    db.quiz.findMany({ where: { teacherId: teacher.id, archivedAt: null }, orderBy: { updatedAt: "desc" }, take: 5, select: { id: true, title: true, source: true, updatedAt: true, _count: { select: { sections: true } } } }),
     db.submission.findMany({ where: paperWhere, orderBy: { updatedAt: "desc" }, take: 5, select: { id: true, status: true, expectedPages: true, nameReviewed: true, pages: { select: { status: true, retryAt: true, extraction: true, pageNumber: true } }, answers: true, paperName: true, student: { select: { name: true } }, quiz: { select: { title: true, source: true, numbering: true, sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } } } } } }),
   ]);
   return <WorkspaceFrame active="overview" teacherId={teacher.id}><div className={styles.overview}>

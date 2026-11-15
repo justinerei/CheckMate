@@ -1,5 +1,5 @@
 "use client";
-import { PendingScreen } from "@/app/pending-screen";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { MAX_GENERATE_COUNT, MAX_MODULES, MAX_MODULE_PAGES, MAX_MODULE_CHARS, MAX_PAGE_CHARS, MAX_PDF_BYTES, type ModuleSummary, type ModulePage } from "@/lib/module-content";
@@ -54,6 +54,8 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
   const draftKey = `checkmate-module-drafts-v1-${teacherId}-${quizId}`;
   const [draftReady, setDraftReady] = useState(false);
   const [workshopOpen, setWorkshopOpen] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
   const [storageOk, setStorageOk] = useState(true);
   const [saved, setSaved] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -76,13 +78,19 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
         if (raw) {
           const restored = restoreSuggestionDrafts(raw, { slots: sections.flatMap(item => item.questions), modules: initialModules });
           draftsRef.current = restored; setDrafts(restored);
-          if (Object.keys(restored).length) { const first = sections.find(item => item.questions.some(question => restored[question.id])); if (first) setSectionId(first.id); setWorkshopOpen(true); setMessage("Restored your question drafts from this browser. Review and save each question."); }
+          if (Object.keys(restored).length) { const first = sections.find(item => item.questions.some(question => restored[question.id])); if (first) setSectionId(first.id); setMessage("Restored your question drafts from this browser. Review and save each question."); }
         }
       } catch { setStorageOk(false); }
       setDraftReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
   }, [draftKey, initialModules, sections]);
+  useEffect(() => { if (!workshopOpen) return; const element = dialog.current; if (element && !element.open) element.showModal(); return () => { if (element?.open) element.close(); }; }, [workshopOpen]);
+  function closeWorkshop() {
+    if (uploading || busy || savingOne > 0) return;
+    setWorkshopOpen(false);
+    requestAnimationFrame(() => trigger.current?.focus());
+  }
   function updateDrafts(next: Record<string, SuggestionDraft>) {
     draftsRef.current = next;
     try {
@@ -189,7 +197,8 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
     setBusy(false);
   }
 
-  return <details className={styles.workshop} open={workshopOpen} onToggle={event => setWorkshopOpen(event.currentTarget.open)}><summary><span><strong>Suggest questions from modules</strong><small>Optional · PDF lessons → editable question drafts</small></span><span className={styles.summaryArrow}>＋</span></summary><div className={styles.body}><PendingScreen pending={uploading || busy || savingOne > 0} message={uploading ? "Preparing your modules…" : savingOne > 0 ? "Saving your question…" : "Working on your questions…"} />
+  return <><button ref={trigger} type="button" className={styles.workshopTrigger} aria-haspopup="dialog" onClick={() => setWorkshopOpen(true)}><span><strong>Suggest questions from modules</strong><small>{anyDrafts ? `${Object.keys(drafts).length} unsaved ${Object.keys(drafts).length === 1 ? "draft" : "drafts"} · Continue reviewing` : "Optional · PDF lessons → editable question drafts"}</small></span><span aria-hidden="true" className={styles.summaryArrow}>↗</span></button>
+    {workshopOpen && createPortal(<dialog ref={dialog} className={styles.workshopDialog} aria-labelledby="workshop-title" onCancel={event => { event.preventDefault(); closeWorkshop(); }}><header className={styles.dialogHeader}><div><span className={styles.kicker}>QUIZ TOOLS</span><h2 id="workshop-title">Suggest questions from modules</h2></div><button type="button" className={styles.secondary} onClick={closeWorkshop} disabled={uploading || busy || savingOne > 0}>Close</button></header><div className={styles.dialogScroll}><div className={styles.body}>{(uploading || busy || savingOne > 0) && <p className={styles.workshopProgress} role="status">{uploading ? "Preparing your modules…" : savingOne > 0 ? "Saving your question…" : "Working on your questions…"}</p>}
     <div className={styles.intro}><span className={styles.kicker}>01 / SOURCE MATERIAL</span><h2>Add your modules</h2><p>Use text-based PDFs; scanned pages may not work. Extracted text and page references are saved, but PDFs are not.</p><label className={styles.upload}>＋ Add PDFs<input type="file" accept="application/pdf,.pdf" multiple disabled={uploading || busy || modules.length >= MAX_MODULES} onChange={upload} /></label><small>Up to 10 MB and 150 pages per PDF · 3 PDFs per quiz</small></div>
     {modules.length > 0 && <div className={styles.modules}>{modules.map(module => <article key={module.id} className={styles.module}><div className={styles.moduleTop}><label className={styles.moduleSelect}><input type="checkbox" checked={selected.includes(module.id)} disabled={busy || uploading} onChange={e => setSelected(old => e.target.checked ? [...old, module.id] : old.filter(id => id !== module.id))} /><span><strong>{module.name}</strong><small>{module.pages.filter(page => page.readable).length} of {module.pages.length} pages have readable text</small></span></label><button type="button" className={styles.textButton} disabled={busy || uploading} onClick={() => removeModule(module)}>Remove</button></div><details className={styles.headings}><summary>Review page headings and exclude pages</summary><p>Headings are estimates. Each checkbox includes or excludes the whole page.</p><div className={styles.pageList}>{module.pages.map(page => { const key = `${module.id}:${page.page}`; return <label key={key}><input type="checkbox" disabled={!page.readable || busy || uploading} checked={page.readable && !excluded.includes(key)} onChange={e => setExcluded(old => e.target.checked ? old.filter(value => value !== key) : [...old, key])} /><span><strong>Page {page.page}</strong> · {page.heading}</span></label>; })}</div></details></article>)}</div>}
     <div className={styles.generator}><span className={styles.kicker}>02 / QUESTION DRAFTS</span><h2>Suggest by section</h2><p>Sample excerpts and text from open, unsaved question slots are sent to Gemini and use your quota. Avoid private information; review coverage, sources, and answers.</p>
@@ -197,5 +206,5 @@ export default function ModuleWorkshop({ quizId, teacherId, initialModules, sect
     </div>
     {!storageOk && <p className={styles.error} role="alert">This browser could not save your question drafts. Keep this page open and save each question, or enable browser storage.</p>}{message && <p className={styles.message} role="status">{message}</p>}{error && <p className={styles.error} role="alert">{error}</p>}
     {sections.map(item => { const items = item.questions.filter(question => !question.text.trim() && !saved.includes(question.id) && drafts[question.id]); if (!items.length) return null; return <div key={item.id} hidden={item.id !== section?.id} className={styles.drafts}><div><span className={styles.kicker}>03 / REVIEW</span><h3>Your suggestions</h3><p>Drafts stay in this browser and are visible to its users. Use one tab; review questions, answers, and sources before saving.</p></div><button type="button" className={styles.primary} disabled={busy || uploading || savingOne > 0} onClick={saveAllSuggestions}>Save all suggestions ({Object.keys(drafts).length})</button><small>Saves suggestions across all sections. Questions that cannot be saved stay as drafts.</small>{items.map(slot => { const draft = drafts[slot.id]; return <SuggestionCard key={`${slot.id}-${draft.revision}`} quizId={quizId} slot={slot} suggestion={draft.suggestion} edit={draft.edit} busy={busy || uploading} onEdit={patch => editDraft(slot.id, patch)} onDiscard={discardDraft} onSaved={savedQuestion} onRegenerate={id => generate([id], true)} onSavingChange={saving => setSavingOne(n => n + (saving ? 1 : -1))} />; })}</div>; })}
-  </div></details>;
+  </div></div></dialog>, document.body)}</>;
 }

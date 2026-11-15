@@ -1,5 +1,12 @@
 export type ExtractionItem = { number: number | null; section: number | null; answer: string | null; status: "clear" | "blank" | "unclear" | "multiple" | "erased"; note: string; erasure?: "present" | "none" | "uncertain"; markShape?: "circle" | "box" | "triangle" | "unknown"; observedStyle?: "written" | "circle" | "shade" | "box" | "triangle" | "underline" | "other" | "unknown" };
 
+export function targetedCircleReading(item: ExtractionItem, input: unknown): ExtractionItem {
+  const data = input as { handwritten_next_to_number?: unknown; circled_choices?: unknown; uncertain?: unknown } | null;
+  const choices = data?.circled_choices;
+  const confirmed = data?.uncertain === false && data.handwritten_next_to_number === null && Array.isArray(choices) && choices.length === 1 && typeof choices[0] === "string" && /^[A-D]$/i.test(choices[0].trim()) && choices[0].trim().toUpperCase() === item.answer?.trim().toUpperCase();
+  return confirmed ? item : { ...item, status: "unclear", note: "The focused mark check did not confirm this circle. Check the photo." };
+}
+
 export function verifyCircleReadings(items: ExtractionItem[], verification: ExtractionItem[]): ExtractionItem[] {
   return items.map(item => {
     if (item.status !== "clear" || (item.observedStyle ?? item.markShape) !== "circle") return item;

@@ -15,6 +15,16 @@ test("independent mark verification keeps matching circles and flags disagreemen
   assert.deepEqual(verifyCircleReadings([written], []), [written]);
 });
 
+test("targeted check accepts only one certain circle without a conflicting written letter", async () => {
+  const { targetedCircleReading } = await import("../src/lib/extraction.ts");
+  const item = { number: 4, section: null, answer: "A", status: "clear", note: "", observedStyle: "circle" };
+  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: null, circled_choices: ["A"], uncertain: false }).status, "clear");
+  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: "D", circled_choices: [], uncertain: false }).status, "unclear");
+  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: "D", circled_choices: ["A"], uncertain: false }).status, "unclear");
+  assert.equal(targetedCircleReading(item, { handwritten_next_to_number: null, circled_choices: ["A"], uncertain: true }).status, "unclear");
+  assert.equal(targetedCircleReading(item, null).status, "unclear");
+});
+
 test("validates extraction structure and rejects malformed or fabricated statuses", () => {
   const parsed = parseExtraction(JSON.stringify({ items: [{ number: 1, section: null, answer: "B", status: "clear", note: "" }] }));
   assert.equal(parsed?.items[0].answer, "B");

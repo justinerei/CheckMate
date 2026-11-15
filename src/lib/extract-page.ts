@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readPhoto } from "@/lib/private-photos";
-import { parseExtraction, retryDelayMs, verifyCircleReadings } from "@/lib/extraction";
+import { parseExtraction, retryDelayMs, targetedCircleReading } from "@/lib/extraction";
 
 export async function extractPage(teacherId: string, id: string, pageId: string) {
   const key = process.env.GROQ_API_KEY;
@@ -30,15 +30,25 @@ export async function extractPage(teacherId: string, id: string, pageId: string)
     const body = await response.json();
     const result = typeof body?.choices?.[0]?.message?.content === "string" ? parseExtraction(body.choices[0].message.content) : null;
     if (!result) { message = "Groq returned an unreadable result. Please retry this page."; throw new Error(); }
-    if (result.items.some(item => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle")) {
-      let verification: typeof result | null = null;
-      try {
-        const checkPrompt = 'Inspect the photo independently. Report handwritten marks for every visible multiple-choice question. Do not solve questions or infer an answer from the printed text. Inspect the margin beside each question number as well as every printed option. Return JSON only: {"items":[{"number":1,"section":null,"answer":null,"status":"blank","note":"","observedStyle":"unknown"}]}. For each question, answer is the marked option letter or a handwritten letter beside the question; never report an unmarked printed option. Use observedStyle circle only when a visible hand-drawn circle or oval surrounds the selected option, even if imperfect or large; use written for a handwritten letter beside the number, underline for an underlined choice, and unknown if unsure. status must be clear, blank, unclear, multiple or erased. Use unclear or multiple for conflicting, crossed-out, or uncertain marks. Include each visible multiple-choice question; use null for unreadable answers and section when unknown.';
-        const check = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(60000), body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: checkPrompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
-        if (check.ok) { const data = await check.json(); verification = typeof data?.choices?.[0]?.message?.content === "string" ? parseExtraction(data.choices[0].message.content) : null; }
-      } catch { /* Unverified marks are flagged for teacher review. */ }
-      result.items = verifyCircleReadings(result.items, verification?.items ?? []);
-    }
+    const circles = result.items.map((item, index) => ({ item, index })).filter(({ item }) => item.status === "clear" && (item.observedStyle ?? item.markShape) === "circle");
+    // Limit extra calls and concurrency; unverified readings remain available for review.
+    let nextCircle = 0;
+    const checkCircle = async () => {
+      while (nextCircle < circles.length) {
+        const position = nextCircle++;
+        const { item, index } = circles[position];
+        let observation: unknown = null;
+        if (position < 12 && item.number !== null && result.items.filter(other => other.number === item.number).length === 1) {
+          try {
+            const checkPrompt = `Inspect question ${item.number} only. Report only visible handwriting and marks, not the answer to the question. Return JSON {"handwritten_next_to_number":"letter or null","circled_choices":["letters"],"uncertain":boolean}. Use JSON null when no handwriting is present. Inspect all choices and the margin. Do not infer an answer from the printed text.`;
+            const check = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(15000), body: JSON.stringify({ model, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: checkPrompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
+            if (check.ok) { const data = await check.json(); observation = JSON.parse(data?.choices?.[0]?.message?.content ?? "null"); }
+          } catch { /* Unverified marks are flagged for teacher review. */ }
+        }
+        result.items[index] = targetedCircleReading(item, observation);
+      }
+    };
+    await Promise.all([checkCircle(), checkCircle()]);
     const saved = await db.submissionPage.updateMany({ where: { ...owner, status: "PROCESSING", processingToken: token }, data: { status: "COMPLETE", extraction: result, extractionModel: model, processingToken: null, processingStartedAt: null, error: null, retryAt: null } });
     if (!saved.count) return NextResponse.json({ error: "The request expired. Refresh before retrying." }, { status: 409 });
     return NextResponse.json({ ok: true });

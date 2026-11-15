@@ -52,6 +52,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             const flagged = summary?.flagged ?? 0;
             const unmatchedBlocked = summary?.unmatchedBlocked ?? false;
             const proposed = summary?.proposed ?? 0;
+            const backgroundState = ["Checking", "Waiting to be checked", "Waiting for Groq retry"].includes(progress.label);
             const state = progress.label;
             const action = progress.action;
             const href = progress.review ? `/submissions/${encodeURIComponent(paper.id)}/review?from=batch` : `/submissions/${encodeURIComponent(paper.id)}?from=batch`;
@@ -59,7 +60,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             return <article className={styles.row} key={paper.id}>
               <span className={styles.paperNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
               <div className={styles.paperDetails}><h3>{paper.paperName || `Paper ${index + 1}`}</h3><p>{paper.pages.filter(p => p.status === "COMPLETE").length} of {paper.expectedPages ?? "?"} pages read</p></div>
-              <div className={styles.reviewInfo}><span className={`${styles.status} ${stateClass}`}><span aria-hidden="true" />{state}</span>
+              <div className={styles.reviewInfo}><span className={`${styles.status} ${stateClass} ${backgroundState ? styles.backgroundStatus : ""}`}><span aria-hidden="true" />{state}</span>
                 {paper.status === "FINALIZED" && paper.totalScore !== null && <p className={styles.score}>Final score: {paper.totalScore.toString()} / {maximum}</p>}
                 {paper.status === "IN_REVIEW" && complete && <><p className={styles.score}>{flagged ? `Score pending · ${flagged} ${flagged === 1 ? "answer needs" : "answers need"} review` : `Proposed score: ${proposed} / ${maximum}`}</p>{unmatchedBlocked && <p className={styles.reviewNote}>Unmatched reading · verify all answers</p>}{!paper.nameReviewed && <p className={styles.reviewNote}>Student name needs confirmation</p>}</>}
               </div>

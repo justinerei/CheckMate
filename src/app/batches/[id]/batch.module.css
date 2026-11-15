@@ -33,3 +33,7 @@
 .mateImage { width:82px; height:82px; object-fit:contain; image-rendering:pixelated; flex:none; }
 .checkingMate strong { color:#f4f4f5; font-size:14px; }.checkingMate p { margin:6px 0 0; color:#d1c4bd; font-size:13px; line-height:1.5; }
 @media(max-width:480px) { .checkingMate { gap:12px; padding:12px; }.mateImage { width:64px; height:64px; } }
+.backgroundStatus { color:#f4d4be; }
+.status.backgroundStatus span { background:#ffad7d; box-shadow:0 0 0 0 #ffad7d80; animation:statusPulse 2s ease-out infinite; }
+@keyframes statusPulse { 0% { box-shadow:0 0 0 0 #ffad7d80; } 70%,100% { box-shadow:0 0 0 7px #ffad7d00; } }
+@media (prefers-reduced-motion: reduce) { .status.backgroundStatus span { animation:none; box-shadow:0 0 0 3px #ffad7d40; } }

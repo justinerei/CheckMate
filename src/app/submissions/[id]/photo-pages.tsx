@@ -7,7 +7,8 @@ import { MAX_PHOTO_BYTES, pagesComplete } from "@/lib/submission-upload";
 import { isMobileCaptureDevice } from "@/lib/mobile-capture";
 import { paperReviewUrl, type PaperOrigin } from "@/lib/back-navigation";
 import { shortRetrySeconds } from "@/lib/short-retry";
-import { confirmSubmission, reopenSubmission, updateExpectedPages, swapPages, retryBatchPage } from "../actions";
+import { confirmAndAddBatchPaper, confirmSubmission, reopenSubmission, updateExpectedPages, swapPages, retryBatchPage } from "../actions";
+import { canAddPaper, MAX_BATCH_PAPERS } from "@/lib/batch-policy";
 import FileDropzone from "../file-dropzone";
 import PhotoPreview from "../photo-preview";
 import ConfirmDialog from "../confirm-dialog";
@@ -68,12 +69,13 @@ function PageSlot({ submissionId, batchId, number, page, editable, canExtract, d
   </section>;
 }
 
-export default function PhotoPages({ id, batchId, expectedPages, status, pages, existing, reviewOrigin, autoCamera = false }: { id: string; batchId: string | null; expectedPages: number; status: string; pages: Page[]; existing: boolean; reviewOrigin: PaperOrigin | null; autoCamera?: boolean }) {
+export default function PhotoPages({ id, batchId, batchPaperCount, expectedPages, status, pages, existing, reviewOrigin, autoCamera = false }: { id: string; batchId: string | null; batchPaperCount: number; expectedPages: number; status: string; pages: Page[]; existing: boolean; reviewOrigin: PaperOrigin | null; autoCamera?: boolean }) {
   const router = useRouter();
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const [pending, startTransition] = useTransition();
   const [checked, setChecked] = useState(false);
+  const [nextPages, setNextPages] = useState(expectedPages);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [batchBusy, setBatchBusy] = useState(false);
@@ -88,6 +90,14 @@ export default function PhotoPages({ id, batchId, expectedPages, status, pages, 
     setError("");
     try { const result = await (reopen ? reopenSubmission(id) : confirmSubmission(id)); if (result.error) { setError(result.error); return; } setChecked(false); if (!reopen && batchId) { router.push(`/batches/${batchId}`); } else if (!reopen && existing) { await readAll(); } else router.refresh(); }
     catch { setError("Something went wrong. Refresh and try again."); }
+  });
+  const addNextStudent = () => startTransition(async () => {
+    setError("");
+    try {
+      const result = await confirmAndAddBatchPaper(id, nextPages);
+      if (result.error || !result.id) { setError(result.error || "Could not start the next paper."); return; }
+      router.push(`/submissions/${encodeURIComponent(result.id)}`); router.refresh();
+    } catch { setError("Could not start the next paper. Refresh and try again."); }
   });
   const changeCount = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -157,5 +167,5 @@ export default function PhotoPages({ id, batchId, expectedPages, status, pages, 
         return <PageSlot key={page.id} submissionId={id} batchId={batchId} number={page.pageNumber} page={page} editable={editable} disabled={batchBusy || pending} canExtract={status === "IN_REVIEW" && !batchBusy} onEarlier={earlier ? () => move(page, earlier) : undefined} onLater={later ? () => move(page, later) : undefined} />;
       })}
     </div>}
-    {editable && complete ? <div className={`${styles.confirm} ${styles.paperConfirm}`}><h2>Check page order</h2><p>Make sure every photo belongs to this student and quiz, and matches its page number. Add other students as separate papers.</p><label className={styles.check}><input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={!complete || pending} /> I checked that all pages are present and in the correct order.</label>{(batchId || existing) && <p>Starting sends these page photos to Groq for reading.</p>}<button className={styles.primary} type="button" disabled={!complete || !checked || pending || batchBusy} onClick={() => change(false)}>{pending || batchBusy ? "Starting…" : batchId || existing ? "Start checking" : "Confirm pages"}</button></div> : !editable ? <div className={styles.confirm}><h2>{batchId ? "Paper progress" : "Read and review"}</h2><p>{batchId ? "Checking continues in the background. Return to the batch to add or review other papers." : existing ? "Review flagged answers and essays before finalizing." : "Check suggestions against the original photo. No scores are assigned yet."}</p>{!batchId && status === "IN_REVIEW" && <button type="button" className={styles.primary} disabled={batchBusy || !pages.some(page => page.status === "PENDING" || page.status === "FAILED")} onClick={readAll}>{batchBusy ? "Reading…" : "Retry unread pages"}</button>}<Link className={styles.secondary} href={paperReviewUrl(id, reviewOrigin)}>Review answers</Link>{status === "IN_REVIEW" && <button type="button" className={styles.secondary} disabled={pending} onClick={() => change(true)}>{pending ? "Opening…" : "Reopen page uploads"}</button>}</div> : null}</>;
+    {editable && complete ? <div className={`${styles.confirm} ${styles.paperConfirm}`}><h2>Check page order</h2><p>Make sure every photo belongs to this student and quiz, and matches its page number. Add other students as separate papers.</p><label className={styles.check}><input type="checkbox" checked={checked} onChange={event => setChecked(event.target.checked)} disabled={!complete || pending} /> I checked that all pages are present and in the correct order.</label>{(batchId || existing) && <p>Starting sends these page photos to Groq for reading.</p>}<button className={styles.primary} type="button" disabled={!complete || !checked || pending || batchBusy} onClick={() => change(false)}>{pending || batchBusy ? "Starting…" : batchId || existing ? "Start checking" : "Confirm pages"}</button>{batchId && canAddPaper(batchPaperCount) && <div className={styles.nextBatchPaper}><h3>Add another student</h3><p>This paper will start checking while you upload the next one. {MAX_BATCH_PAPERS - batchPaperCount} {MAX_BATCH_PAPERS - batchPaperCount === 1 ? "spot" : "spots"} left in this batch.</p><label htmlFor="next-paper-pages">Pages in the next student’s paper</label><div className={styles.nextBatchControls}><select id="next-paper-pages" value={nextPages} onChange={event => setNextPages(Number(event.target.value))} disabled={pending || batchBusy}><option value={1}>1 page</option><option value={2}>2 pages</option><option value={3}>3 pages</option></select><button className={styles.secondary} type="button" disabled={!checked || pending || batchBusy} onClick={addNextStudent}>{pending ? "Starting…" : "Start checking & add next student"}</button></div></div>}{batchId && !canAddPaper(batchPaperCount) && <p>Batch full: {MAX_BATCH_PAPERS} papers. Start checking to return to the batch.</p>}</div> : !editable ? <div className={styles.confirm}><h2>{batchId ? "Paper progress" : "Read and review"}</h2><p>{batchId ? "Checking continues in the background. Return to the batch to add or review other papers." : existing ? "Review flagged answers and essays before finalizing." : "Check suggestions against the original photo. No scores are assigned yet."}</p>{!batchId && status === "IN_REVIEW" && <button type="button" className={styles.primary} disabled={batchBusy || !pages.some(page => page.status === "PENDING" || page.status === "FAILED")} onClick={readAll}>{batchBusy ? "Reading…" : "Retry unread pages"}</button>}<Link className={styles.secondary} href={paperReviewUrl(id, reviewOrigin)}>Review answers</Link>{status === "IN_REVIEW" && <button type="button" className={styles.secondary} disabled={pending} onClick={() => change(true)}>{pending ? "Opening…" : "Reopen page uploads"}</button>}</div> : null}</>;
 }

@@ -5,7 +5,7 @@ import { pagesComplete, validPageCount } from "@/lib/submission-upload";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { questionIsComplete } from "@/lib/quiz-outline";
-import { canAddPaper, validBatchPageCount } from "@/lib/batch-policy";
+import { canAddPaper, nextBatchPaperError, validBatchPageCount } from "@/lib/batch-policy";
 
 export type CreateState = { error: string; existingId?: string };
 
@@ -82,6 +82,25 @@ export async function confirmSubmission(submissionId: string): Promise<{ error: 
   revalidatePath(`/submissions/${submissionId}`);
   revalidatePath("/submissions");
   return { error: "" };
+}
+
+export async function confirmAndAddBatchPaper(submissionId: string, nextPages: number): Promise<{ error: string; id?: string }> {
+  const teacher = await getTeacher();
+  if (!teacher) return { error: "Please sign in again." };
+  try {
+    const result = await db.$transaction(async tx => {
+      const current = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "DRAFT", quiz: { teacherId: teacher.id }, batch: { teacherId: teacher.id } }, select: { quizId: true, batchId: true, expectedPages: true, pages: { select: { pageNumber: true } }, batch: { select: { _count: { select: { submissions: true } } } } } });
+      if (!current?.batchId || !current.batch) return { error: "This paper is unavailable or already confirmed." };
+      const error = nextBatchPaperError(current.expectedPages ?? 0, current.pages.map(page => page.pageNumber), current.batch._count.submissions, nextPages);
+      if (error) return { error };
+      const updated = await tx.submission.updateMany({ where: { id: submissionId, teacherId: teacher.id, status: "DRAFT" }, data: { status: "IN_REVIEW" } });
+      if (updated.count !== 1) return { error: "This paper is unavailable or already confirmed." };
+      const next = await tx.submission.create({ data: { teacherId: teacher.id, quizId: current.quizId, batchId: current.batchId, expectedPages: nextPages }, select: { id: true } });
+      return { error: "", id: next.id };
+    }, { isolationLevel: "Serializable" });
+    if (!result.error) { revalidatePath(`/submissions/${submissionId}`); revalidatePath("/submissions"); }
+    return result;
+  } catch { return { error: "Could not start the next paper. Refresh and try again." }; }
 }
 
 export async function reopenSubmission(submissionId: string): Promise<{ error: string }> {

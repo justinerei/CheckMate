@@ -129,6 +129,7 @@
 .pagePlaceholder { display:grid; place-content:center; justify-items:center; gap:6px; min-height:124px; margin-top:8px; border:1px dashed #46464e; border-radius:8px; background:#1a1a1e; color:#a8a8b2; }
 .pagePlaceholder span { font-size:21px; color:#858590; }.pagePlaceholder p { margin:0; font-size:13px; }
 .paperConfirm { gap:14px; margin-top:24px; }.paperConfirm .check { margin:0; }.paperConfirm .primary { margin-top:4px; }
+.nextBatchPaper { display:grid; gap:10px; margin-top:10px; padding-top:20px; border-top:1px solid #39393f; }.nextBatchPaper h3,.nextBatchPaper p { margin:0; }.nextBatchPaper p { color:#c3c3ca; line-height:1.5; }.nextBatchPaper label { font-size:14px; font-weight:600; }.nextBatchControls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }.nextBatchControls select { min-height:44px; padding:10px; border:1px solid var(--field-border); border-radius:6px; background:var(--field-bg); color:var(--field-text); color-scheme:dark; font:inherit; }.nextBatchControls button { max-width:100%; }
 @media (hover:none) and (pointer:coarse) { .cameraFileButton { display:inline-flex; } }
 @media(max-width:700px) { .photoUpload { grid-template-columns:auto minmax(0,1fr); gap:14px; padding:20px; }.photoUploadActions { grid-column:1 / -1; }.photoUploadActions label { flex:1; }.pagePlaceholder { min-height:100px; } }
 .successDialog { width:min(480px,calc(100% - 40px)); padding:32px; border:1px solid #484850; border-radius:14px; background:#19191d; color:#f4f4f5; box-shadow:0 24px 80px #000a; }

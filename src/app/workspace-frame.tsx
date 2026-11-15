@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/auth";
 import { db } from "@/lib/db";
 import styles from "./workspace.module.css";
+import { PendingSubmit } from "./pending-screen";
 
 type Active = "overview" | "quizzes" | "students";
 const links: { id: Active; label: string; href: string; path: string }[] = [
@@ -14,5 +15,5 @@ function Navigation({ active }: { active: Active }) {
 }
 export default async function WorkspaceFrame({ active, teacherId, children }: { active: Active; teacherId: string; children: React.ReactNode }) {
   const user = await db.user.findUnique({ where: { id: teacherId }, select: { email: true } });
-  return <div className={styles.app}><aside className={styles.rail}><Link className={styles.brand} href="/dashboard">checkmate<span>.</span></Link><Navigation active={active}/><div className={styles.railBottom}><p>Your classroom, in one place.</p><span>{user?.email}</span><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><button className={styles.signOut}>Sign out ↗</button></form></div></aside><header className={styles.mobileHeader}><Link className={styles.brand} href="/dashboard">checkmate<span>.</span></Link><details className={styles.mobileMenu}><summary aria-label="Open workspace menu">Menu <span aria-hidden="true">☰</span></summary><div className={styles.menuPanel}><Navigation active={active}/><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><button className={styles.signOut}>Sign out ↗</button></form></div></details></header><main className={styles.main}>{children}</main></div>;
+  return <div className={styles.app}><aside className={styles.rail}><Link className={styles.brand} href="/dashboard">checkmate<span>.</span></Link><Navigation active={active}/><div className={styles.railBottom}><p>Your classroom, in one place.</p><span>{user?.email}</span><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out ↗</PendingSubmit></form></div></aside><header className={styles.mobileHeader}><Link className={styles.brand} href="/dashboard">checkmate<span>.</span></Link><details className={styles.mobileMenu}><summary aria-label="Open workspace menu">Menu <span aria-hidden="true">☰</span></summary><div className={styles.menuPanel}><Navigation active={active}/><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out ↗</PendingSubmit></form></div></details></header><main className={styles.main}>{children}</main></div>;
 }

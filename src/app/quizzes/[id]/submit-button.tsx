@@ -1,7 +1,6 @@
 "use client";
-import { useFormStatus } from "react-dom";
+import { PendingSubmit } from "@/app/pending-screen";
 import styles from "./quiz-editor.module.css";
 export default function SubmitButton({ children }: { children: string }) {
-  const { pending } = useFormStatus();
-  return <button className={styles.primary} type="submit" disabled={pending} aria-busy={pending}>{pending ? "Saving…" : children}</button>;
+  return <PendingSubmit className={styles.primary}>{children}</PendingSubmit>;
 }

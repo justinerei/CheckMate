@@ -1,4 +1,5 @@
 "use client";
+import { PendingScreen } from "@/app/pending-screen";
 
 import { useActionState, useState } from "react";
 import { login, register } from "./auth-actions";
@@ -10,7 +11,7 @@ export default function PasswordForm() {
   const [registerState, registerAction, registerPending] = useActionState(register, { error: "" });
   const error = creating ? registerState.error : loginState.error;
   return <>
-    <form className={styles.authForm} action={creating ? registerAction : loginAction}>
+    <form className={styles.authForm} action={creating ? registerAction : loginAction}><PendingScreen pending={loginPending || registerPending} message={creating ? "Creating your account…" : "Signing in…"} />
       {creating && <label>Name<input name="name" autoComplete="name" maxLength={120} required /></label>}
       <label>Email<input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
       <label>Password<input name="password" type="password" autoComplete={creating ? "new-password" : "current-password"} minLength={creating ? 12 : undefined} maxLength={128} required /></label>

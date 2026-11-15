@@ -1,4 +1,5 @@
 "use client";
+import { PendingScreen } from "@/app/pending-screen";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
@@ -142,7 +143,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const uncertain = rows.filter(row => row.uncertain).length;
   const missing = rows.filter(row => row.type !== "ESSAY" && !row.answer.trim()).length;
   const issues = rows.flatMap(row => row.uncertain ? [{ number: row.number, message: "Check this reading against the key." }] : row.type !== "ESSAY" && !row.answer.trim() ? [{ number: row.number, message: "Enter a correct answer." }] : row.type === "ESSAY" && (!row.rubricConfirmed || !validateRubric(row.rubric ?? [], row.points)) ? [{ number: row.number, message: "Review and confirm a rubric matching the points." }] : []);
-  return <div className={styles.keySetup}>
+  return <div className={styles.keySetup}><PendingScreen pending={busy} message={progress || "Processing your answer key…"} />
     {fromChecking && <nav className={styles.keySteps} aria-label="Checking workflow"><span aria-current={!reviewStarted ? "step" : undefined}><b>1</b> Upload key</span><span aria-current={reviewStarted ? "step" : undefined}><b>2</b> Review answers</span><span><b>3</b> Upload student paper</span><span><b>4</b> Check results</span></nav>}
     {!reviewStarted && <section className={`${styles.keyPanel} ${styles.keyStage}`} aria-labelledby="key-upload-heading">
       <div className={styles.keyHeading}><div><p className={styles.keyEyebrow}>01 / SET UP</p><h2 id="key-upload-heading">Add your answer key</h2><p>Upload a key to fill the answers, or enter them below.</p></div></div>

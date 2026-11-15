@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import Image from "next/image";
 import styles from "./page.module.css";
 import PasswordForm from "./password-form";
+import { PendingSubmit } from "./pending-screen";
 
 export const instant = false;
 
@@ -28,7 +29,7 @@ export default async function Home() {
       <PasswordForm />
       <div className={styles.divider}><span>or</span></div>
       <form action={async () => { "use server"; await signIn("google", { redirectTo: "/dashboard" }); }}>
-        <button className={styles.button} type="submit"><span aria-hidden="true" className={styles.google}>G</span>Continue with Google <span aria-hidden="true">↗</span></button>
+        <PendingSubmit className={styles.button} pendingLabel="Connecting to Google…"><span aria-hidden="true" className={styles.google}>G</span>Continue with Google <span aria-hidden="true">↗</span></PendingSubmit>
       </form><p className={styles.note}>Your students don’t need an account.</p>
     </section></div><footer className={styles.footer}><span>CHECKMATE / FOR TEACHERS</span><span>MADE FOR THE WORK THAT MATTERS.</span></footer>
   </main>;

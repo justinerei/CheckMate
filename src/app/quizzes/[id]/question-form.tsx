@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
+import { PendingSubmit } from "@/app/pending-screen";
 import { parseQuestion } from "@/lib/question-input";
 import { defaultEssayRubric } from "@/lib/rubric";
 import styles from "./quiz-editor.module.css";
@@ -8,8 +8,7 @@ import styles from "./quiz-editor.module.css";
 type Initial = { type: string; text: string; points: string; choices: { label: string; text: string }[]; answers: string[]; rubric: string; lines: number; besideNext: boolean };
 type Criterion = { id: number; title: string; description: string; points: string };
 function Submit({ editing }: { editing: boolean }) {
-  const { pending } = useFormStatus();
-  return <button className={styles.primary} disabled={pending} aria-busy={pending} type="submit">{pending ? "Saving…" : editing ? "Save changes" : "Save question"}</button>;
+  return <PendingSubmit className={styles.primary}>{editing ? "Save changes" : "Save question"}</PendingSubmit>;
 }
 
 export default function QuestionForm({ action, defaultPoints, initial, cancelHref, sharedRubric }: { sharedRubric?: { rubric: string; points: string }; action: (data: FormData) => void | Promise<void>; defaultPoints: string; initial?: Initial; cancelHref?: string }) {

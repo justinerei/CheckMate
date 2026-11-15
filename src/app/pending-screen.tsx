@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal, useFormStatus } from "react-dom";
-import Image from "next/image";
+import Mascot from "@/app/mascot";
 import styles from "./pending-screen.module.css";
 
 export function PendingScreen({ pending, message = "Working…" }: { pending: boolean; message?: string }) {
@@ -13,7 +13,7 @@ export function PendingScreen({ pending, message = "Working…" }: { pending: bo
     return () => { window.clearTimeout(timer); setVisible(false); };
   }, [pending]);
   if (!pending || !visible) return null;
-  return createPortal(<div className={styles.overlay} role="status" aria-live="polite"><div className={styles.card}><Image src="/images/mate/focused.png" width={96} height={96} alt="" aria-hidden="true" /><span className={styles.spinner} aria-hidden="true" /><strong>{message}</strong><span>Please wait a moment.</span></div></div>, document.body);
+  return createPortal(<div className={styles.overlay} role="status" aria-live="polite"><div className={styles.card}><Mascot state="focused" width={96} height={96} /><span className={styles.spinner} aria-hidden="true" /><strong>{message}</strong><span>Please wait a moment.</span></div></div>, document.body);
 }
 
 export function PendingSubmit({ className, children, pendingLabel = "Saving…" }: { className?: string; children: React.ReactNode; pendingLabel?: string }) {

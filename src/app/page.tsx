@@ -2,7 +2,7 @@ import { auth, signIn } from "@/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import Image from "next/image";
+import Mascot from "@/app/mascot";
 import styles from "./page.module.css";
 import PasswordForm from "./password-form";
 import { PendingSubmit } from "./pending-screen";
@@ -23,7 +23,7 @@ export default async function Home() {
       <div className={styles.steps}><span>01 &nbsp; CREATE</span><span>02 &nbsp; REVIEW</span><span>03 &nbsp; FINALIZE</span></div>
     </section><section className={styles.card} aria-labelledby="sign-in-title">
       <div className={styles.cardTop}><span>TEACHER ACCESS</span><span className={styles.dot}>●</span></div>
-      <picture><source media="(prefers-reduced-motion: reduce)" srcSet="/images/mate/ready-idle-still.png" /><Image className={styles.mascot} src="/images/mate/ready-idle.gif" width={104} height={104} alt="" aria-hidden="true" unoptimized /></picture>
+      <Mascot state="ready" className={styles.mascot} width={104} height={104} />
       <h2 id="sign-in-title">Welcome to CheckMate.</h2><p>Sign in to create quizzes and review submissions.</p>
       {session && !user?.enabled && <p className={styles.warning} role="alert">This account is unavailable. Contact your administrator.</p>}
       <PasswordForm />

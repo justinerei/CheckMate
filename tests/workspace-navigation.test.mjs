@@ -21,3 +21,11 @@ test("paper links preserve their entry point without changing status routing", (
   assert.equal(paperDestination("p/1", "DRAFT", false, "papers"), "/submissions/p%2F1?from=papers");
   assert.equal(paperDestination("p/1", "FINALIZED", true, "dashboard"), "/submissions/p%2F1/review?from=dashboard");
 });
+
+test("highlights the current workspace area, including quiz overviews", async () => {
+  const { workspaceActive } = await import("../src/lib/workspace-navigation.ts");
+  assert.equal(workspaceActive("/dashboard"), "overview");
+  assert.equal(workspaceActive("/students"), "students");
+  assert.equal(workspaceActive("/quizzes"), "quizzes");
+  assert.equal(workspaceActive("/quizzes/quiz-1/overview"), "quizzes");
+});

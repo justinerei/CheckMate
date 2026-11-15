@@ -9,11 +9,10 @@ import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
 import { paperDestination } from "@/lib/workspace-navigation";
-import WorkspaceFrame from "../../../workspace-frame";
-import styles from "./quiz-overview.module.css";
-import BatchDeletedDialog from "./batch-deleted-dialog";
-import PaperList from "./paper-list";
-import DeleteQuiz from "./delete-quiz";
+import styles from "@/app/quizzes/[id]/overview/quiz-overview.module.css";
+import BatchDeletedDialog from "@/app/quizzes/[id]/overview/batch-deleted-dialog";
+import PaperList from "@/app/quizzes/[id]/overview/paper-list";
+import DeleteQuiz from "@/app/quizzes/[id]/overview/delete-quiz";
 
 export const instant = false;
 
@@ -45,7 +44,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
   const summaryQuestions = quiz.sections.flatMap((section, sectionIndex) => section.questions.map((question, position) => ({ id: question.id, label: quiz.numbering === "CONTINUOUS" ? `Question ${++summaryNumber}` : `${section.title || `Section ${sectionIndex + 1}`} · Question ${position + 1}`, text: quiz.source === "BUILT" ? question.text : "" })));
   const date = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "Asia/Manila" });
   let questionNumber = 0;
-  return <WorkspaceFrame active="quizzes" teacherId={teacher.id}><div className={styles.page}>
+  return <><div className={styles.page}>
     {batchDeleted === "1" && <BatchDeletedDialog quizId={id} />}
     <Link href="/quizzes" className="back-navigation">All quizzes</Link>
     <header className={styles.header}><div><p className={styles.eyebrow}>{quiz.source === "EXISTING" ? "Saved answer key" : "Created in CheckMate"}</p><h1>{quiz.title}</h1><p>{questions.length} {questions.length === 1 ? "question" : "questions"} · {maximum} points</p></div><div className={styles.headerActions}>{quiz.source === "BUILT" && <>{quiz._count.submissions === 0 && <Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}`}>Edit quiz</Link>}<Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}/print?from=overview`}>Preview &amp; print</Link></>}<Link className={styles.primary} href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>+ Upload papers</Link></div></header>
@@ -63,5 +62,5 @@ export default async function QuizOverview({ params, searchParams }: { params: P
       <div className={styles.keyActions}><Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}/answer-key/print`}>Print answer key</Link><Link className={styles.secondaryAction} href={`/quizzes/existing/${encodeURIComponent(id)}/edit`}>Edit correct answers</Link></div></div>
     </section>
     <DeleteQuiz id={id} title={quiz.title} hasPapers={quiz._count.submissions > 0} hasBatches={quiz.batches.length > 0} archived={!!quiz.archivedAt} />
-  </div></WorkspaceFrame>;
+  </div></>;
 }

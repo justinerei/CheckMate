@@ -12,12 +12,13 @@ function Blocks({ count = 3 }: { count?: number }) {
   return <div className={styles.blocks}>{Array.from({ length: count }, (_, index) => <div className={styles.block} key={index}><Line size="short" /><Line size="long" /><Line size="medium" /></div>)}</div>;
 }
 
-export default function LoadingSkeleton({ variant = "form" }: { variant?: Variant }) {
+export default function LoadingSkeleton({ variant = "form", workspaceContentOnly = false }: { variant?: Variant; workspaceContentOnly?: boolean }) {
   const workspace = ["dashboard", "library", "students", "overview"].includes(variant);
   const home = variant === "home";
   const print = variant === "print";
   const active: Active = variant === "dashboard" ? "overview" : variant === "students" ? "students" : "quizzes";
-  if (workspace) return <WorkspaceShell active={active}><span className={styles.status} role="status">Loading page…</span><div className={styles.workspaceContent} aria-busy="true" aria-hidden="true"><Line size="short" /><Line size="title" /><Line size="long" />{variant === "dashboard" ? <><div className={styles.dashboardCards}><div className={styles.panel}><Line size="short" /><Line size="title" /><Line size="long" /><Line size="button" /></div><Blocks count={2} /></div><Blocks /></> : <><div className={styles.toolbar}><Line size="medium" /><Line size="button" /></div><Blocks count={variant === "students" ? 2 : 3} /><div className={styles.list}><Blocks /></div></>}</div></WorkspaceShell>;
+  const workspaceContent = <><span className={styles.status} role="status">Loading page…</span><div className={styles.workspaceContent} aria-busy="true" aria-hidden="true"><Line size="short" /><Line size="title" /><Line size="long" />{variant === "dashboard" ? <><div className={styles.dashboardCards}><div className={styles.panel}><Line size="short" /><Line size="title" /><Line size="long" /><Line size="button" /></div><Blocks count={2} /></div><Blocks /></> : <><div className={styles.toolbar}><Line size="medium" /><Line size="button" /></div><Blocks count={variant === "students" ? 2 : 3} /><div className={styles.list}><Blocks /></div></>}</div></>;
+  if (workspace) return workspaceContentOnly ? workspaceContent : <WorkspaceShell active={active}>{workspaceContent}</WorkspaceShell>;
   return <div className={`${styles.shell} ${workspace ? styles.workspace : ""}`}>
     <span className={styles.status} role="status">Loading page…</span>
     <div className={styles.body} aria-busy="true">

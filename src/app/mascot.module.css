@@ -1,0 +1,7 @@
+@media (prefers-reduced-motion: no-preference) {
+  .concerned { animation: concerned-sway 2.6s ease-in-out infinite; transform-origin: 50% 80%; }
+  @keyframes concerned-sway {
+    0%, 100% { transform: rotate(-2deg) translateY(0); }
+    50% { transform: rotate(2deg) translateY(-2px); }
+  }
+}

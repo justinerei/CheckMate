@@ -358,6 +358,7 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 
 /* Feedback and confirmation for the paper checking flow. */
 .feedbackNotice { display:flex; align-items:flex-start; gap:12px; margin:14px 0; padding:16px; border:1px solid #9b6249; border-radius:12px; background:#30221e; color:#fff1eb; box-shadow:0 10px 28px #0003; }
+.feedbackMascot { flex:none; width:48px; height:48px; object-fit:contain; }
 .feedbackNotice > div { min-width:0; flex:1; }.feedbackNotice strong { display:block; font-size:15px; }.feedbackNotice p { margin:5px 0 0; font-size:14px; line-height:1.55; overflow-wrap:anywhere; }.feedbackNotice button { margin-top:12px; }
 .feedbackIcon,.confirmDialogIcon { display:grid; flex:none; place-items:center; width:32px; height:32px; border-radius:50%; background:#ff9b7b26; color:#ffb89f; font-weight:700; }
 .feedbackSuccess { border-color:#4c7258; background:#1d2b22; color:#e8ffec; }.feedbackSuccess .feedbackIcon { background:#a6d9b026; color:#bcebc6; }

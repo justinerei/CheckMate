@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Mascot from "@/app/mascot";
 import styles from "../submissions.module.css";
 import PhotoPreview from "../photo-preview";
 import ConfirmDialog from "../confirm-dialog";
@@ -117,7 +118,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
     <div className={styles.cameraPanel}>
       <div className={styles.cameraHeader}><div><span className={styles.eyebrow}>{kind === "answer-key" ? "ANSWER KEY" : "STUDENT PAPER"}</span><h2 id="camera-title">{review ? "Review your photos" : `Page ${pageNumbers[current]} of ${pageNumbers[pageNumbers.length - 1]}`}</h2></div><button type="button" className={styles.secondary} onClick={close} disabled={busy}>Close</button></div>
       <p className={styles.cameraHelp}>{review ? "Check that each photo is clear and matches its page number." : preview ? "Check that the whole page and answers are readable." : "Fit the whole page in view, then tap Capture."}</p>
-      {error && <div role="alert" className={styles.feedbackNotice}><span className={styles.feedbackIcon} aria-hidden="true">!</span><div><strong>Camera needs attention</strong><p>{error}</p><button type="button" className={styles.secondary} onClick={() => { setError(""); setTorchSupported(null); setTorchOn(false); setCameraAttempt(value => value + 1); }}>Try camera again</button></div></div>}
+      {error && <div role="alert" className={styles.feedbackNotice}><Mascot state="concerned" width={48} height={48} className={styles.feedbackMascot} /><div><strong>Camera needs attention</strong><p>{error}</p><button type="button" className={styles.secondary} onClick={() => { setError(""); setTorchSupported(null); setTorchOn(false); setCameraAttempt(value => value + 1); }}>Try camera again</button></div></div>}
       {torchSupported === false && !review && !preview && <p className={styles.cameraLightUnavailable}>Camera light unavailable on this device or browser.</p>}
       {torchMessage && <p role="status" className={styles.cameraWarning}>{torchMessage} {torchOn && (preview || review) && <button type="button" className={styles.secondary} disabled={torchBusy} onClick={() => toggleTorch(false)}>Turn light off</button>}</p>}
       <div className={styles.cameraView} hidden={review || !!preview}>

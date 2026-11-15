@@ -402,13 +402,9 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .nextPaperOptions select { min-height:44px; padding:10px; border:1px solid var(--field-border); border-radius:6px; background:var(--field-bg); color:var(--field-text); color-scheme:dark; font:inherit; }
 .paperConfirmHint { font-size:14px; }
 @media(max-width:600px) { .paperConfirmActions { display:grid; } .paperConfirmActions button { width:100%; } }
-.savedKeySection { max-width:680px; }
-.savedKeySection h2 { margin:0; font:600 21px var(--font-geist-sans),sans-serif; }
-.savedKeySection .form { margin-top:22px; }
-.keyDivider { display:flex; align-items:center; gap:14px; max-width:680px; margin-bottom:24px; color:#bcbcc4; font-size:12px; font-weight:600; letter-spacing:.08em; }
-.keyDivider::before,.keyDivider::after { content:""; height:1px; background:#39393f; flex:1; }
 
-.uploadKeyChoice { margin-top:32px; }
-.uploadKeyChoice h2 { margin:0 0 8px; font:600 21px var(--font-geist-sans),sans-serif; }
-.uploadKeyChoice p { margin:0 0 16px; color:#c3c3ca; line-height:1.5; }
-.uploadKeyChoice a { gap:10px; }
+
+.newKeyLink { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin:-6px 0 10px; color:#c3c3ca; font-size:14px; }
+.newKeyLink a { color:#ffb184; font-weight:600; text-underline-offset:3px; }
+.newKeyLink a:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.newKeyEmpty p { margin:0; color:#c3c3ca; line-height:1.5; }

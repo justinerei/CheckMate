@@ -19,17 +19,8 @@ export default async function NewSubmission({ searchParams }: { searchParams: Pr
     <div className={styles.narrow}>
       <p className={styles.eyebrow}>CHECK PAPERS</p><h1>Start checking</h1>
       {saved === "1" && selected && <p className={styles.success} role="status">Answer key saved. Next, upload the student’s paper.</p>}
-      {quizzes.length > 0 && <section className={styles.savedKeySection} aria-labelledby="saved-key-heading">
-        <h2 id="saved-key-heading">Use a saved answer key or quiz</h2>
-        <p className={styles.description}>Choose a saved key, then add your first paper. A batch can hold up to five papers.</p>
-        <CreateForm selectedQuizId={selected ? quizId : undefined} quizzes={quizzes.map(q => ({ id: q.id, label: q.title }))} />
-      </section>}
-      <section className={styles.uploadKeyChoice} aria-labelledby="upload-key-heading">
-        {quizzes.length > 0 && <div className={styles.keyDivider}><span>OR</span></div>}
-        <h2 id="upload-key-heading">Have a new answer key?</h2>
-        <p>Upload a photo or PDF, or enter the answers manually.</p>
-        <Link className={styles.secondary} href="/quizzes/existing?from=check">Upload answer key <span aria-hidden="true">→</span></Link>
-      </section>
+      <p className={styles.description}>Choose an answer key to start, then add your first paper.</p>
+      <CreateForm selectedQuizId={selected ? quizId : undefined} quizzes={quizzes.map(q => ({ id: q.id, label: q.title }))} />
     </div>
   </main>;
 }

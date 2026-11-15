@@ -15,3 +15,10 @@ test("updates only non-essay questions in the chosen section", async () => {
   await applySectionPoints(tx, "one", 2.5);
   assert.deepEqual(questions.map(q => q.points), [2.5, 2.5, 10, 4]);
 });
+
+test("counts only objective questions whose points would change", async () => {
+  const { countChangedSectionPoints } = await import("../src/lib/section-points.ts");
+  const questions = [{ type: "MULTIPLE_CHOICE", points: "1" }, { type: "IDENTIFICATION", points: "2" }, { type: "ESSAY", points: "10" }];
+  assert.equal(countChangedSectionPoints(questions, 2), 1);
+  assert.equal(countChangedSectionPoints(questions, 3), 2);
+});

@@ -16,7 +16,7 @@ export function parseQuestion(form: FormData) {
     if (!["T", "F"].includes(answer)) return null;
     acceptedAnswers = [answer];
   } else if (type === "IDENTIFICATION") {
-    acceptedAnswers = answer.split(",").map(s => s.trim()).filter(Boolean);
+    acceptedAnswers = answer.split(field("answerDelimiter") === "pipe" ? "|" : ",").map(s => s.trim()).filter(Boolean);
     if (!acceptedAnswers.length || acceptedAnswers.some(s => s.length > 200)) return null;
   } else {
     criteria = field("rubric").split("\n").filter(line => line.trim()).map(line => {

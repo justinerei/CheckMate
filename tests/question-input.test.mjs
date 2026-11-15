@@ -23,3 +23,9 @@ test("essay rubric points must add up to the question total", () => {
   assert.equal(parseQuestion(data)?.criteria.length, 2);
   data.set("rubric", "Accuracy | Correct facts | 4"); assert.equal(parseQuestion(data), null);
 });
+
+test("the editor preserves commas inside identification answers", () => {
+  const data = new FormData(); data.set("type", "IDENTIFICATION"); data.set("text", "Where?"); data.set("points", "1");
+  data.set("answerDelimiter", "pipe"); data.set("answer", "Manila, Philippines | Manila");
+  assert.deepEqual(parseQuestion(data)?.acceptedAnswers, ["Manila, Philippines", "Manila"]);
+});

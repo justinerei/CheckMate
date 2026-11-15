@@ -1,7 +1,11 @@
+.concerned { display:inline-flex; flex:none; align-items:center; justify-content:center; }
+.concernedFrame { display:block; width:75%; height:100%; background:url('/images/mate/concerned-frames.png') 0 0 / 400% 100% no-repeat; }
 @media (prefers-reduced-motion: no-preference) {
-  .concerned { animation: concerned-sway 2.6s ease-in-out infinite; transform-origin: 50% 80%; }
-  @keyframes concerned-sway {
-    0%, 100% { transform: rotate(-2deg) translateY(0); }
-    50% { transform: rotate(2deg) translateY(-2px); }
+  .concernedFrame { animation: concerned-blink 2.4s steps(1, end) infinite; }
+  @keyframes concerned-blink {
+    0%, 100% { background-position:0 0; }
+    50% { background-position:33.333% 0; }
+    60% { background-position:66.667% 0; }
+    70% { background-position:100% 0; }
   }
 }

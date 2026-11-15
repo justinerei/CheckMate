@@ -31,3 +31,33 @@
 .quickPoints small { color:#bcbcc4; line-height:1.5; }
 .rubricShortcut { display:inline-flex; align-items:center; min-height:44px; color:#ffb184; font-weight:600; }
 .quickPoints input:focus-visible,.quickPoints button:focus-visible,.sectionJump a:focus-visible,.rubricShortcut:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.content { max-width:1400px; }
+.editorLayout { display:grid; grid-template-columns:minmax(0, 1fr) minmax(290px, 360px); gap:28px; align-items:start; margin-top:32px; }
+.editorMain,.editorSidebar { min-width:0; }
+.editorMain .sectionListHeading { margin-top:0; }
+.editorSidebar { position:sticky; top:20px; max-height:calc(100dvh - 40px); overflow:auto; overscroll-behavior:contain; container-type:inline-size; padding:2px 4px 8px 2px; }
+.editorSidebar > :first-child { margin-top:0; }
+.sidebarHeading { margin:0 0 14px; font-size:16px; color:#f4f4f5; }
+.editorSidebar .settings { margin-top:14px; }
+@media(max-width:900px) { .editorLayout { display:flex; flex-direction:column; gap:24px; } .editorMain,.editorSidebar { width:100%; } .editorSidebar { position:static; max-height:none; overflow:visible; order:-1; } }
+.sectionJump { margin:14px 0 22px; }
+.editorMain:focus-visible,.editorSidebar:focus-visible { outline:2px solid #ffad7d; outline-offset:-2px; }
+.editorMain,.editorSidebar { scrollbar-width:thin; scrollbar-color:#777079 transparent; }
+.editorMain::-webkit-scrollbar,.editorSidebar::-webkit-scrollbar { width:8px; }
+.editorMain::-webkit-scrollbar-track,.editorSidebar::-webkit-scrollbar-track { background:transparent; }
+.editorMain::-webkit-scrollbar-thumb,.editorSidebar::-webkit-scrollbar-thumb { background:#777079; border:2px solid #0c0c0f; border-radius:8px; }
+@media (min-width:901px) and (min-height:680px) {
+  .shell { height:100dvh; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+  .header { flex:none; }
+  .content { width:100%; flex:1; min-height:0; display:flex; flex-direction:column; padding:24px 24px 0; }
+  .hero { flex:none; align-items:center; padding:0 0 20px; border-bottom:1px solid #303036; }
+  .hero > div { min-width:0; }
+  .hero .eyebrow { margin:0; }
+  .hero h1 { font-size:clamp(28px,3vw,40px); margin:8px 0; overflow-wrap:anywhere; }
+  .hero .description { margin:0; }
+  .hero .previewLink { margin:0; }
+  .editorLayout { flex:1; min-height:0; align-items:stretch; margin-top:20px; }
+  .editorMain,.editorSidebar { min-height:0; overflow-y:auto; overscroll-behavior:contain; padding-bottom:36px; }
+  .editorMain { padding-right:12px; }
+  .editorSidebar { position:static; max-height:none; padding-right:8px; }
+}

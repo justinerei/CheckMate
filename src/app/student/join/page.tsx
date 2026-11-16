@@ -7,8 +7,12 @@ import Mascot from "@/app/mascot";
 import StudentShell from "../student-shell";
 import styles from "../student-workspace.module.css";
 import invite from "./join.module.css";
+import { connection } from "next/server";
+
+export const instant = false;
 
 export default async function JoinClassPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  await connection();
   const { code = "" } = await searchParams;
   const session = await auth();
   const user = session?.user?.id ? await db.user.findUnique({ where: { googleId: session.user.id }, select: { email: true, role: true, enabled: true } }) : null;

@@ -32,8 +32,8 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
   const { from } = await searchParams;
   const submission = await db.submission.findFirst({ where: { id, teacherId: teacher.id, quiz: { teacherId: teacher.id } }, include: { concerns: { orderBy: { createdAt: "desc" } }, resultHistory: { orderBy: { changedAt: "desc" }, take: 20 }, student: true, pages: { orderBy: { pageNumber: "asc" } }, answers: { include: { assessments: true } }, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true, rubricCriteria: { orderBy: { position: "asc" } } } } } } } } } });
   if (!submission) notFound();
-  const studentLinks = submission.status !== "DRAFT" ? await db.teacherStudent.findMany({ where: { teacherId: teacher.id }, orderBy: { student: { name: "asc" } }, select: { student: { select: { id: true, name: true, code: true } } } }) : [];
-  const students = studentLinks.map(({ student }) => ({ id: student.id, name: student.name, codeSuffix: student.code.slice(-4) }));
+  const studentLinks = submission.status !== "DRAFT" ? await db.teacherStudent.findMany({ where: { teacherId: teacher.id }, orderBy: { student: { name: "asc" } }, select: { student: { select: { id: true, name: true, code: true, classes: { where: { classroom: { teacherId: teacher.id } }, select: { classroom: { select: { id: true, name: true } } } } } } } }) : [];
+  const students = studentLinks.map(({ student }) => ({ id: student.id, name: student.name, codeSuffix: student.code.slice(-4), classes: student.classes.map(({ classroom }) => classroom) }));
   const unfinished = submission.pages.filter(page => page.status !== "COMPLETE");
   const pagesNeedingIdentification = submission.status === "IN_REVIEW" ? submission.pages.filter(page => page.status === "COMPLETE" && page.extraction && !documentReviewed(page.extraction) && documentNeedsReview(parseExtraction(JSON.stringify(page.extraction))?.document)) : [];
   let counter = 0;

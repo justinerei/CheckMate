@@ -55,6 +55,7 @@ export async function removeStudentFromList(studentId: string): Promise<{ error:
       if (!link) return false;
       await tx.submission.updateMany({ where: { teacherId, studentId, quiz: { teacherId } }, data: { studentId: null, releasedAt: null, showCorrectAnswers: false } });
       await tx.studentInvite.updateMany({ where: { studentId, usedAt: null }, data: { usedAt: new Date() } });
+      await tx.classEnrollment.deleteMany({ where: { studentId, classroom: { teacherId } } });
       await tx.teacherStudent.deleteMany({ where: { teacherId, studentId } });
       return true;
     }, { isolationLevel: "Serializable" });

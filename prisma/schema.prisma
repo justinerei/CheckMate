@@ -52,6 +52,7 @@ model User {
   keyChanges    AnswerKeyHistory[]
   resultChanges ResultHistory[]
   studentRecord Student?
+  classes       Classroom[]
   adminActions AdminActivity[] @relation("AdminActor")
   accountEvents AdminActivity[] @relation("AdminTarget")
 }
@@ -81,6 +82,30 @@ model Student {
   invites     StudentInvite[]
   teachers    TeacherStudent[]
   submissions Submission[]
+  classes     ClassEnrollment[]
+}
+
+model Classroom {
+  id          String            @id @default(cuid())
+  teacherId   String
+  name        String
+  joinCode    String            @unique
+  createdAt   DateTime          @default(now())
+  teacher     User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  enrollments ClassEnrollment[]
+
+  @@index([teacherId])
+}
+
+model ClassEnrollment {
+  classroomId String
+  studentId   String
+  joinedAt    DateTime  @default(now())
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([classroomId, studentId])
+  @@index([studentId])
 }
 
 model StudentInvite {

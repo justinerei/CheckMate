@@ -14,6 +14,10 @@ export async function setAccountEnabled(id: string, enabled: boolean, reason = "
     if (!updated) return { error: "Account unavailable or already updated. Refresh and try again." };
   } catch { return { error: "Could not update account. Try again." }; }
   revalidatePath("/admin");
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/queue");
+  revalidatePath("/admin/activity");
+  revalidatePath("/admin/reports");
   return { error: "" };
 }
 
@@ -32,6 +36,10 @@ export async function unlockAccount(id: string): Promise<{ error: string }> {
     if (!updated) return { error: "Account is no longer locked. Refresh and try again." };
   } catch { return { error: "Could not unlock account. Try again." }; }
   revalidatePath("/admin");
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/queue");
+  revalidatePath("/admin/activity");
+  revalidatePath("/admin/reports");
   return { error: "" };
 }
 
@@ -54,6 +62,10 @@ export async function retryPages(ids: string[]): Promise<{ error: string; count:
       return updated;
     });
     revalidatePath("/admin");
+  revalidatePath("/admin/accounts");
+  revalidatePath("/admin/queue");
+  revalidatePath("/admin/activity");
+  revalidatePath("/admin/reports");
     return { error: count ? "" : "No selected pages are ready to retry.", count };
   } catch { return { error: "Could not queue pages. Try again.", count: 0 }; }
 }

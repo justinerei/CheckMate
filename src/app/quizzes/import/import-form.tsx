@@ -6,6 +6,7 @@ import { PendingScreen } from "@/app/pending-screen";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
 import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
 import { documentNeedsReview } from "@/lib/extraction";
+import { clipboardImages } from "@/lib/clipboard-images";
 import { saveImportedQuiz } from "./actions";
 import styles from "./import.module.css";
 
@@ -170,8 +171,8 @@ export default function ImportQuizForm() {
     <fieldset className={styles.formFields} disabled={busy}>
     <section className={styles.panel} aria-labelledby="import-files-heading"><h2 id="import-files-heading">1 / Choose your files</h2>
       <label>Quiz title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Science Quiz 1" /></label>
-      <label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label>
-      <label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label>
+      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Quiz files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectQuiz([...quizFiles, ...images]); } }}><label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {quizFiles.length} files selected</small></div>
+      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Answer key files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectKey([...keyFiles, ...images]); } }}><label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {keyFiles.length} files selected</small></div>
       {keyFiles.length > 0 && <button type="button" className={styles.secondary} disabled={busy} onClick={() => { if (keyInput.current) keyInput.current.value = ""; selectKey([]); }}>Remove answer key</button>}
       <p>Up to 10 pages per upload; answer keys can include at most 2 photos. PDFs: 10 MB per file; photos: 8 MB each. Supports multiple choice (A–D), true/false, identification and essay questions. Files are sent to Groq for scanning; avoid uploading sensitive information.</p>
       <button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"}</button>

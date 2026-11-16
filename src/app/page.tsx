@@ -19,7 +19,7 @@ export default async function Home() {
   return <main className={styles.shell}>
     <div className={styles.top}><span className={styles.logo}>checkmate<span>.</span></span><span className={styles.label}>A little less checking. A little more teaching.</span></div>
     <div className={styles.layout}><section className={styles.intro}>
-      <p className={styles.eyebrow}>YOUR CLASSROOM COMPANION <span>✳</span></p>
+
       <h1>Good work deserves<br /><span>a closer look.</span></h1>
       <p className={styles.description}>Create quizzes, review student papers, and keep every grade in your hands.</p>
       <div className={styles.steps}><span>01 &nbsp; CREATE</span><span>02 &nbsp; REVIEW</span><span>03 &nbsp; FINALIZE</span></div>

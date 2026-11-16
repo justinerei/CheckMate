@@ -17,7 +17,7 @@ export default async function NewSubmission({ searchParams }: { searchParams: Pr
   return <main className={styles.shell}>
     <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={selected ? `/quizzes/${encodeURIComponent(quizId!)}/overview` : "/dashboard"} className="back-navigation">{selected ? "Back to quiz" : "Back to dashboard"}</Link></header>
     <div className={styles.narrow}>
-      <p className={styles.eyebrow}>CHECK PAPERS</p><h1>Start checking</h1>
+      <h1>Start checking</h1>
       {saved === "1" && selected && <p className={styles.success} role="status">Answer key saved. Next, upload the student’s paper.</p>}
       <p className={styles.description}>Choose an answer key to start, then add your first paper.</p>
       <CreateForm selectedQuizId={selected ? quizId : undefined} quizzes={quizzes.map(q => ({ id: q.id, label: q.title }))} />

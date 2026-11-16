@@ -11,5 +11,5 @@ export default async function ExistingQuiz({ searchParams }: { searchParams: Pro
   const fromChecking = from === "check";
   const teacher = await getTeacher();
   if (!teacher) redirect("/");
-  return <main className={styles.shell}><header className={styles.header}><DraftBackLink teacherId={teacher.id} logo /><DraftBackLink teacherId={teacher.id} fromChecking={fromChecking} /></header><div className={styles.content}><p className={styles.eyebrow}>ANSWER KEY / SETUP</p><h1>Add an answer key</h1><p className={styles.description}>Scan your key or enter answers manually.</p><KeyForm teacherId={teacher.id} fromChecking={fromChecking} /></div></main>;
+  return <main className={styles.shell}><header className={styles.header}><DraftBackLink teacherId={teacher.id} logo /><DraftBackLink teacherId={teacher.id} fromChecking={fromChecking} /></header><div className={styles.content}><h1>Add an answer key</h1><p className={styles.description}>Scan your key or enter answers manually.</p><KeyForm teacherId={teacher.id} fromChecking={fromChecking} /></div></main>;
 }

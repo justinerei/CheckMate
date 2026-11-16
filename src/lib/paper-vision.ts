@@ -1,11 +1,8 @@
 import { parseExtraction, parseDocumentCheck, retryDelayMs } from "./extraction";
 
 type VisionResult = { kind: "ok"; result: NonNullable<ReturnType<typeof parseExtraction>> & { document: ReturnType<typeof parseDocumentCheck> }; model: string } | { kind: "error"; message: string; retryAt: Date | null };
-export const GROQ_SHORT_WAIT = "Groq is busy. Waiting briefly before retrying; Gemini is reserved as a backup.";
-const MAX_GROQ_WAIT_MS = 60_000;
-
 /** Read with Groq first, then Ling on OpenRouter, and finally Gemini if needed. */
-export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string, previousError?: string | null): Promise<VisionResult> {
+export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string): Promise<VisionResult> {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
   const groqModel = process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b";
@@ -24,7 +21,6 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
       if (response.status === 429) {
         const delay = Math.max(1000, retryDelayMs(response.headers.get("retry-after"), Date.now()));
         retryAt = new Date(Date.now() + delay);
-        if (delay <= MAX_GROQ_WAIT_MS && previousError !== GROQ_SHORT_WAIT) return { kind: "error", message: GROQ_SHORT_WAIT, retryAt };
         message = "Groq rate limit reached. Retry after the displayed time.";
       }
       else if (!response.ok) message = response.status === 401 ? "Groq rejected the API key. Check .env.local and restart the server." : `Groq could not process this page (HTTP ${response.status}).`;

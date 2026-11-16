@@ -4,6 +4,7 @@ import { PendingSubmit } from "@/app/pending-screen";
 import WorkspaceMobileMenu from "@/app/workspace-mobile-menu";
 import workspace from "@/app/workspace.module.css";
 import styles from "./admin.module.css";
+import AccountMenu from "./account-menu";
 
 const links = [
   { href: "/admin", label: "Overview", path: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
@@ -20,12 +21,12 @@ export default function AdminShell({ email, active, title, description, children
   description: string;
   children: React.ReactNode;
 }) {
-  const signout = <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={workspace.signOut} pendingLabel="Signing out…">Sign out ↗</PendingSubmit></form>;
+  const accountMenu = <AccountMenu email={email}><form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={styles.accountSignOut} pendingLabel="Signing out…">Sign out <span aria-hidden="true">↗</span></PendingSubmit></form></AccountMenu>;
   const nav = <nav className={styles.adminNav} aria-label="Admin workspace"><p className={styles.navLabel}>WORKSPACE</p>{links.map(link => <Link key={link.href} href={link.href} className={`${styles.adminNavItem} ${active === link.href ? styles.adminNavActive : ""}`} aria-current={active === link.href ? "page" : undefined}><svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={link.path} /></svg><span>{link.label}</span><span className={styles.navArrow} aria-hidden="true">›</span></Link>)}</nav>;
   return <div className={workspace.app}>
     <a className={workspace.skipLink} href="#admin-content">Skip to content</a>
-    <aside className={`${workspace.rail} ${styles.adminRail}`}><Link className={`${workspace.brand} ${styles.adminBrand}`} href="/admin">checkmate<span>.</span></Link><div className={styles.workspaceCard}><span aria-hidden="true">C</span><div><strong>Admin workspace</strong><small>CheckMate</small></div></div>{nav}<div className={`${workspace.railBottom} ${styles.adminProfile}`}><div className={styles.profileInfo}><span className={styles.profileAvatar} aria-hidden="true">A</span><strong>Admin</strong></div><span className={styles.profileEmail}>{email}</span>{signout}</div></aside>
-    <header className={workspace.mobileHeader}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link><WorkspaceMobileMenu>{nav}{signout}</WorkspaceMobileMenu></header>
+    <aside className={`${workspace.rail} ${styles.adminRail}`}><Link className={`${workspace.brand} ${styles.adminBrand}`} href="/admin">checkmate<span>.</span></Link><div className={styles.workspaceCard}><span aria-hidden="true">C</span><div><strong>Admin workspace</strong><small>CheckMate</small></div></div>{nav}<div className={styles.adminProfile}>{accountMenu}</div></aside>
+    <header className={workspace.mobileHeader}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link><WorkspaceMobileMenu>{nav}<div className={styles.mobileAccount}>{accountMenu}</div></WorkspaceMobileMenu></header>
     <main id="admin-content" tabIndex={-1} className={workspace.main}><div className={styles.page}>
       <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {links.find(link => link.href === active)?.label.toUpperCase()}</p>
       <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>

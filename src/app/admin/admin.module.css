@@ -34,7 +34,7 @@
 .adminBrand { margin-bottom:26px; }
 .workspaceCard { display:flex; align-items:center; gap:10px; padding:11px; border:1px solid #3b3a41; border-radius:10px; background:#202026; }
 .workspaceCard > span,.profileAvatar { display:grid; place-items:center; flex:none; width:34px; height:34px; border-radius:9px; background:#463027; color:#ffc19e; font-size:13px; font-weight:700; }
-.workspaceCard strong,.profileInfo strong { display:block; color:#f4f4f5; font-size:12px; }
+.workspaceCard strong { display:block; color:#f4f4f5; font-size:12px; }
 .workspaceCard small { display:block; margin-top:4px; color:#bcbcc4; font-size:11px; }
 .adminNav { display:grid; gap:5px; }
 .navLabel { margin:31px 9px 12px; color:#bcbcc4; font:11px var(--font-geist-mono),monospace; letter-spacing:.11em; }
@@ -46,10 +46,24 @@
 .adminNavActive::before { content:""; position:absolute; left:-15px; top:8px; bottom:8px; width:3px; border-radius:3px; background:#ff9a62; }
 .adminNavActive svg,.adminNavActive .navArrow { color:#ff9a62; }
 .navArrow { margin-left:auto; color:transparent; font-size:20px; line-height:1; }
-.adminProfile { margin-left:7px; margin-right:7px; padding-top:18px; border-top:1px solid #38383f; }
-.profileInfo { display:flex; align-items:center; gap:10px; min-width:0; }
-.profileEmail { display:block; overflow-wrap:anywhere; }
+.adminProfile { margin-top:auto; padding-top:14px; border-top:1px solid #38383f; }
 .profileAvatar { border-radius:50%; }
+.accountMenu { position:relative; }
+.accountTrigger { display:flex; align-items:center; gap:10px; min-height:52px; padding:8px; border:1px solid transparent; border-radius:9px; color:#f4f4f5; cursor:pointer; list-style:none; }
+.accountTrigger::-webkit-details-marker { display:none; }
+.accountTrigger:hover,.accountMenu[open] .accountTrigger { background:#26262d; border-color:#49454a; }
+.accountTrigger:focus-visible,.accountSignOut:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.accountTriggerText { flex:1; min-width:0; font-size:13px; font-weight:600; }
+.accountTriggerText small { display:block; margin-top:4px; color:#bcbcc4; font-size:11px; font-weight:400; }
+.accountChevron { color:#bcbcc4; font-size:17px; transition:transform .18s ease; }
+.accountMenu[open] .accountChevron { transform:rotate(180deg); }
+.accountPopover { position:absolute; z-index:12; left:0; right:0; bottom:calc(100% + 8px); display:grid; gap:6px; padding:14px; border:1px solid #49454a; border-radius:10px; background:#222228; box-shadow:0 14px 35px #0008; }
+.accountPopoverLabel { color:#bcbcc4; font-size:11px; }
+.accountEmail { color:#f4f4f5; font-size:12px; overflow-wrap:anywhere; }
+.accountSignOut { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:42px; margin-top:8px; padding:10px; border:1px solid #60483c; border-radius:7px; background:#382a26; color:#ffd0b4; cursor:pointer; font:600 13px var(--font-geist-sans),Arial,sans-serif; }
+.accountSignOut:hover { background:#4a332a; }
+.accountSignOut:disabled { opacity:.6; cursor:wait; }
+.mobileAccount { margin-top:14px; padding-top:12px; border-top:1px solid #38383f; }
 .heading h1 { font-family:var(--font-geist-sans),Arial,sans-serif; font-weight:650; letter-spacing:-.045em; }
 .metrics { gap:12px; border:0; border-radius:0; background:transparent; overflow:visible; }
 .metrics > a,.metrics > div,.metrics > div + div { gap:8px; border:1px solid #393940; border-radius:11px; background:#1a1a20; }
@@ -70,5 +84,5 @@
 .overviewActivity li { display:grid; gap:5px; padding:13px 0; border-top:1px solid #393940; font-size:13px; }
 .overviewActivity span,.overviewEmpty { color:#bcbcc7; font-size:12px; line-height:1.5; }
 .overviewEmpty { margin:0; padding-top:14px; border-top:1px solid #393940; }
-@media(max-width:760px) { .adminNavActive::before { left:-10px; } .overviewPanels { grid-template-columns:1fr; } }
+@media(max-width:760px) { .adminNavActive::before { left:-10px; } .overviewPanels { grid-template-columns:1fr; } .accountPopover { position:static; margin-top:8px; box-shadow:none; } }
 @media(max-width:420px) { .metrics > div + div { border-left:1px solid #393940; border-top:1px solid #393940; } }

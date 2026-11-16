@@ -6,7 +6,7 @@ import { DOCUMENT_CHECK_INSTRUCTION } from "@/lib/extraction";
 import { readPaperPhoto } from "@/lib/paper-vision";
 
 export async function extractPage(teacherId: string, id: string, pageId: string) {
-  if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY && !process.env.OPENROUTER_API_KEY) return NextResponse.json({ error: "Add an AI provider API key and restart CheckMate." }, { status: 503 });
+  if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY) return NextResponse.json({ error: "Add an AI provider API key and restart CheckMate." }, { status: 503 });
   const now = new Date();
   const token = randomUUID();
   const owner = { id: pageId, submissionId: id, submission: { teacherId: teacherId, quiz: { teacherId: teacherId }, status: "IN_REVIEW" as const } };

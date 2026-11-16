@@ -1,15 +1,7 @@
 import { parseExtraction, parseDocumentCheck, retryDelayMs } from "./extraction";
 
 type VisionResult = { kind: "ok"; result: NonNullable<ReturnType<typeof parseExtraction>> & { document: ReturnType<typeof parseDocumentCheck> }; model: string } | { kind: "error"; message: string; retryAt: Date | null };
-/** Ling has misidentified non-circular marks as circles; preserve the answer and require mark review. */
-function requireLingMarkReview(result: Extract<VisionResult, { kind: "ok" }>): VisionResult {
-  return { ...result, result: { ...result.result, items: result.result.items.map(item => {
-    const marked = ["circle", "box", "triangle", "shade", "underline", "other"].includes(item.observedStyle ?? "") || ["circle", "box", "triangle"].includes(item.markShape ?? "");
-    if (!marked || item.status !== "clear") return item;
-    return { ...item, observedStyle: "unknown", markShape: "unknown", note: `${item.note ? `${item.note} ` : ""}Mark shape uncertain; check the photo.`.slice(0, 500) };
-  }) } };
-}
-/** Read with Groq first, then Ling on OpenRouter, and finally Gemini if needed. */
+/** Read with Groq first and use Gemini if Groq fails. */
 export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string): Promise<VisionResult> {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -40,25 +32,6 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
       }
     } catch { message = "Could not connect to Groq or the request timed out."; }
   }
-  const openRouterKey = process.env.OPENROUTER_API_KEY;
-  if (openRouterKey) try {
-    const model = "inclusionai/ling-3.2-flash:free";
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${openRouterKey}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30_000), body: JSON.stringify({ model, temperature: 0, reasoning: { enabled: false }, provider: { zdr: true, data_collection: "deny", require_parameters: true, max_price: { prompt: 0, completion: 0 } }, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
-    if (response.status === 429) {
-      const fallbackRetry = new Date(Date.now() + Math.max(1000, retryDelayMs(response.headers.get("retry-after"), Date.now())));
-      retryAt = retryAt && retryAt > fallbackRetry ? retryAt : fallbackRetry;
-      message = "Groq failed and OpenRouter reached a rate limit. Retry later.";
-    }
-    else if (!response.ok) message = `OpenRouter could not read the page (HTTP ${response.status}).`;
-    else {
-      const body = await response.json();
-      const raw = typeof body?.choices?.[0]?.message?.content === "string" ? body.choices[0].message.content : "";
-      const result = parse(raw, `openrouter:${model}`);
-      if (result) return requireLingMarkReview(result as Extract<VisionResult, { kind: "ok" }>);
-      message = "OpenRouter returned an unreadable result.";
-    }
-  } catch { message = "OpenRouter could not be reached."; }
-
   if (geminiKey && /^[a-zA-Z0-9._-]+$/.test(geminiModel)) try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30_000), body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: photo.toString("base64") } }] }], generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: "application/json" } }) });
     if (response.status === 429) {

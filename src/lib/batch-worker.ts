@@ -20,7 +20,7 @@ async function processNext() {
       catch (error) { removed = (error as NodeJS.ErrnoException).code === "ENOENT"; }
       if (removed) await db.pendingPhotoDeletion.deleteMany({ where: { filePath: cleanup.filePath } });
     }
-    if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY && !process.env.OPENROUTER_API_KEY) return;
+    if (!process.env.GROQ_API_KEY && !process.env.GEMINI_API_KEY) return;
     const now = new Date();
     const waiting = await db.submissionPage.findFirst({ where: { submission: { batchId: { not: null }, status: "IN_REVIEW" }, status: "FAILED", retryAt: { gt: now } }, select: { id: true } });
     if (waiting) return;

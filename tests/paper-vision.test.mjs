@@ -13,8 +13,10 @@ test("paper vision tries Gemini only after Groq fails, and preserves retry when 
   const originalFetch = globalThis.fetch;
   const originalGroq = process.env.GROQ_API_KEY;
   const originalGemini = process.env.GEMINI_API_KEY;
+  const originalOpenRouter = process.env.OPENROUTER_API_KEY;
   process.env.GROQ_API_KEY = "test";
   process.env.GEMINI_API_KEY = "test";
+  delete process.env.OPENROUTER_API_KEY;
   let calls = [];
   try {
     globalThis.fetch = async url => { calls.push(url); return Response.json({ choices: [{ message: { content: valid } }] }); };
@@ -47,9 +49,27 @@ test("paper vision tries Gemini only after Groq fails, and preserves retry when 
     const limited = await readPaperPhoto("prompt", Buffer.from("image"), "image/jpeg");
     assert.equal(limited.kind, "error");
     assert.ok(limited.retryAt instanceof Date);
+
+    process.env.OPENROUTER_API_KEY = "test";
+    calls = [];
+    globalThis.fetch = async (url, options) => {
+      calls.push({ url, options });
+      if (calls.length === 1) return new Response("", { status: 503 });
+      if (calls.length === 2) return new Response("", { status: 503 });
+      return Response.json({ choices: [{ message: { content: valid } }] });
+    };
+    const third = await readPaperPhoto("prompt", Buffer.from("image"), "image/jpeg");
+    assert.equal(third.kind, "ok");
+    assert.match(third.model, /^openrouter:.*:free$/);
+    const request = JSON.parse(calls[2].options.body);
+    assert.equal(request.provider.zdr, true);
+    assert.equal(request.provider.data_collection, "deny");
+    assert.equal(request.provider.max_price.prompt, 0);
+    assert.equal(calls.length, 3);
   } finally {
     globalThis.fetch = originalFetch;
     if (originalGroq === undefined) delete process.env.GROQ_API_KEY; else process.env.GROQ_API_KEY = originalGroq;
     if (originalGemini === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = originalGemini;
+    if (originalOpenRouter === undefined) delete process.env.OPENROUTER_API_KEY; else process.env.OPENROUTER_API_KEY = originalOpenRouter;
   }
 });

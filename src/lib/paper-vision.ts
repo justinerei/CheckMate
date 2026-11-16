@@ -4,7 +4,7 @@ type VisionResult = { kind: "ok"; result: NonNullable<ReturnType<typeof parseExt
 export const GROQ_SHORT_WAIT = "Groq is busy. Waiting briefly before retrying; Gemini is reserved as a backup.";
 const MAX_GROQ_WAIT_MS = 60_000;
 
-/** Read with Groq first; only send the photo to Gemini if Groq cannot produce a valid result. */
+/** Read with Groq first, then Gemini and the free OpenRouter model if needed. */
 export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string, previousError?: string | null): Promise<VisionResult> {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
@@ -20,7 +20,7 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
   };
   if (groqKey) {
     try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(50_000), body: JSON.stringify({ model: groqModel, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30_000), body: JSON.stringify({ model: groqModel, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
       if (response.status === 429) {
         const delay = Math.max(1000, retryDelayMs(response.headers.get("retry-after"), Date.now()));
         retryAt = new Date(Date.now() + delay);
@@ -36,18 +36,37 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
       }
     } catch { message = "Could not connect to Groq or the request timed out."; }
   }
-  if (!geminiKey) return { kind: "error", message, retryAt };
-  if (!/^[a-zA-Z0-9._-]+$/.test(geminiModel)) return { kind: "error", message: "Groq failed and the Gemini vision model setting is invalid.", retryAt };
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey, "Content-Type": "application/json" }, signal: AbortSignal.timeout(50_000), body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: photo.toString("base64") } }] }], generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: "application/json" } }) });
+  if (geminiKey && /^[a-zA-Z0-9._-]+$/.test(geminiModel)) try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`, { method: "POST", headers: { "x-goog-api-key": geminiKey, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30_000), body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mime, data: photo.toString("base64") } }] }], generationConfig: { temperature: 0, maxOutputTokens: 8192, responseMimeType: "application/json" } }) });
     if (response.status === 429) {
       const fallbackRetry = new Date(Date.now() + retryDelayMs(response.headers.get("retry-after"), Date.now()));
-      return { kind: "error", message: "Groq failed and Gemini reached a rate limit. Retry later.", retryAt: retryAt && retryAt > fallbackRetry ? retryAt : fallbackRetry };
+      retryAt = retryAt && retryAt > fallbackRetry ? retryAt : fallbackRetry;
+      message = "Groq failed and Gemini reached a rate limit. Retry later.";
     }
-    if (!response.ok) return { kind: "error", message: `Groq failed and Gemini could not read the page (HTTP ${response.status}).`, retryAt };
+    else if (!response.ok) message = `Groq failed and Gemini could not read the page (HTTP ${response.status}).`;
+    else {
+      const body = await response.json();
+      const parts = body?.candidates?.[0]?.content?.parts;
+      const raw = Array.isArray(parts) ? parts.filter((part: { text?: unknown; thought?: boolean }) => !part.thought && typeof part.text === "string").map((part: { text: string }) => part.text).join("") : "";
+      const result = parse(raw, `gemini:${geminiModel}`);
+      if (result) return result;
+      message = "Groq failed and Gemini returned an unreadable result.";
+    }
+  } catch { message = "Groq failed and Gemini could not be reached. Please retry."; }
+  else if (geminiKey) message = "Groq failed and the Gemini vision model setting is invalid.";
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  if (!openRouterKey) return { kind: "error", message, retryAt };
+  try {
+    const model = "inclusionai/ling-3.2-flash:free";
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${openRouterKey}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(30_000), body: JSON.stringify({ model, temperature: 0, reasoning: { enabled: false }, provider: { zdr: true, data_collection: "deny", require_parameters: true, max_price: { prompt: 0, completion: 0 } }, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
+    if (response.status === 429) {
+      const fallbackRetry = new Date(Date.now() + Math.max(1000, retryDelayMs(response.headers.get("retry-after"), Date.now())));
+      return { kind: "error", message: "The reading services reached a rate limit. Try again later.", retryAt: retryAt && retryAt > fallbackRetry ? retryAt : fallbackRetry };
+    }
+    if (!response.ok) return { kind: "error", message: `Groq and Gemini failed; OpenRouter could not read the page (HTTP ${response.status}).`, retryAt };
     const body = await response.json();
-    const parts = body?.candidates?.[0]?.content?.parts;
-    const raw = Array.isArray(parts) ? parts.filter((part: { text?: unknown; thought?: boolean }) => !part.thought && typeof part.text === "string").map((part: { text: string }) => part.text).join("") : "";
-    return parse(raw, `gemini:${geminiModel}`) ?? { kind: "error", message: "Groq failed and Gemini returned an unreadable result.", retryAt };
-  } catch { return { kind: "error", message: "Groq failed and Gemini could not be reached. Please retry.", retryAt }; }
+    const raw = typeof body?.choices?.[0]?.message?.content === "string" ? body.choices[0].message.content : "";
+    return parse(raw, `openrouter:${model}`) ?? { kind: "error", message: "All reading services failed to return a valid result.", retryAt };
+  } catch { return { kind: "error", message: "Groq and Gemini failed, and OpenRouter could not be reached.", retryAt }; }
 }

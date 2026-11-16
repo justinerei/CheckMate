@@ -133,6 +133,18 @@ Remove-Item Env:CHECKMATE_DEMO_PASSWORD
 
 Sign in with `demo@checkmate.test` and your chosen password. The demo account contains three students and a sample science quiz with an answer key. The seeder only connects to local databases, refuses production mode, and can be rerun without resetting existing demo records or the password. It does not create paper photos or graded submissions.
 
+### Local demo admin
+
+After applying migrations, choose a password of 12–128 characters and run in PowerShell:
+
+```powershell
+$env:CHECKMATE_DEMO_ADMIN_PASSWORD = 'Choose-a-demo-admin-password'
+npm run seed:admin
+Remove-Item Env:CHECKMATE_DEMO_ADMIN_PASSWORD
+```
+
+Sign in with `admin@checkmate.test` and your chosen password. This account is created only in your local database; teammates run the same command on their own machines. The script refuses production mode and non-local databases, and will not change an existing account or reset its password. Use a separate, securely managed admin account for deployment.
+
 On the dashboard, open **Students** to create a student record or link an existing record using its CheckMate sharing code. The sharing code works between teachers connected to the **same database**; separate local databases do not share records. Treat codes as private and share them only with teachers who need the student on their list. Creating a second record for the same student can produce duplicates; merging is not available yet. **Remove student** removes the student from your list and unlinks your papers, while retaining the shared student record and your papers and scores.
 
 Choose **Check a paper** on the dashboard or **Upload papers** from a quiz to start a batch; no student record is required. Each batch contains up to five papers, and each paper has one to three JPEG or PNG photos, up to 8 MB each. Check the page order before starting. The server reads pages in the background and saves each successful reading. Review and finalize results per paper.

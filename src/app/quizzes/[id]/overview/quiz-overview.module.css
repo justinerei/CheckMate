@@ -1,7 +1,7 @@
 .page { max-width:1100px; margin:0 auto; color:#f4f4f5; }
 .back { display:inline-flex; align-items:center; min-height:44px; color:#d7d7dd; font-size:14px; text-decoration:none; }
 .header { display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:24px; padding:26px 0 38px; border-bottom:1px solid #37373e; }
-.header h1 { margin:8px 0 12px; font:500 clamp(36px,4vw,54px)/1.1 var(--font-display),sans-serif; overflow-wrap:anywhere; }.header p { margin:0; color:#bcbcc4; font-size:14px; }.eyebrow { color:#ffad7d !important; font-weight:600; }
+.header h1 { margin:8px 0 12px; font:500 clamp(36px,4vw,54px)/1.1 var(--font-pixel); overflow-wrap:anywhere; }.header p { margin:0; color:#bcbcc4; font-size:14px; }.eyebrow { color:#ffad7d !important; font-weight:600; }
 .primary { display:inline-flex; justify-content:center; align-items:center; min-height:46px; padding:10px 17px; border-radius:8px; background:#f4f4f5; color:#161619; font-size:14px; font-weight:700; text-decoration:none; }.primary:hover { background:#dedee2; }
 .section { margin-top:38px; }.sectionHeading { display:flex; justify-content:space-between; gap:16px; margin-bottom:17px; }.sectionHeading h2 { margin:0; font-size:21px; }.sectionHeading p { margin:7px 0 0; color:#bcbcc4; font-size:14px; }
 .paperList,.batches { overflow:hidden; border:1px solid #39393f; border-radius:10px; background:#17171b; }.paper { display:grid; grid-template-columns:38px minmax(0,1fr) auto 72px 18px; gap:16px; align-items:center; min-height:78px; padding:14px 18px; color:#f4f4f5; text-decoration:none; }.paper+.paper,.batch+.batch { border-top:1px solid #39393f; }.paper:hover,.batch:hover { background:#212126; }.paperIcon { display:grid; place-items:center; width:38px; height:38px; border-radius:8px; background:#35271f; color:#ffad7d; }.paperName { display:grid; gap:5px; min-width:0; }.paperName strong { overflow-wrap:anywhere; }.paperName small,.batch small { color:#bcbcc4; font-size:13px; }.status { color:#d3d3d9; font-size:13px; }.score { text-align:right; font-size:14px; font-weight:600; }.arrow { color:#ffad7d; }
@@ -44,3 +44,17 @@
 .primary:hover { background:var(--action-primary-hover); }
 .secondaryAction,.secondaryAction:visited { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
 .secondaryAction:hover { background:var(--action-secondary-hover); }
+
+/* Quiz overview results */
+.overviewTabs { display:flex; gap:28px; border-bottom:1px solid #39393f; margin-top:4px; }
+.overviewTabs a { display:inline-flex; align-items:center; min-height:52px; padding:10px 2px; border-bottom:2px solid transparent; color:#c3c3ca; text-decoration:none; font-size:14px; font-weight:600; }
+.overviewTabs a[aria-current] { color:#ffad7d; border-color:#ff8a42; }.overviewTabs a:hover { color:#fff; }
+.resultsSummary { display:grid; gap:16px; border:0; background:transparent; overflow:visible; }
+.resultsMetrics { gap:14px; }.resultsMetrics > div,.resultsMetrics > div + div { border:1px solid #39393f; border-radius:10px; background:#17171b; padding:20px; }
+.resultsBands,.itemResults { border:1px solid #39393f; border-radius:10px; background:#17171b; padding:22px; }
+.resultsBands h3,.itemResults h3 { margin:0; font:600 16px var(--font-geist-sans),sans-serif; }
+.resultsBands > div { display:grid; grid-template-columns:1fr; gap:15px; margin-top:22px; }
+.resultsBands > div > .bandRow { display:grid; grid-template-columns:70px minmax(0,1fr) 70px; gap:12px; align-items:center; padding:0; background:none; border:0; border-radius:0; }
+.bandRow strong { text-align:right; white-space:nowrap; font-size:12px; font-weight:500; color:#c3c3ca; }.bandTrack { height:8px; overflow:hidden; border-radius:999px; background:#34343a; }.bandTrack > span { display:block; height:100%; border-radius:inherit; background:#f09359; }
+.resultsTableWrap { margin-top:20px; }.resultsTableWrap :is(th,td):not(:first-child) { text-align:right; }.resultsTableWrap thead th { border-top:0; }.resultsTableWrap tbody th { width:65%; }
+@media(max-width:600px) { .resultsMetrics { grid-template-columns:1fr; }.resultsBands,.itemResults { padding:18px; }.resultsBands > div > .bandRow { grid-template-columns:58px minmax(0,1fr) 64px; gap:8px; }.resultsTableWrap table { min-width:380px; } }

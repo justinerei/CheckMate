@@ -1,0 +1,8 @@
+.confirm,.success { display:flex; gap:16px; align-items:flex-start; margin-top:20px; padding:18px; border:1px solid #685044; border-radius:10px; background:#211b19; }
+.confirm img,.success img { flex:none; object-fit:contain; image-rendering:pixelated; }
+.confirm strong,.success strong { font-size:17px; }
+.confirm p,.success p { line-height:1.5; }
+.confirm .secondary { background:#29292f; color:#f4f4f5; border:1px solid #575761; }
+.success { border-color:#416649; background:#19271e; }
+.success a { color:#f4f4f5; text-underline-offset:4px; }
+@media(max-width:480px) { .confirm,.success { flex-direction:column; } }

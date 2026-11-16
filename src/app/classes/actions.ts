@@ -10,6 +10,14 @@ import { redirect } from "next/navigation";
 
 type State = { message: string; ok: boolean };
 
+export async function findClass(code: string): Promise<{ name?: string; teacher?: string; error?: string }> {
+  const user = await currentUser();
+  if (!user?.enabled || user.role !== "STUDENT") return { error: "Sign in with a student account first." };
+  if (!/^[a-f0-9]{32}$/.test(code.trim().toLowerCase())) return { error: "Enter the class code from your teacher." };
+  const classroom = await db.classroom.findUnique({ where: { joinCode: code.trim().toLowerCase() }, select: { name: true, teacher: { select: { name: true, enabled: true } } } });
+  return classroom?.teacher.enabled ? { name: classroom.name, teacher: classroom.teacher.name } : { error: "Class not found. Ask your teacher for a new link." };
+}
+
 export async function continueToSignIn(form: FormData) {
   const code = String(form.get("code") ?? "").toLowerCase();
   if (/^[a-f0-9]{32}$/.test(code)) (await cookies()).set("class-invite", code, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 3600 });

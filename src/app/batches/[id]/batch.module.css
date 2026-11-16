@@ -96,3 +96,10 @@
   .rowAction { grid-column:3; grid-row:1 / span 2; }
   .row .deleteControl { grid-column:2; justify-self:start; }
 }
+/* Compact, labelled batch actions */
+.deleteButton { display:inline-flex; align-items:center; justify-content:center; width:44px; min-width:44px; height:44px; padding:0; border:1px solid #4b3c3c; border-radius:9px; color:#e5b7ad; background:#211b1b; }
+.deleteButton svg,.newBatchLink svg { display:block; width:18px; height:18px; flex:none; }
+.deleteButton:hover { background:#382722; border-color:#9a6d63; color:#ffd3c5; }
+.row .deleteButton { color:#e5b7ad; }
+.footer .newBatchLink { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:9px 14px; border:1px solid #4a4a52; border-radius:9px; color:#f4f4f5; font-size:13px; font-weight:600; text-decoration:none; }
+.footer .newBatchLink:hover { background:#29292e; border-color:#777780; text-decoration:none; }

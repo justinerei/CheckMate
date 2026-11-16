@@ -72,7 +72,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
         </div>
         <div className={styles.addArea}>{full ? <p>Batch full. Start another batch for more papers.</p> : <><AddPaper id={id} /><p>{5 - batch.submissions.length} {5 - batch.submissions.length === 1 ? "spot" : "spots"} left · Up to 3 pages per paper</p></>}</div>
       </section>
-      <footer className={styles.footer}><DeleteControl batchId={id} papers={batch.submissions.map(paper => ({ id: paper.id, status: paper.status }))} /><Link href={`/submissions/new?quizId=${encodeURIComponent(batch.quizId)}`}>Start another batch</Link></footer>
+      <footer className={styles.footer}><DeleteControl batchId={id} papers={batch.submissions.map(paper => ({ id: paper.id, status: paper.status }))} /><Link className={styles.newBatchLink} href={`/submissions/new?quizId=${encodeURIComponent(batch.quizId)}`}><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>Start another batch</Link></footer>
     </div>
   </main>;
 }

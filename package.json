@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node --experimental-strip-types prisma/seed.mjs",
-    "seed:admin": "node --experimental-strip-types prisma/seed-admin.mjs"
+    "seed:admin": "node --experimental-strip-types prisma/seed-admin.mjs",
+    "seed:student": "node --experimental-strip-types prisma/seed-student.mjs"
   },
   "dependencies": {
     "@next/env": "^16.4.5",

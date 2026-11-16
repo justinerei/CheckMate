@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { currentPagination, paginate, type Pagination } from "@/lib/pagination";
 import { groupSectionRubrics } from "@/lib/print-rubrics";
+import { questionRows, sectionDirections } from "@/lib/standard-quiz-layout";
+import { instructionTemplates } from "@/lib/instruction-templates";
 import PrintDocumentTitle from "../print-document-title";
 import styles from "./print.module.css";
 
@@ -25,6 +27,8 @@ function BlockContent({ block }: { block: Block }) {
 
 export default function PagedPreview({ title, generalInstructions, code, paper, numbering, sections, back }: { title: string; generalInstructions: string; code: string; paper: Paper; numbering: string; sections: Section[]; back: { href: string; label: string } }) {
   const [labels, setLabels] = useState(true);
+  const hasSavedPairings = sections.some(section => section.questions.some((question, index) => question.besideNext && index + 1 < section.questions.length));
+  const [standard, setStandard] = useState(() => !hasSavedPairings);
   const [measurement, setMeasurement] = useState<{ blocks: Block[]; width: string; height: string; layout: Pagination } | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
   const blocks = useMemo<Block[]>(() => {
@@ -34,17 +38,12 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
     sections.forEach((section, index) => {
       const start = numbering === "RESET_PER_SECTION" ? 0 : total;
       total += section.questions.length;
-      output.push({ kind: "section", title: section.title, instructions: section.instructions, number: index + 1, keepWithNext: section.questions.length > 0 });
-      for (let i = 0; i < section.questions.length; i++) {
-        const current = i;
-        const row = [{ question: section.questions[i], number: start + i + 1 }];
-        if (section.questions[current].besideNext && section.questions[i + 1]) { i++; row.push({ question: section.questions[i], number: start + i + 1 }); }
-        output.push({ kind: "row", questions: row });
-      }
+      output.push({ kind: "section", title: section.title, instructions: sectionDirections(section.instructions, section.questions.map(question => question.type), instructionTemplates, standard), number: index + 1, keepWithNext: section.questions.length > 0 });
+      for (const row of questionRows(section.questions, start, standard)) output.push({ kind: "row", questions: row });
       for (const group of groupSectionRubrics(section.questions, start)) output.push({ kind: "rubric", ...group });
     });
     return output;
-  }, [title, generalInstructions, numbering, sections]);
+  }, [title, generalInstructions, numbering, sections, standard]);
   const layout = currentPagination(measurement, blocks, paper.width, paper.height);
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +65,7 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
   const dimensions = { "--paper-width": paper.width, "--paper-height": paper.height } as React.CSSProperties;
   return <main className={styles.preview}><PrintDocumentTitle title={title} kind="quiz" /><style>{`@page { size: ${paper.page}; margin: 0; }`}</style>
     <div className={styles.toolbar}><Link className="back-navigation" href={back.href}>{back.label}</Link><span>Paper: {paper.label} · Quiz: {code}</span><div className={styles.controls}><label><input type="checkbox" checked={labels} onChange={e => setLabels(e.target.checked)} /> Include page labels</label><button type="button" disabled={!layout || layout.oversized.length > 0} onClick={() => window.print()}>Print / Save as PDF</button></div>
+      <div className={styles.templateInfo}><strong>{standard ? "Standard layout" : "Saved question layout"}</strong><span>{standard ? "One question per row. CheckMate expects circled multiple-choice answers and written true/false and identification answers; make sure your instructions match." : "Uses the side-by-side placements saved in this quiz."}</span>{hasSavedPairings && <><label><input type="checkbox" checked={standard} onChange={event => setStandard(event.target.checked)} /> Use standard one-question-per-row layout</label><span>Layout selection applies to this preview; choose it again when reprinting.</span></>}</div>
       <p className={styles.hint}>Pages are arranged automatically. In the print dialog, select the same paper size shown above, set margins to None and scale to 100%, and turn off browser headers and footers. The code identifies the quiz, not the version; reprint all pages after edits.</p>
       {layout && layout.oversized.length > 0 && <p className={styles.warning} role="alert">A question or section is too long to fit on one page. Shorten its text or rubric descriptions, reduce its essay lines, or turn off side-by-side layout before printing.</p>}
     </div>

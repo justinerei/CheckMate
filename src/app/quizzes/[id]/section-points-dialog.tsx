@@ -7,6 +7,7 @@ export default function SectionPointsDialog({ children, openOnError = false }: {
   useEffect(() => {
     if (openOnError && dialog.current && !dialog.current.open) dialog.current.showModal();
   }, [openOnError]);
+
   return <>
     <button type="button" className={styles.pointsTrigger} aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}><strong>Edit section points</strong><small>Set points for each section</small></button>
     <dialog ref={dialog} className={styles.pointsDialog} aria-labelledby="section-points-title">

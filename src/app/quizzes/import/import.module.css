@@ -5,3 +5,24 @@
 .importer .secondary { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
 .importer .secondary:not(:disabled):hover { background:var(--action-secondary-hover); }
 .pasteArea { display:grid; gap:8px; padding:14px; border:1px solid #45454d; border-radius:8px; }.pasteArea small { color:#bcbcc4; font-size:12px; line-height:1.45; }.pasteArea:focus-visible,.pasteArea:focus-within { outline:2px solid #ffad7d; outline-offset:2px; }
+
+/* File selection */
+.importPage.importPage { max-width:948px; }
+.importer { max-width:900px; margin-top:28px; }
+.steps { display:flex; align-items:center; gap:12px; color:#bcbcc4; font-size:13px; font-weight:600; }
+.steps [aria-current] { color:#ffad7d; }.stepLine { width:32px; height:1px; background:#55555d; }
+.panel { gap:20px; padding:26px; }.panel h2,.review h2 { font-size:20px; }.panel > div:first-child p { margin:7px 0 0; }
+.uploadCards { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.pasteArea { align-content:start; gap:14px; min-width:0; padding:20px; border:1px dashed #5b5050; background:#1b1b1f; }
+.pasteArea p { margin:8px 0 0; font-size:13px; }.pasteArea strong { font-size:14px; }.optional { color:#bcbcc4; font-size:12px; }
+.fileIcon { display:grid; place-items:center; width:38px; height:38px; border-radius:9px; color:#ffad7d; background:#39271f; }.fileIcon svg { width:20px; height:20px; }
+.importer .fileButton { position:relative; display:inline-flex; align-items:center; justify-content:center; width:max-content; min-height:44px; padding:10px 14px; border:1px solid #66666e; border-radius:7px; background:#29292e; color:#f4f4f5; cursor:pointer; }
+.fileButton:hover { background:#38383f; }.fileButton:focus-within { outline:2px solid #ffad7d; outline-offset:2px; }
+.importer .fileInput { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.fileNames { margin:0; padding-left:18px; color:#dddde2; font-size:12px; line-height:1.5; overflow-wrap:anywhere; }
+.importer .removeKey { width:max-content; min-height:36px; padding:5px 0; border:0; background:transparent; color:#ffbfa7; text-decoration:underline; text-underline-offset:3px; }.importer .removeKey:not(:disabled):hover { background:transparent; color:#ffe0d4; }
+.panel .fileHelp { margin:0; font-size:12px; }.panel .privacyNote { margin:0; padding:13px 15px; border:1px solid #48403b; border-radius:8px; background:#24201e; color:#d9c9bf; font-size:13px; }
+.scanActions { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; padding-top:4px; }.scanActions a { color:#ffb184; font-size:13px; font-weight:600; text-underline-offset:3px; }.scanActions button span { margin-left:8px; }.scanActions :is(a,button):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+@media(max-width:600px) { .panel { padding:20px; }.uploadCards { grid-template-columns:1fr; }.scanActions { align-items:stretch; flex-direction:column-reverse; }.scanActions button { width:100%; }.scanActions a { min-height:44px; display:inline-flex; align-items:center; } }
+.importer button.removeKey { border:0; background:transparent; color:#ffbfa7; }
+.importer button.removeKey:not(:disabled):hover { background:transparent; color:#ffe0d4; }

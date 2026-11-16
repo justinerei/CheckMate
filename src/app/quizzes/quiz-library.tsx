@@ -2,12 +2,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Mascot from "@/app/mascot";
+import LibraryIcon from "@/app/library-icon";
 import { matchesSearch } from "@/lib/list-filter";
 import { quizDestination } from "@/lib/workspace-navigation";
 import QuizCardActions from "./quiz-card-actions";
 import styles from "../workspace-content.module.css";
 
 type Quiz = { id: string; title: string; source: string; archived: boolean; updated: string; papers: number; questions: number; missingAnswers: number };
+
 export default function QuizLibrary({ quizzes }: { quizzes: Quiz[] }) {
   const [query, setQuery] = useState("");
   const visible = quizzes.filter(quiz => matchesSearch([quiz.title], query));
@@ -17,13 +19,13 @@ export default function QuizLibrary({ quizzes }: { quizzes: Quiz[] }) {
   const created = active.filter(quiz => quiz.source !== "EXISTING");
   function listing(items: Quiz[]) {
     return <div className={styles.quizGrid}>{items.map(item => <div className={styles.quizCardWrap} key={item.id}><Link className={styles.quizCard} href={quizDestination(item.id, item.source)}>
-      <span className={styles.cardTop}><span className={styles.rowIcon} aria-hidden="true">{item.source === "EXISTING" ? "▤" : "▦"}</span></span>
+      <span className={styles.cardTop}><span className={styles.rowIcon}><LibraryIcon type={item.source === "EXISTING" ? "key" : "quiz"} /></span></span>
       <strong>{item.title}</strong><span className={styles.cardMeta}>{item.source === "EXISTING" ? "Existing quiz" : "Created quiz"} · {item.papers} {item.papers === 1 ? "paper" : "papers"}</span><span className={styles.cardFooter}>Updated {item.updated} <span>Open quiz →</span></span>
     </Link><QuizCardActions quiz={item} /></div>)}</div>;
   }
   function keyListing(items: Quiz[]) {
     return <div className={styles.quizGrid}>{items.map(item => <Link className={styles.quizCard} href={`/quizzes/${encodeURIComponent(item.id)}/overview?view=key#answer-key`} key={item.id}>
-      <span className={styles.cardTop}><span className={styles.rowIcon} aria-hidden="true">▤</span><span aria-hidden="true">↗</span></span>
+      <span className={styles.cardTop}><span className={styles.rowIcon}><LibraryIcon type="key" /></span><span aria-hidden="true">↗</span></span>
       <strong>{item.title}</strong><span className={styles.cardMeta}>{item.source === "EXISTING" ? "Added manually" : "Created in CheckMate"} · {item.questions === 0 ? "No questions yet" : item.missingAnswers ? `${item.missingAnswers} ${item.missingAnswers === 1 ? "answer" : "answers"} missing` : `${item.questions} ${item.questions === 1 ? "question" : "questions"}`}</span><span className={styles.cardFooter}>Updated {item.updated} <span>View key →</span></span>
     </Link>)}</div>;
   }

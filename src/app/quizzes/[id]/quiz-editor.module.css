@@ -106,3 +106,14 @@
 .pointsDialog::backdrop { background:#000b; }.pointsDialogHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid #483b35; }.pointsDialogHeader h2 { margin:6px 0 0; font-size:20px; }.pointsDialogHeader p { margin:0; }.pointsDialogBody { padding:4px 24px 24px; }.pointsSection { padding:20px 0; border-bottom:1px solid #34343a; }.pointsSection:last-child { border-bottom:0; }.pointsSection h3 { margin:0; font-size:16px; overflow-wrap:anywhere; }.pointsSection small { color:#c3c3ca; }.pointsSection .quickPoints { margin-bottom:0; }
 @media(max-width:600px) { .pointsDialog { width:calc(100% - 24px); max-height:90dvh; }.pointsDialogHeader,.pointsDialogBody { padding-left:18px; padding-right:18px; } }
 .focusedTitleRow { display:flex; align-items:center; justify-content:space-between; gap:16px; }.focusedTitleRow button { min-height:40px; padding:8px 12px; border:1px solid #815447; border-radius:7px; background:#36231f; color:#ffd3c5; cursor:pointer; }.focusedTitleRow button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.form[id^="rubric-"] { scroll-margin-top:20px; }
+
+/* Related quiz tools */
+.toolGroup { display:grid; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid #34343a; min-width:0; }
+.toolGroup h3 { margin:0 0 2px; color:#e6e6ea; font:600 14px/1.4 var(--font-geist-sans),sans-serif; }
+.toolGroup .pointsTrigger,.editorLayout .toolGroup .management,.editorSidebar .toolGroup .settings { margin:0; }
+.editorSidebar > .notice,.editorSidebar > .error { margin:0 0 14px; }
+.toolGroup > details { margin-top:0; }
+.pointsSection .modalRubricForm { padding:16px 0 0; border:0; gap:16px; }
+.pointsDialogBody > .management { margin-top:20px; }
+.pointsDialogBody .sectionListHeading { margin-top:0; }

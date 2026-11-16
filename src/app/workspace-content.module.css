@@ -54,3 +54,7 @@
 .buttonSecondary:hover { background:var(--action-secondary-hover); }
 .actionPrimary > .primaryCta:last-child { background:var(--action-primary); color:var(--action-primary-text); }
 .actionPrimary:hover > .primaryCta:last-child { background:var(--action-primary-hover); }
+/* Align the primary card arrow after removing its decorative caption. */
+.actionPrimary .actionTop { justify-content:flex-end; }
+.welcome { margin-top:0; }
+.headingRow h2 { margin-top:0; }

@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
-import { claimStudentInvite, createStudentInvite, setResultReleased } from "./actions";
+import { claimStudentInvite, createStudentInvite, setResultReleased, setCorrectAnswersVisible } from "./actions";
 import styles from "./student.module.css";
 import { useRouter } from "next/navigation";
 
@@ -22,4 +22,10 @@ export function ReleaseResult({ id, released }: { id: string; released: boolean 
   const router = useRouter();
   async function change() { setBusy(true); setError(""); try { const result = await setResultReleased(id, !released); setError(result.error); if (!result.error) router.refresh(); } catch { setError("Could not update visibility. Try again."); } finally { setBusy(false); } }
   return <span className={styles.release}><span>{released ? "Released" : "Not released"}</span><button type="button" disabled={busy} onClick={change}>{busy ? "Updating…" : released ? "Hide from student" : "Release to student"}</button>{error && <span role="alert">{error}</span>}</span>;
+}
+
+export function AnswerVisibility({ id, visible }: { id: string; visible: boolean }) {
+  const [error, setError] = useState(""); const [busy, setBusy] = useState(false); const router = useRouter();
+  async function change() { setBusy(true); setError(""); try { const result = await setCorrectAnswersVisible(id, !visible); setError(result.error); if (!result.error) router.refresh(); } catch { setError("Could not update answer visibility."); } finally { setBusy(false); } }
+  return <div className={styles.release}><span>Correct answers: {visible ? "visible to student" : "hidden from student"}</span><button type="button" disabled={busy} onClick={change}>{busy ? "Updating…" : visible ? "Hide correct answers" : "Show correct answers"}</button>{error && <span role="alert">{error}</span>}</div>;
 }

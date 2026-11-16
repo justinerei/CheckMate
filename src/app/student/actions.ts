@@ -56,3 +56,48 @@ export async function setResultReleased(id: string, release: boolean): Promise<{
   revalidatePath("/students"); revalidatePath(`/submissions/${id}/review`); revalidatePath("/student");
   return { error: "" };
 }
+
+export async function setCorrectAnswersVisible(id: string, visible: boolean): Promise<{ error: string }> {
+  const teacher = await getTeacher();
+  if (!teacher || typeof id !== "string" || !id || id.length > 200 || typeof visible !== "boolean") return { error: "Paper unavailable." };
+  try {
+    const result = await db.submission.updateMany({ where: { id, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "FINALIZED", studentId: { not: null }, releasedAt: { not: null } }, data: { showCorrectAnswers: visible } });
+    if (result.count !== 1) return { error: "Release this finalized result to a student first." };
+  } catch { return { error: "Could not update answer visibility. Try again." }; }
+  revalidatePath(`/submissions/${id}/review`); revalidatePath(`/student/results/${id}`);
+  return { error: "" };
+}
+
+export async function submitResultConcern(submissionId: string, _state: { message: string; ok: boolean }, form: FormData) {
+  const session = await auth();
+  const user = session?.user?.id ? await db.user.findUnique({ where: { googleId: session.user.id }, select: { id: true, role: true, enabled: true } }) : null;
+  const rawQuestion = form.get("questionId"); const rawMessage = form.get("message");
+  if (!user?.enabled || user.role !== "STUDENT") return { message: "Sign in as a student.", ok: false };
+  if (typeof submissionId !== "string" || !submissionId || submissionId.length > 200 || typeof rawQuestion !== "string" || !rawQuestion || rawQuestion.length > 200 || typeof rawMessage !== "string" || !rawMessage.trim() || rawMessage.length > 1000) return { message: "Choose a question and enter a message of up to 1,000 characters.", ok: false };
+  try {
+    const saved = await db.$transaction(async tx => {
+      const paper = await tx.submission.findFirst({ where: { id: submissionId, student: { accountId: user.id }, status: "FINALIZED", releasedAt: { not: null } }, select: { id: true, studentId: true, quizId: true } });
+      if (!paper?.studentId) return false;
+      const question = await tx.question.findFirst({ where: { id: rawQuestion, section: { quizId: paper.quizId } }, select: { id: true } });
+      if (!question) return false;
+      if (await tx.resultConcern.count({ where: { submissionId, studentId: paper.studentId, resolvedAt: null } }) >= 10) return false;
+      await tx.resultConcern.create({ data: { submissionId, studentId: paper.studentId, questionId: question.id, message: rawMessage.trim() } });
+      return true;
+    }, { isolationLevel: "Serializable" });
+    if (!saved) return { message: "This result is unavailable, or you already have 10 open concerns. Contact your teacher.", ok: false };
+  } catch { return { message: "Could not send your concern. Try again.", ok: false }; }
+  revalidatePath(`/student/results/${submissionId}`); revalidatePath(`/submissions/${submissionId}/review`); revalidatePath("/dashboard");
+  return { message: "Your concern was sent to your teacher.", ok: true };
+}
+
+export async function answerResultConcern(id: string, _state: { message: string; ok: boolean }, form: FormData) {
+  const teacher = await getTeacher(); const response = form.get("response");
+  if (!teacher) return { message: "Sign in as a teacher.", ok: false };
+  if (typeof id !== "string" || !id || id.length > 200 || typeof response !== "string" || !response.trim() || response.length > 1000) return { message: "Enter a response of up to 1,000 characters.", ok: false };
+  try {
+    const updated = await db.resultConcern.updateMany({ where: { id, resolvedAt: null, submission: { teacherId: teacher.id, quiz: { teacherId: teacher.id } } }, data: { response: response.trim(), resolvedAt: new Date() } });
+    if (!updated.count) return { message: "This concern is unavailable or already answered.", ok: false };
+  } catch { return { message: "Could not save your response. Try again.", ok: false }; }
+  revalidatePath("/dashboard"); revalidatePath("/submissions/[id]/review", "page"); revalidatePath("/student/results/[id]", "page");
+  return { message: "Response sent.", ok: true };
+}

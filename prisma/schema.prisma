@@ -255,6 +255,7 @@ model Submission {
   totalScore     Decimal?           @db.Decimal(8, 2)
   finalizedAt    DateTime?
   releasedAt     DateTime?
+  showCorrectAnswers Boolean @default(false)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   quiz           Quiz               @relation(fields: [quizId], references: [id], onDelete: Restrict)
@@ -264,9 +265,25 @@ model Submission {
   pages          SubmissionPage[]
   answers        SubmissionAnswer[]
   resultHistory  ResultHistory[]
+  concerns       ResultConcern[]
 
   @@unique([quizId, studentId])
   @@index([teacherId])
+}
+
+model ResultConcern {
+  id           String    @id @default(cuid())
+  submissionId String
+  questionId   String
+  studentId    String
+  message      String
+  response     String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId, createdAt])
 }
 
 model SubmissionPage {

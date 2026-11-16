@@ -17,7 +17,7 @@ export async function assignPaperStudent(id: string, _state: { message: string; 
       const duplicate = !!(studentId && paper && await tx.submission.findFirst({ where: { quizId: paper.quizId, studentId, id: { not: id } }, select: { id: true } }));
       const error = studentLinkProblem(!!paper, allowed, duplicate);
       if (error) return error;
-      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, data: { studentId, releasedAt: null } });
+      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, data: { studentId, releasedAt: null, showCorrectAnswers: false } });
       return updated.count === 1 ? null : "This paper is unavailable. Refresh and try again.";
     }, { isolationLevel: "Serializable" });
     if (issue) return { message: issue, ok: false };

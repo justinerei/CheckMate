@@ -7,7 +7,7 @@ test("uses consistent states for paper processing and failures", () => {
   assert.equal(status("DRAFT", []).label, "Photos needed");
   assert.equal(status("IN_REVIEW", [{ status: "PENDING", retryAt: null }]).label, "Waiting to be checked");
   assert.equal(status("IN_REVIEW", [{ status: "PROCESSING", retryAt: null }]).label, "Checking");
-  assert.equal(status("IN_REVIEW", [{ status: "FAILED", retryAt: new Date() }]).label, "Waiting for Groq retry");
+  assert.equal(status("IN_REVIEW", [{ status: "FAILED", retryAt: new Date() }]).label, "Waiting for AI retry");
   assert.equal(status("IN_REVIEW", [{ status: "FAILED", retryAt: null }]).label, "Page needs attention");
   assert.equal(status("IN_REVIEW", [{ status: "COMPLETE", retryAt: null }]).label, "Ready for review");
   assert.equal(status("FINALIZED", []).label, "Finalized");

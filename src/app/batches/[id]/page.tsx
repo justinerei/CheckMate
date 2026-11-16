@@ -32,7 +32,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const active = batch.submissions.some(p => p.status === "IN_REVIEW" && p.pages.some(page => page.status === "PENDING" || page.status === "PROCESSING" || (page.status === "FAILED" && page.retryAt)));
   const activePages = batch.submissions.filter(p => p.status === "IN_REVIEW").flatMap(p => p.pages);
   const checking = batchCheckingStatus(activePages);
-  const progressLabel = checking.kind === "reading" ? "Reading a page" : checking.kind === "rate_limit" ? "Groq rate limit reached" : "Pages queued for checking";
+  const progressLabel = checking.kind === "reading" ? "Reading a page" : checking.kind === "rate_limit" ? "AI rate limit reached" : "Pages queued for checking";
   const finalized = batch.submissions.filter(p => p.status === "FINALIZED").length;
   const full = batch.submissions.length >= 5;
 
@@ -41,7 +41,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
     <div className={styles.content}>
       <div className={styles.heading}><div><h1>Checking papers</h1><p className={styles.intro}>{batch.quiz.title} · Batch of student papers</p></div></div>
       <Refresh active={active} />
-      {active && <div className={styles.checkingMate} role="status"><Mascot state={batchMascotState(checking.kind)} width={82} height={82} className={styles.mateImage} /><div><strong>{progressLabel}</strong>{checking.kind === "rate_limit" ? <p>Groq temporarily limited requests. Checking will retry automatically after <RetryTime value={checking.retryAt} />. Keep the app server running.</p> : <p>{checking.kind === "reading" ? "A page is being read. Other pages will wait their turn." : "Pages are waiting for the background checker. Keep the app server running."}</p>}</div></div>}
+      {active && <div className={styles.checkingMate} role="status"><Mascot state={batchMascotState(checking.kind)} width={82} height={82} className={styles.mateImage} /><div><strong>{progressLabel}</strong>{checking.kind === "rate_limit" ? <p>The checker temporarily reached a rate limit. Checking will retry automatically after <RetryTime value={checking.retryAt} />. Keep the app server running.</p> : <p>{checking.kind === "reading" ? "A page is being read. Other pages will wait their turn." : "Pages are waiting for the background checker. Keep the app server running."}</p>}</div></div>}
       <section className={styles.workspace} aria-labelledby="batch-papers">
         <div className={styles.sectionHeader}><div><h2 id="batch-papers">Papers</h2><p>{finalized} finalized · {batch.submissions.length - finalized} in progress</p></div><span className={styles.capacity}>{batch.submissions.length} of 5 papers</span></div>
         <div className={styles.list}><div className={styles.listHead} aria-hidden="true"><span>Paper</span><span>Status</span><span>Action</span></div>
@@ -53,7 +53,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
             const flagged = summary?.flagged ?? 0;
             const unmatchedBlocked = summary?.unmatchedBlocked ?? false;
             const proposed = summary?.proposed ?? 0;
-            const backgroundState = ["Checking", "Waiting to be checked", "Waiting for Groq retry"].includes(progress.label);
+            const backgroundState = ["Checking", "Waiting to be checked", "Waiting for AI retry"].includes(progress.label);
             const state = progress.label;
             const action = progress.action;
             const href = progress.review ? `/submissions/${encodeURIComponent(paper.id)}/review?from=batch` : `/submissions/${encodeURIComponent(paper.id)}?from=batch`;

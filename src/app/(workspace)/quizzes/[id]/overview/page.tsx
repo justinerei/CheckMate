@@ -16,12 +16,12 @@ import DeleteQuiz from "@/app/quizzes/[id]/overview/delete-quiz";
 
 export const instant = false;
 
-export default async function QuizOverview({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ batchDeleted?: string }> }) {
+export default async function QuizOverview({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ batchDeleted?: string; view?: string }> }) {
   await connection();
   const teacher = await getTeacher();
   if (!teacher) redirect("/");
   const { id } = await params;
-  const { batchDeleted } = await searchParams;
+  const { batchDeleted, view } = await searchParams;
   const quiz = await db.quiz.findFirst({
     where: { id, teacherId: teacher.id },
     include: {
@@ -58,7 +58,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
       </div> : <div className={`${styles.empty} ${quiz.submissions.length ? styles.emptyWithMate : ""}`}>{quiz.submissions.length > 0 && <Mascot state="empty" width={96} height={96} className={styles.emptyMate} />}<div><strong>No finalized scores yet</strong><p>Finalize a paper to see score distribution and question averages.</p></div></div>}
     </section>
     {quiz.batches.length > 0 && <section className={styles.section} aria-labelledby="batches-heading"><div className={styles.sectionHeading}><div><h2 id="batches-heading">Batches</h2><p>Continue adding or checking papers.</p></div></div><div className={styles.batches}>{quiz.batches.map((batch, index) => <Link className={styles.batch} href={`/batches/${encodeURIComponent(batch.id)}`} key={batch.id}><span><strong>Batch {quiz.batches.length - index}</strong><small>{date.format(batch.createdAt)} · {batch._count.submissions} of 5 papers</small></span><span aria-hidden="true">→</span></Link>)}</div></section>}
-    <section className={styles.section}><div className={styles.answerKey}><details className={styles.keyDisclosure}><summary><span><strong>Answer key</strong><small>{questions.length} questions · {maximum} points</small></span><span className={styles.showKey}>View key</span></summary><div className={styles.keyContent}>{quiz.sections.length ? quiz.sections.map(section => <section className={styles.keySection} key={section.id}><h3>{section.title}</h3>{section.instructions && <p>{section.instructions}</p>}<ol>{section.questions.map((question, position) => { const number = quiz.numbering === "CONTINUOUS" ? ++questionNumber : position + 1; return <li key={question.id}><span>{number}.</span><strong>{question.type === "ESSAY" ? "Teacher-scored essay" : question.answerKey?.acceptedAnswers.join(" / ") || "Answer missing"}</strong><small>{question.points.toString()} pts</small></li>; })}</ol></section>) : <p>No questions added yet.</p>}</div></details>
+    <section id="answer-key" className={styles.section}><div className={styles.answerKey}><details open={view === "key"} className={styles.keyDisclosure}><summary><span><strong>Answer key</strong><small>{questions.length} questions · {maximum} points</small></span><span className={styles.showKey}>View key</span></summary><div className={styles.keyContent}>{quiz.sections.length ? quiz.sections.map(section => <section className={styles.keySection} key={section.id}><h3>{section.title}</h3>{section.instructions && <p>{section.instructions}</p>}<ol>{section.questions.map((question, position) => { const number = quiz.numbering === "CONTINUOUS" ? ++questionNumber : position + 1; return <li key={question.id}><span>{number}.</span><strong>{question.type === "ESSAY" ? "Teacher-scored essay" : question.answerKey?.acceptedAnswers.join(" / ") || "Answer missing"}</strong><small>{question.points.toString()} pts</small></li>; })}</ol></section>) : <p>No questions added yet.</p>}</div></details>
       <div className={styles.keyActions}><Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}/answer-key/print`}>Print answer key</Link><Link className={styles.secondaryAction} href={`/quizzes/existing/${encodeURIComponent(id)}/edit`}>Edit correct answers</Link></div></div>
     </section>
     <DeleteQuiz id={id} title={quiz.title} hasPapers={quiz._count.submissions > 0} hasBatches={quiz.batches.length > 0} archived={!!quiz.archivedAt} />

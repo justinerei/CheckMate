@@ -31,3 +31,6 @@
 .classFooter strong { font-size:12px; white-space:nowrap; }
 .classFooter strong span { color:#ff9b63; }
 @media(prefers-reduced-motion:reduce) { .classLink { transition:none; } }
+.detailCard input.profileInput { box-sizing:border-box; width:100%; max-width:480px; min-height:44px; padding:10px; border:1px solid #575761; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
+.detailCard input.profileInput:focus-visible { outline:2px solid #ff9b63; outline-offset:2px; }
+.detailCard form p { margin:0; font-size:13px; }

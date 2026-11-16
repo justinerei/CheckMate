@@ -15,14 +15,14 @@ export function CreateClass() {
 export function JoinClass({ code = "" }: { code?: string }) {
   const [state, action, pending] = useActionState(joinClass, initial);
   const [value, setValue] = useState(code);
-  const [preview, setPreview] = useState<{ name?: string; teacher?: string; error?: string } | null>(null);
+  const [preview, setPreview] = useState<{ name?: string; teacher?: string; schoolName?: string | null; accountName?: string; error?: string } | null>(null);
   const [looking, setLooking] = useState(false);
   async function check(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setLooking(true); setPreview(null);
     try { setPreview(await findClass(value)); } catch { setPreview({ error: "Could not find the class. Please try again." }); } finally { setLooking(false); }
   }
   if (state.ok) return <div className={styles.success} role="status"><Mascot state="celebrate" width={80} height={80} /><div><strong>You joined the class!</strong><p>{state.message}</p><Link href="/student/classes">View my classes →</Link></div></div>;
-  if (preview?.name) return <div className={styles.confirm}><Mascot state="focused" width={72} height={72} /><div><strong>Join {preview.name}?</strong><p>Teacher: {preview.teacher}</p><p>Your teacher can link your checked papers to your account.</p><form action={action}><input type="hidden" name="code" value={value} /><button type="submit" disabled={pending}>{pending ? "Joining…" : "Confirm and join"}</button><button type="button" className={styles.secondary} disabled={pending} onClick={() => setPreview(null)}>Cancel</button></form>{state.message && <p role="alert">{state.message}</p>}</div></div>;
+  if (preview?.name) return <div className={styles.confirm}><Mascot state="focused" width={72} height={72} /><div><strong>Join {preview.name}?</strong><p>Teacher: {preview.teacher}</p><p>Your teacher can link your checked papers to your account.</p><form action={action}><input type="hidden" name="code" value={value} />{preview.schoolName ? <p>School name: <strong>{preview.schoolName}</strong> · <Link href="/student/profile">Change in My profile</Link></p> : <label>School name<input name="schoolName" defaultValue={preview.accountName ?? ""} autoComplete="name" maxLength={120} required /><small>Use the name you write on your school papers. Your teachers will see this name.</small></label>}<button type="submit" disabled={pending}>{pending ? "Joining…" : "Confirm and join"}</button><button type="button" className={styles.secondary} disabled={pending} onClick={() => setPreview(null)}>Cancel</button></form>{state.message && <p role="alert">{state.message}</p>}</div></div>;
   return <form onSubmit={check}><label>Class code <input name="code" value={value} onChange={event => setValue(event.target.value)} autoComplete="off" required /></label><button disabled={looking}>{looking ? "Finding class…" : "Continue"}</button>{preview?.error && <p role="alert">{preview.error}</p>}</form>;
 }
 

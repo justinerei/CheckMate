@@ -130,7 +130,7 @@ export default function GuidedCamera({ pageNumbers, onClose, onUpload, kind = "s
       <div className={styles.cameraActions}>
         {review ? <button type="button" className={styles.primary} disabled={busy} onClick={upload}>{busy ? "Uploading…" : "Use these photos"}</button> : preview ? <><button type="button" className={styles.secondary} onClick={() => setPreview(null)}>Retake</button><button type="button" className={styles.primary} onClick={usePhoto}>Use photo</button></> : <button type="button" className={styles.primary} disabled={!!error || torchBusy} onClick={capture}>Capture</button>}
       </div>
-      <p className={styles.cameraFootnote}>{kind === "answer-key" ? "Photos are checked locally for basic quality. Review your files and select Scan answer key when you are ready to send them to Groq." : "Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking."}</p>
+      <p className={styles.cameraFootnote}>{kind === "answer-key" ? "Photos are checked locally for basic quality. Review your files and select Scan answer key when you are ready to send them to Groq or Gemini." : "Photos are checked locally for basic quality. Review them yourself; AI reading starts when you select Start checking."}</p>
     </div>
     {confirmClose && <ConfirmDialog destructive title="Leave the camera?" message="Photos taken in this session have not been added yet. Leaving will discard them." confirmLabel="Discard photos" onCancel={() => setConfirmClose(false)} onConfirm={onClose} />}
   </div>;

@@ -191,7 +191,7 @@ export default function ImportQuizForm() {
         </div>
       </div>
       <p className={styles.fileHelp}>PDF, JPEG or PNG · Up to 10 pages per upload · Answer key: up to 2 photos<br />PDFs: 10 MB per file · Photos: 8 MB each. Supports multiple choice, true/false, identification and essay questions.</p>
-      <p className={styles.privacyNote}>Files are sent to Groq for scanning. Avoid uploading sensitive information.</p>
+      <p className={styles.privacyNote}>Files are sent to Groq or Gemini for scanning. Avoid uploading sensitive information.</p>
       <div className={styles.scanActions}><Link href="/quizzes/new">Create a quiz from scratch</Link><button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"} <span aria-hidden="true">→</span></button></div>
     </section>
     {error && <p role="alert" className={styles.error}>{error}</p>}

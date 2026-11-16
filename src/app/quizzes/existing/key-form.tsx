@@ -176,7 +176,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
           </article>;
         })}</div>
         <div className={styles.uploadPreviewActions}><button className={styles.primary} type="button" onClick={extract} disabled={busy || !files.length}>{busy ? "Scanning…" : "Scan answer key →"}</button></div>
-        <p className={styles.help}>When you select Scan answer key, the selected pages are sent to Groq. Review the results before saving.</p>
+        <p className={styles.help}>When you select Scan answer key, the selected pages are sent to Groq or Gemini. Review the results before saving.</p>
         {progress && <p className={styles.help} role="status">{progress}</p>}
         {scanItems.some(item => !item.ok) && <button type="button" className={styles.retryCheck} disabled={busy} onClick={retryChecks}>↻ Retry scan</button>}
       </section>}

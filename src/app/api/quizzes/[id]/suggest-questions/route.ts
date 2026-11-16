@@ -10,7 +10,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!teacher) return NextResponse.json({ error: "Please sign in again." }, { status: 401 });
   try { if (!request.headers.get("origin") || new URL(request.headers.get("origin")!).host !== request.headers.get("host")) throw new Error(); }
   catch { return NextResponse.json({ error: "Invalid request origin." }, { status: 403 }); }
-  if (!process.env.GEMINI_API_KEY) return NextResponse.json({ error: "Add GEMINI_API_KEY in .env.local and restart CheckMate, or enter questions manually." }, { status: 503 });
+  if (!process.env.GEMINI_API_KEY && !process.env.GROQ_API_KEY) return NextResponse.json({ error: "Add a Gemini or Groq API key and restart CheckMate, or enter questions manually." }, { status: 503 });
   if (Number(request.headers.get("content-length") || 0) > 40_000) return NextResponse.json({ error: "Request too large." }, { status: 413 });
   try {
     const { id } = await params;
@@ -30,8 +30,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const type = section.questions[0].type;
     const prompt = questionSuggestionPrompt(questionIds.length, type, difficulty);
     const result = await geminiText(`${prompt}\n${JSON.stringify({ quiz: section.quiz.title, section: section.title, questionSlots: questionIds.map((id: string) => ({ draft: guidance.find(item => item.id === id)?.text ?? "" })), excerpts: sources.map(source => ({ id: source.id, text: source.text })) })}`, 0.5);
-    if (result.kind === "limited") return NextResponse.json({ error: "Gemini reached a rate limit. Your other drafts are safe; try again later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
-    if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY in .env.local and restart CheckMate." : `Could not generate questions with Gemini${result.kind === "upstream" ? ` (HTTP ${result.status})` : ""}. Your drafts are unchanged.` }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
+    if (result.kind === "limited") return NextResponse.json({ error: "AI services reached a rate limit. Your other drafts are safe; try again later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
+    if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY in .env.local and restart CheckMate." : `Could not generate questions with the available AI services${result.kind === "upstream" ? ` (HTTP ${result.status})` : ""}. Your drafts are unchanged.` }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
     const suggestions = parseSuggestedQuestions(result.data, questionIds, type, sources);
     if (!suggestions) return NextResponse.json({ error: "The AI could not produce complete, source-linked questions for this selection. Try again or use different pages." }, { status: 502 });
     return NextResponse.json({ suggestions, sampledPages: sources.map(({ moduleId, name, page }) => ({ moduleId, name, page })) });

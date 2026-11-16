@@ -30,8 +30,8 @@ export async function POST(request: Request) {
     }
     if (!(image instanceof File && image.size)) {
       const result = await geminiText((content[0] as { text: string }).text);
-      if (result.kind === "limited") return NextResponse.json({ error: "Gemini reached a rate limit. Your current rubric is unchanged; retry later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
-      if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY and restart the app." : "Could not suggest a rubric with Gemini. Your current rubric is unchanged." }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
+      if (result.kind === "limited") return NextResponse.json({ error: "AI services reached a rate limit. Your current rubric is unchanged; retry later.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
+      if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY and restart the app." : "Could not suggest a rubric with the available AI services. Your current rubric is unchanged." }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
       const data = result.data as { criteria?: unknown } | null;
       const criteria = rubricFromAI(data?.criteria, points);
       if (!criteria) return NextResponse.json({ error: "Gemini could not return the expected criteria. Try again or edit manually." }, { status: 502 });

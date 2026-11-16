@@ -15,8 +15,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!question?.rubricCriteria.length) return NextResponse.json({ error: "Essay rubric unavailable." }, { status: 404 });
     const criteria = question.rubricCriteria.map(c => ({ id: c.id, title: c.title, description: c.description, maxPoints: Number(c.maxPoints) }));
     const result = await suggestEssayScores(question.text, input.answer, criteria, geminiText);
-    if (result.kind === "limited") return NextResponse.json({ error: "Gemini reached a rate limit. Try again later or score manually.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
-    if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY and restart the app." : result.kind === "config" ? "Check GEMINI_TEXT_MODEL and restart the app." : result.kind === "upstream" ? `Gemini could not suggest scores (HTTP ${result.status}).` : "Could not generate valid Gemini suggestions. Try again or score manually." }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
+    if (result.kind === "limited") return NextResponse.json({ error: "AI services reached a rate limit. Try again later or score manually.", ...(result.retryAfterSeconds ? { retryAfterSeconds: result.retryAfterSeconds } : {}) }, { status: 429 });
+    if (result.kind !== "ok") return NextResponse.json({ error: result.kind === "missing" ? "Add GEMINI_API_KEY and restart the app." : result.kind === "config" ? "Check GEMINI_TEXT_MODEL and restart the app." : result.kind === "upstream" ? `AI services could not suggest scores (HTTP ${result.status}).` : "Could not generate valid Gemini suggestions. Try again or score manually." }, { status: result.kind === "missing" || result.kind === "config" ? 503 : 502 });
     return NextResponse.json({ assessments: result.assessments });
   } catch { return NextResponse.json({ error: "Could not generate valid suggestions. Try again or score the rubric manually." }, { status: 400 }); }
 }

@@ -5,11 +5,12 @@ import { getTeacher } from "@/lib/teacher";
 import { db } from "@/lib/db";
 import { WorkspaceShell } from "@/app/workspace-frame";
 import LoadingSkeleton from "@/app/loading-skeleton";
+import { auth } from "@/auth";
 
 async function WorkspaceSession({ children }: { children: React.ReactNode }) {
   await connection();
   const teacher = await getTeacher();
-  if (!teacher) redirect("/");
+  if (!teacher) { const session = await auth(); const user = session?.user?.id ? await db.user.findUnique({ where: { googleId: session.user.id }, select: { enabled: true, role: true } }) : null; redirect(user?.enabled && user.role === "STUDENT" ? "/student" : user?.enabled && user.role === "ADMIN" ? "/admin" : "/"); }
   const user = await db.user.findUnique({ where: { id: teacher.id }, select: { email: true } });
   return <WorkspaceShell email={user?.email}>{children}</WorkspaceShell>;
 }

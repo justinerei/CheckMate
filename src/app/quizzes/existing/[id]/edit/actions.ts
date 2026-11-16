@@ -30,7 +30,7 @@ export async function updateKeyAnswer(quizId: string, questionId: string, _previ
         const objective = adjustedScore(Number(entry.submission.objectiveScore), oldScore, newScore);
         const total = adjustedScore(Number(entry.submission.totalScore), oldScore, newScore);
         await tx.submissionAnswer.update({ where: { id: entry.id }, data: { objectiveScore: newScore, keyVersion: version } });
-        await tx.submission.update({ where: { id: entry.submissionId }, data: { objectiveScore: objective, totalScore: total } });
+        await tx.submission.update({ where: { id: entry.submissionId }, data: { objectiveScore: objective, totalScore: total, releasedAt: null } });
         await tx.resultHistory.create({ data: { submissionId: entry.submissionId, changedById: teacher.id, answerKeyChangeId: change.id, reason: "Answer key corrected", previousScore: entry.submission.totalScore, newScore: total } });
       }
       return "";
@@ -38,5 +38,5 @@ export async function updateKeyAnswer(quizId: string, questionId: string, _previ
     if (outcome) return { message: outcome, ok: false };
   } catch { return { message: "Could not update the key. Please refresh and try again.", ok: false }; }
   revalidatePath(`/quizzes/existing/${quizId}`); revalidatePath(`/quizzes/existing/${quizId}/edit`); revalidatePath(`/quizzes/${quizId}/overview`); revalidatePath("/batches/[id]", "page"); revalidatePath("/submissions"); revalidatePath("/submissions/[id]/review", "page");
-  return { message: "Correct answer saved. Finalized scores were updated.", ok: true };
+  return { message: "Correct answer saved. Affected finalized scores were updated and hidden from students until released again.", ok: true };
 }

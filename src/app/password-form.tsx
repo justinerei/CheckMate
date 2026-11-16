@@ -2,13 +2,13 @@
 import { PendingScreen } from "@/app/pending-screen";
 
 import { useActionState, useState } from "react";
-import { login, register } from "./auth-actions";
+import { login, register, loginStudent, registerStudent } from "./auth-actions";
 import styles from "./page.module.css";
 
-export default function PasswordForm() {
+export default function PasswordForm({ student = false }: { student?: boolean }) {
   const [creating, setCreating] = useState(false);
-  const [loginState, loginAction, loginPending] = useActionState(login, { error: "" });
-  const [registerState, registerAction, registerPending] = useActionState(register, { error: "" });
+  const [loginState, loginAction, loginPending] = useActionState(student ? loginStudent : login, { error: "" });
+  const [registerState, registerAction, registerPending] = useActionState(student ? registerStudent : register, { error: "" });
   const error = creating ? registerState.error : loginState.error;
   return <>
     <form className={styles.authForm} action={creating ? registerAction : loginAction}><PendingScreen pending={loginPending || registerPending} message={creating ? "Creating your account…" : "Signing in…"} />

@@ -132,7 +132,7 @@ export async function reopenFinalizedPaper(submissionId: string, _previous: { me
     const reopened = await db.$transaction(async tx => {
       const submission = await tx.submission.findFirst({ where: { id: submissionId, teacherId: teacher.id, status: "FINALIZED", quiz: { teacherId: teacher.id } }, select: { id: true, totalScore: true } });
       if (!submission || submission.totalScore === null) return false;
-      const updated = await tx.submission.updateMany({ where: { id: submission.id, status: "FINALIZED" }, data: { status: "IN_REVIEW", finalizedAt: null } });
+      const updated = await tx.submission.updateMany({ where: { id: submission.id, status: "FINALIZED" }, data: { status: "IN_REVIEW", finalizedAt: null, releasedAt: null } });
       if (updated.count !== 1) return false;
       await tx.resultHistory.create({ data: { submissionId, changedById: teacher.id, reason: `Reopened: ${reason}`, previousScore: submission.totalScore, newScore: submission.totalScore } });
       return true;
@@ -140,5 +140,5 @@ export async function reopenFinalizedPaper(submissionId: string, _previous: { me
     if (!reopened) return { message: "This finalized paper is unavailable or has already been reopened.", ok: false };
   } catch { return { message: "Could not reopen this paper. Refresh and try again.", ok: false }; }
   revalidatePath(`/submissions/${submissionId}/review`); revalidatePath("/submissions"); revalidatePath("/batches/[id]", "page"); revalidatePath("/quizzes/[id]/overview", "page");
-  return { message: "Paper reopened. Review changes before finalizing again.", ok: true };
+  return { message: "Paper reopened and hidden from the student. Review changes before finalizing and releasing again.", ok: true };
 }

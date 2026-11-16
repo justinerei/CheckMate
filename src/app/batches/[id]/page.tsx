@@ -5,6 +5,7 @@ import { RetryTime } from "@/app/retry-time";
 import { paperReviewSummary } from "@/lib/paper-review-summary";
 import Link from "next/link";
 import Mascot from "@/app/mascot";
+import ReadingProgress from "@/app/reading-progress";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
@@ -42,6 +43,7 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
       <div className={styles.heading}><div><h1>Checking papers</h1><p className={styles.intro}>{batch.quiz.title} · Batch of student papers</p></div></div>
       <Refresh active={active} />
       {active && <div className={styles.checkingMate} role="status"><Mascot state={batchMascotState(checking.kind)} width={82} height={82} className={styles.mateImage} /><div><strong>{progressLabel}</strong>{checking.kind === "rate_limit" ? <p>The checker temporarily reached a rate limit. Checking will retry automatically after <RetryTime value={checking.retryAt} />. Keep the app server running.</p> : <p>{checking.kind === "reading" ? "A page is being read. Other pages will wait their turn." : "Pages are waiting for the background checker. Keep the app server running."}</p>}</div></div>}
+      <ReadingProgress papers={batch.submissions} label="Batch reading progress" />
       <section className={styles.workspace} aria-labelledby="batch-papers">
         <div className={styles.sectionHeader}><div><h2 id="batch-papers">Papers</h2><p>{finalized} finalized · {batch.submissions.length - finalized} in progress</p></div><span className={styles.capacity}>{batch.submissions.length} of 5 papers</span></div>
         <div className={styles.list}><div className={styles.listHead} aria-hidden="true"><span>Paper</span><span>Status</span><span>Action</span></div>

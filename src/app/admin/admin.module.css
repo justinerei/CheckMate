@@ -86,3 +86,32 @@
 .overviewEmpty { margin:0; padding-top:14px; border-top:1px solid #393940; }
 @media(max-width:760px) { .adminNavActive::before { left:-10px; } .overviewPanels { grid-template-columns:1fr; } .accountPopover { position:static; margin-top:8px; box-shadow:none; } }
 @media(max-width:420px) { .metrics > div + div { border-left:1px solid #393940; border-top:1px solid #393940; } }
+
+/* Match the teacher workspace's typography, surfaces, and navigation rhythm. */
+.heading h1 { font:500 clamp(38px,4.2vw,56px)/1.15 var(--font-pixel),monospace; letter-spacing:0; overflow-wrap:anywhere; }
+.adminProfile { margin: auto 4px 0; padding-top:14px; border-top:1px solid #38383f; }
+.accountTrigger { border-radius:999px; }
+.accountTrigger:hover,.accountMenu[open] .accountTrigger { background:#ffffff0c; border-color:#ffffff14; }
+.accountSignOut { background:#28282d; border-color:#56565e; color:#f4f4f5; }
+.accountSignOut:hover { background:#393940; }
+.metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; margin-top:38px; border:1px solid #323239; border-radius:11px; background:#151518; overflow:hidden; }
+.metrics > a,.metrics > div,.metrics > div + div { display:grid; gap:7px; min-width:0; padding:21px 24px; border:0; border-radius:0; background:transparent; }
+.metrics > * + * { border-left:1px solid #323239 !important; }
+.metrics > a:hover { background:#202024; }
+.metrics span { color:#bcbcc4; font:12px var(--font-geist-mono),monospace; letter-spacing:.08em; text-transform:uppercase; }
+.metrics strong { font:500 34px/1.15 var(--font-pixel),monospace; }
+.overviewPanels { gap:12px; margin-top:28px; }
+.overviewPanel { padding:20px; background:#17171b; }
+.overviewHeader h2 { font-size:16px; letter-spacing:-.01em; }
+.overviewHeader a { color:#ededf0; }
+.overviewRow:hover { color:#ffad7d; }
+@media(max-width:760px) {
+  .metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .metrics > a,.metrics > div,.metrics > div + div { padding:16px 12px; }
+  .metrics strong { font-size:29px; }
+  .metrics small { line-height:1.4; }
+}
+@media(max-width:420px) {
+  .metrics { grid-template-columns:1fr; }
+  .metrics > * + * { border-left:0 !important; border-top:1px solid #323239 !important; }
+}

@@ -15,9 +15,19 @@
 .connect form input { background: #202025; color: #fff; border: 1px solid #50505a; border-radius: 6px; padding: 12px; width: 100%; }
 .connect form button { border: 0; border-radius: 6px; background: #ff914d; color: #151515; font-weight: 700; padding: 12px 16px; }
 .connect form p { width: 100%; }
-.classList { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; padding:0; }
-.classList a { display:grid; gap:12px; min-height:135px; padding:20px; border:1px solid #393940; border-radius:11px; background:#17171b; color:#f4f4f5; text-decoration:none; }
-.classList a:hover { background:#222227; }
-.classList a:focus-visible { outline:2px solid #ff9b63; outline-offset:2px; }
-.classList span { color:#bcbcc7; font-size:13px; }
-.classList span:last-child { color:#ff9b63; }
+.classList { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr)); gap:14px; padding:0; margin:0; }
+.classLink { display:flex; flex-direction:column; height:100%; min-height:190px; padding:20px; border:1px solid #393940; border-radius:11px; background:#17171b; color:#f4f4f5; text-decoration:none; transition:border-color .18s ease,background-color .18s ease; }
+.classLink:hover { background:#1e1e23; border-color:#65616a; }
+.classLink:focus-visible { outline:2px solid #ff9b63; outline-offset:2px; }
+.classTop { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.classIcon { display:grid; place-items:center; width:38px; height:38px; border:1px solid #3d3a40; border-radius:8px; background:#211c1b; }
+.classIcon svg { width:24px; height:24px; }
+.classArrow { color:#ff9b63; font-size:17px; }
+.classDetails { display:grid; gap:7px; margin:19px 0 20px; min-width:0; }
+.classDetails strong { font-size:16px; line-height:1.35; overflow-wrap:anywhere; }
+.classDetails span { color:#bcbcc7; font-size:13px; line-height:1.4; overflow-wrap:anywhere; }
+.classFooter { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-top:auto; padding-top:14px; border-top:1px solid #393940; font-size:12px; }
+.classFooter > span { color:#bcbcc7; }
+.classFooter strong { font-size:12px; white-space:nowrap; }
+.classFooter strong span { color:#ff9b63; }
+@media(prefers-reduced-motion:reduce) { .classLink { transition:none; } }

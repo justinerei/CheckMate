@@ -1,13 +1,13 @@
 "use client";
 import { PendingScreen } from "@/app/pending-screen";
 
-import { useActionState, useState } from "react";
-import { login, register, loginStudent, registerStudent } from "./auth-actions";
+import { useActionState } from "react";
+import Link from "next/link";
+import { login, register, registerStudent } from "./auth-actions";
 import styles from "./page.module.css";
 
-export default function PasswordForm({ student = false }: { student?: boolean }) {
-  const [creating, setCreating] = useState(false);
-  const [loginState, loginAction, loginPending] = useActionState(student ? loginStudent : login, { error: "" });
+export default function PasswordForm({ student = false, creating = false }: { student?: boolean; creating?: boolean }) {
+  const [loginState, loginAction, loginPending] = useActionState(login, { error: "" });
   const [registerState, registerAction, registerPending] = useActionState(student ? registerStudent : register, { error: "" });
   const error = creating ? registerState.error : loginState.error;
   return <>
@@ -19,6 +19,6 @@ export default function PasswordForm({ student = false }: { student?: boolean })
       {error && <p className={styles.warning} role="alert">{error}</p>}
       <button className={styles.authSubmit} type="submit" disabled={loginPending || registerPending}>{loginPending || registerPending ? "Please wait…" : creating ? "Create account" : "Sign in"}</button>
     </form>
-    <p className={styles.authToggle}>{creating ? "Already have an account? " : "New to CheckMate? "}<button type="button" onClick={() => setCreating(!creating)}>{creating ? "Sign in" : "Create account"}</button></p>
+    <p className={styles.authToggle}>{creating ? "Already have an account? " : "New to CheckMate? "}<Link href={creating ? "/" : "/register"}>{creating ? "Sign in" : "Create account"}</Link></p>
   </>;
 }

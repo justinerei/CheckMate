@@ -36,7 +36,7 @@
 .authSubmit:disabled { opacity: .65; cursor: wait; }
 .card .passwordHint { font-size: 12px; margin: -5px 0 0; }
 .card .authToggle { margin: 16px 0; font-size: 13px; }
-.authToggle button { color: #ff9c61; text-decoration: underline; background: none; border: 0; padding: 3px; cursor: pointer; font: inherit; }
+.authToggle button,.authToggle a { color: #ff9c61; text-decoration: underline; background: none; border: 0; padding: 3px; cursor: pointer; font: inherit; }
 .divider { color: #a3a3aa; display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .divider::before, .divider::after { content: ""; height: 1px; background: #3f3f46; flex: 1; }
 .divider + form .button { margin-top: 16px; background: transparent; color: #f4f4f5; border: 1px solid #52525b; }

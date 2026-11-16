@@ -7,7 +7,6 @@ import styles from "./page.module.css";
 import PasswordForm from "./password-form";
 import { PendingSubmit } from "./pending-screen";
 import { cookies } from "next/headers";
-import RoleSelector from "./role-selector";
 
 export const instant = false;
 
@@ -25,15 +24,14 @@ export default async function Home() {
       <div className={styles.steps}><span>01 &nbsp; CREATE</span><span>02 &nbsp; REVIEW</span><span>03 &nbsp; FINALIZE</span></div>
     </section><section className={styles.card} aria-labelledby="sign-in-title">
       <div className={styles.cardTop}><span>WELCOME TO CHECKMATE</span><span className={styles.dot}>●</span></div>
-      <RoleSelector current="teacher" />
       <Mascot state="ready" className={styles.mascot} width={104} height={104} />
-      <h2 id="sign-in-title">Teacher sign in.</h2><p>Create quizzes, check papers, and manage your students.</p>
+      <h2 id="sign-in-title">Welcome to CheckMate.</h2><p>Sign in to continue to your workspace.</p>
       {session && !user?.enabled && <p className={styles.warning} role="alert">This account is unavailable. Contact your administrator.</p>}
       <PasswordForm />
       <div className={styles.divider}><span>or</span></div>
-      <form action={async () => { "use server"; (await cookies()).delete("checkmate-student-signup"); await signIn("google", { redirectTo: "/" }); }}>
+      <form action={async () => { "use server"; (await cookies()).delete("checkmate-student-signup"); (await cookies()).delete("checkmate-signup-role"); await signIn("google", { redirectTo: "/" }); }}>
         <PendingSubmit className={styles.button} pendingLabel="Connecting to Google…"><span aria-hidden="true" className={styles.google}>G</span>Continue with Google <span aria-hidden="true">↗</span></PendingSubmit>
-      </form><p className={styles.roleHint}>Already have an account? Your saved role determines your workspace.</p>
+      </form><p className={styles.roleHint}>New to CheckMate? Choose Create account before using Google for the first time.</p>
     </section></div><footer className={styles.footer}><span>CHECKMATE / YOUR CLASSROOM COMPANION</span><span>MADE FOR THE WORK THAT MATTERS.</span></footer>
   </main>;
 }

@@ -35,8 +35,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!existing) {
         const collision = await db.user.findFirst({ where: { email: { equals: identity.email, mode: "insensitive" } } });
         if (collision) return false;
-        const studentSignup = (await cookies()).get("checkmate-student-signup")?.value === "1";
-        await db.user.create({ data: { ...identity, role: studentSignup ? "STUDENT" : "TEACHER" } });
+        const signupRole = (await cookies()).get("checkmate-signup-role")?.value;
+        if (signupRole !== "TEACHER" && signupRole !== "STUDENT") return false;
+        await db.user.create({ data: { ...identity, role: signupRole } });
       }
       return true;
     },

@@ -124,3 +124,6 @@
   .dashboardLayout { max-width:1450px; margin-inline:auto; grid-template-columns:minmax(0,1fr) minmax(280px,320px); }
   .attentionPanel { margin-top:200px; }
 }
+.overview .welcome h1 { font:500 clamp(28px,3vw,38px)/1.18 var(--font-pixel),monospace; letter-spacing:0; }
+.overview .actionIcon { display:grid; place-items:center; width:26px; height:26px; flex:none; }
+.overview .actionIcon svg,.attentionSymbol svg { display:block; }

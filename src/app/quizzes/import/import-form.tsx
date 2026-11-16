@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PendingScreen } from "@/app/pending-screen";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
 import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
@@ -168,19 +169,34 @@ export default function ImportQuizForm() {
   const missing = rows.filter(row => row.type !== "ESSAY" && !row.answer.trim()).length;
   return <div className={styles.importer}>
     <PendingScreen pending={busy} mood={scanning ? "thinking" : "working"} message={progress || "Processing your quiz…"} />
+    <div className={styles.steps} aria-label="Import progress"><span aria-current={!scanned ? "step" : undefined}>Choose files</span><span aria-hidden="true" className={styles.stepLine} /><span aria-current={scanned ? "step" : undefined}>Review questions</span></div>
     <fieldset className={styles.formFields} disabled={busy}>
-    <section className={styles.panel} aria-labelledby="import-files-heading"><h2 id="import-files-heading">1 / Choose your files</h2>
+    <section className={styles.panel} aria-labelledby="import-files-heading"><div><h2 id="import-files-heading">Start with your files</h2><p>Upload your quiz and an answer key if you have one.</p></div>
       <label>Quiz title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Science Quiz 1" /></label>
-      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Quiz files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectQuiz([...quizFiles, ...images]); } }}><label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {quizFiles.length} files selected</small></div>
-      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Answer key files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectKey([...keyFiles, ...images]); } }}><label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {keyFiles.length} files selected</small></div>
-      {keyFiles.length > 0 && <button type="button" className={styles.secondary} disabled={busy} onClick={() => { if (keyInput.current) keyInput.current.value = ""; selectKey([]); }}>Remove answer key</button>}
-      <p>Up to 10 pages per upload; answer keys can include at most 2 photos. PDFs: 10 MB per file; photos: 8 MB each. Supports multiple choice (A–D), true/false, identification and essay questions. Files are sent to Groq for scanning; avoid uploading sensitive information.</p>
-      <button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"}</button>
+      <div className={styles.uploadCards}>
+        <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Quiz files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectQuiz([...quizFiles, ...images]); } }}>
+          <span className={styles.fileIcon} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6" /></svg></span>
+          <div><strong>Quiz document</strong><p>Choose a PDF or clear photos of your quiz.</p></div>
+          <label className={styles.fileButton}>Choose quiz files<input className={styles.fileInput} aria-label="Choose quiz files" type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label>
+          <small>{quizFiles.length ? `${quizFiles.length} ${quizFiles.length === 1 ? "file" : "files"} selected` : "No files selected"} · Paste screenshots here with Ctrl+V</small>
+          {quizFiles.length > 0 && <ul className={styles.fileNames}>{quizFiles.map((file, index) => <li key={`${file.name}-${index}`}>{file.name}</li>)}</ul>}
+        </div>
+        <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Answer key files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectKey([...keyFiles, ...images]); } }}>
+          <span className={styles.fileIcon} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v7M14 3v5h4M6 3v18h6m2-3 2 2 4-5" /></svg></span>
+          <div><strong>Answer key</strong> <span className={styles.optional}>Optional</span><p>Add a separate key to match answers to questions.</p></div>
+          <label className={styles.fileButton}>Choose answer key<input className={styles.fileInput} aria-label="Choose answer key" ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label>
+          <small>{keyFiles.length ? `${keyFiles.length} ${keyFiles.length === 1 ? "file" : "files"} selected` : "No files selected"} · Paste screenshots here with Ctrl+V</small>
+          {keyFiles.length > 0 && <><ul className={styles.fileNames}>{keyFiles.map((file, index) => <li key={`${file.name}-${index}`}>{file.name}</li>)}</ul><button type="button" className={styles.removeKey} disabled={busy} onClick={() => { if (keyInput.current) keyInput.current.value = ""; selectKey([]); }}>Remove answer key</button></>}
+        </div>
+      </div>
+      <p className={styles.fileHelp}>PDF, JPEG or PNG · Up to 10 pages per upload · Answer key: up to 2 photos<br />PDFs: 10 MB per file · Photos: 8 MB each. Supports multiple choice, true/false, identification and essay questions.</p>
+      <p className={styles.privacyNote}>Files are sent to Groq for scanning. Avoid uploading sensitive information.</p>
+      <div className={styles.scanActions}><Link href="/quizzes/new">Create a quiz from scratch</Link><button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"} <span aria-hidden="true">→</span></button></div>
     </section>
     {error && <p role="alert" className={styles.error}>{error}</p>}
     {notice && <p role="status" className={styles.notice}>{notice}</p>}
     {filesChanged && <p role="status" className={styles.notice}>Files changed. Scan again before saving; your current review stays here until a new scan succeeds.</p>}
-    {scanned && <section className={styles.review} aria-labelledby="import-review-heading"><h2 id="import-review-heading">2 / Review your quiz</h2>
+    {scanned && <section className={styles.review} aria-labelledby="import-review-heading"><h2 id="import-review-heading">Review your quiz</h2>
       <p>Files are scanned in selection order; use the arrows to correct question order. Open the originals while checking the scan. Saved quiz numbering starts at 1 and continues across sections. Each question starts at 1 point; essay rubrics are editable in the quiz editor.</p>
       <div className={styles.sources}>{previews.map(preview => <a key={preview.url} href={preview.url} target="_blank" rel="noreferrer">Open {preview.name} ↗</a>)}</div>
       {keyPreviews.length > 0 && <div className={styles.sources}>{keyPreviews.map(preview => <a key={preview.url} href={preview.url} target="_blank" rel="noreferrer">Open answer key: {preview.name} ↗</a>)}</div>}

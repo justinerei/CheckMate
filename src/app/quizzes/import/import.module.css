@@ -7,7 +7,7 @@
 .pasteArea { display:grid; gap:8px; padding:14px; border:1px solid #45454d; border-radius:8px; }.pasteArea small { color:#bcbcc4; font-size:12px; line-height:1.45; }.pasteArea:focus-visible,.pasteArea:focus-within { outline:2px solid #ffad7d; outline-offset:2px; }
 
 /* File selection */
-.importPage { max-width:948px; }
+.importPage.importPage { max-width:948px; }
 .importer { max-width:900px; margin-top:28px; }
 .steps { display:flex; align-items:center; gap:12px; color:#bcbcc4; font-size:13px; font-weight:600; }
 .steps [aria-current] { color:#ffad7d; }.stepLine { width:32px; height:1px; background:#55555d; }

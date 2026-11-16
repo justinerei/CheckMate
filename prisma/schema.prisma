@@ -93,6 +93,7 @@ model Classroom {
   createdAt   DateTime          @default(now())
   teacher     User              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   enrollments ClassEnrollment[]
+  submissions Submission[]
 
   @@index([teacherId])
 }
@@ -269,6 +270,7 @@ model Submission {
   id             String             @id @default(cuid())
   quizId         String
   studentId      String?
+  classroomId    String?
   paperName      String?
   nameReviewed   Boolean            @default(false)
   teacherId      String
@@ -285,6 +287,7 @@ model Submission {
   updatedAt      DateTime           @updatedAt
   quiz           Quiz               @relation(fields: [quizId], references: [id], onDelete: Restrict)
   student        Student?           @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  classroom      Classroom?         @relation(fields: [classroomId], references: [id], onDelete: SetNull)
   teacher        User               @relation(fields: [teacherId], references: [id], onDelete: Restrict)
   batch          CheckingBatch?     @relation(fields: [batchId], references: [id], onDelete: Restrict)
   pages          SubmissionPage[]
@@ -294,6 +297,7 @@ model Submission {
 
   @@unique([quizId, studentId])
   @@index([teacherId])
+  @@index([classroomId])
 }
 
 model ResultConcern {

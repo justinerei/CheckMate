@@ -15,3 +15,9 @@
 .connect form input { background: #202025; color: #fff; border: 1px solid #50505a; border-radius: 6px; padding: 12px; width: 100%; }
 .connect form button { border: 0; border-radius: 6px; background: #ff914d; color: #151515; font-weight: 700; padding: 12px 16px; }
 .connect form p { width: 100%; }
+.classList { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; padding:0; }
+.classList a { display:grid; gap:12px; min-height:135px; padding:20px; border:1px solid #393940; border-radius:11px; background:#17171b; color:#f4f4f5; text-decoration:none; }
+.classList a:hover { background:#222227; }
+.classList a:focus-visible { outline:2px solid #ff9b63; outline-offset:2px; }
+.classList span { color:#bcbcc7; font-size:13px; }
+.classList span:last-child { color:#ff9b63; }

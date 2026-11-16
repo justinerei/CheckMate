@@ -50,7 +50,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
     unmatched.push(...mapped.unmatched.map(item => ({ item, page: page.pageNumber })));
   }
   const nameSuggestion = new Set(nameSuggestions).size === 1 ? nameSuggestions[0] : null;
-  const nameReview = <>{submission.status === "IN_REVIEW" && <NameForm id={id} value={submission.paperName} suggestion={nameSuggestion} reviewed={submission.nameReviewed} />}{submission.status !== "DRAFT" && <PaperStudent id={id} selectedId={submission.studentId} selectedName={submission.student?.name ?? null} students={students} />}</>;
+  const nameReview = <>{submission.status === "IN_REVIEW" && <NameForm id={id} value={submission.paperName} suggestion={nameSuggestion} reviewed={submission.nameReviewed} />}{submission.status !== "DRAFT" && <PaperStudent id={id} selectedId={submission.studentId} selectedName={submission.student?.name ?? null} selectedClassId={submission.classroomId} students={students} />}</>;
   {
     const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
     const documentConcern = !unfinished.length && submission.status === "IN_REVIEW" ? paperDocumentConcern(submission.pages.map(page => page.extraction), questions, submission.quiz.source === "EXISTING") : null;

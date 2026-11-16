@@ -53,7 +53,7 @@ export async function setResultReleased(id: string, release: boolean): Promise<{
     const result = await db.submission.updateMany({ where: { id, teacherId: teacher.id, quiz: { teacherId: teacher.id }, status: "FINALIZED", studentId: { not: null }, totalScore: { not: null } }, data: { releasedAt: release ? new Date() : null } });
     if (result.count !== 1) return { error: "Finalize the paper and link it to a student first." };
   } catch { return { error: "Could not update result visibility. Try again." }; }
-  revalidatePath("/students"); revalidatePath(`/submissions/${id}/review`); revalidatePath("/student");
+  revalidatePath("/students"); revalidatePath(`/submissions/${id}/review`); revalidatePath("/student"); revalidatePath("/student/classes"); revalidatePath("/student/classes/[id]", "page");
   return { error: "" };
 }
 

@@ -10,14 +10,18 @@ export async function assignPaperStudent(id: string, _state: { message: string; 
   const raw = form.get("studentId");
   if (typeof raw !== "string" || raw.length > 200) return { message: "Choose a student from your student list.", ok: false };
   const studentId = raw || null;
+  const rawClass = form.get("classroomId");
+  if (typeof rawClass !== "string" || rawClass.length > 200) return { message: "Choose a class from your list.", ok: false };
+  const classroomId = rawClass || null;
   try {
     const issue = await db.$transaction(async tx => {
       const paper = await tx.submission.findFirst({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, select: { id: true, quizId: true } });
       const allowed = !studentId || !!(await tx.teacherStudent.findUnique({ where: { teacherId_studentId: { teacherId: teacher.id, studentId } }, select: { studentId: true } }));
+      if (classroomId && (!studentId || !(await tx.classEnrollment.findFirst({ where: { classroomId, studentId, classroom: { teacherId: teacher.id } }, select: { studentId: true } })))) return "Choose a student who belongs to the selected class.";
       const duplicate = !!(studentId && paper && await tx.submission.findFirst({ where: { quizId: paper.quizId, studentId, id: { not: id } }, select: { id: true } }));
       const error = studentLinkProblem(!!paper, allowed, duplicate);
       if (error) return error;
-      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, data: { studentId, releasedAt: null, showCorrectAnswers: false } });
+      const updated = await tx.submission.updateMany({ where: { id, teacherId: teacher.id, status: { in: [...studentLinkStatuses] }, quiz: { teacherId: teacher.id } }, data: { studentId, classroomId, releasedAt: null, showCorrectAnswers: false } });
       return updated.count === 1 ? null : "This paper is unavailable. Refresh and try again.";
     }, { isolationLevel: "Serializable" });
     if (issue) return { message: issue, ok: false };
@@ -25,6 +29,6 @@ export async function assignPaperStudent(id: string, _state: { message: string; 
     if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") return { message: "This student already has a paper for this quiz.", ok: false };
     return { message: "Could not update the student link. Refresh and try again.", ok: false };
   }
-  revalidatePath(`/submissions/${id}/review`); revalidatePath(`/submissions/${id}`); revalidatePath("/submissions"); revalidatePath("/dashboard"); revalidatePath("/batches/[id]", "page"); revalidatePath("/quizzes/[id]/overview", "page");
+  revalidatePath(`/submissions/${id}/review`); revalidatePath(`/submissions/${id}`); revalidatePath("/submissions"); revalidatePath("/dashboard"); revalidatePath("/batches/[id]", "page"); revalidatePath("/quizzes/[id]/overview", "page"); revalidatePath("/student/classes"); revalidatePath("/student/classes/[id]", "page");
   return { message: studentId ? "Student linked to this paper." : "Student link removed.", ok: true };
 }

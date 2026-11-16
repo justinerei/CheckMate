@@ -114,3 +114,6 @@
 .toolGroup .pointsTrigger,.editorLayout .toolGroup .management,.editorSidebar .toolGroup .settings { margin:0; }
 .editorSidebar > .notice,.editorSidebar > .error { margin:0 0 14px; }
 .toolGroup > details { margin-top:0; }
+.pointsSection .modalRubricForm { padding:16px 0 0; border:0; gap:16px; }
+.pointsDialogBody > .management { margin-top:20px; }
+.pointsDialogBody .sectionListHeading { margin-top:0; }

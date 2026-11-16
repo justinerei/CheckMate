@@ -100,3 +100,9 @@
   .editorLayout > .focusedLayout,.editorSidebar { width:100%; }
   .editorSidebar { order:0; position:static; max-height:none; overflow:visible; }
 }
+.pointsTrigger { width:100%; display:grid; gap:6px; margin:0 0 14px; padding:16px 20px; text-align:left; border:1px solid #625047; border-radius:12px; background:#1b1818; color:#f4f4f5; font:inherit; cursor:pointer; }
+.pointsTrigger small { color:#c3c3ca; font-size:13px; }.pointsTrigger:hover { background:#2a2220; }.pointsTrigger:focus-visible,.pointsDialog button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.pointsDialog { width:min(620px,calc(100% - 32px)); max-width:none; max-height:min(85dvh,800px); margin:auto; padding:0; border:1px solid #625047; border-radius:14px; background:#1b1818; color:#f4f4f5; overflow:auto; }
+.pointsDialog::backdrop { background:#000b; }.pointsDialogHeader { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 24px; border-bottom:1px solid #483b35; }.pointsDialogHeader h2 { margin:6px 0 0; font-size:20px; }.pointsDialogHeader p { margin:0; }.pointsDialogBody { padding:4px 24px 24px; }.pointsSection { padding:20px 0; border-bottom:1px solid #34343a; }.pointsSection:last-child { border-bottom:0; }.pointsSection h3 { margin:0; font-size:16px; overflow-wrap:anywhere; }.pointsSection small { color:#c3c3ca; }.pointsSection .quickPoints { margin-bottom:0; }
+@media(max-width:600px) { .pointsDialog { width:calc(100% - 24px); max-height:90dvh; }.pointsDialogHeader,.pointsDialogBody { padding-left:18px; padding-right:18px; } }
+.focusedTitleRow { display:flex; align-items:center; justify-content:space-between; gap:16px; }.focusedTitleRow button { min-height:40px; padding:8px 12px; border:1px solid #815447; border-radius:7px; background:#36231f; color:#ffd3c5; cursor:pointer; }.focusedTitleRow button:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

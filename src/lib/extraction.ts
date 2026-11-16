@@ -29,13 +29,19 @@ export function parseExtraction(input: string): { items: ExtractionItem[]; stude
     const value = JSON.parse(input);
     if (!value || !Array.isArray(value.items) || value.items.length > 200 || (value.studentName !== undefined && value.studentName !== null && (typeof value.studentName !== "string" || value.studentName.length > 120))) return null;
     const positive = (x: unknown) => x === null || (typeof x === "number" && Number.isInteger(x) && x > 0 && x <= 500);
-    for (const item of value.items) {
+    const items = value.items.map((item: unknown) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+      const record = item as Record<string, unknown>;
+      const section = record.section;
+      return { ...record, section: typeof section === "string" && /^[1-9]\d{0,2}$/.test(section) ? Number(section) : section, ...(record.markShape === null ? { markShape: undefined } : {}) };
+    });
+    for (const item of items) {
       if (!item || !positive(item.number) || !positive(item.section) || !(item.answer === null || (typeof item.answer === "string" && item.answer.length <= 4000)) || !["clear", "blank", "unclear", "multiple", "erased"].includes(item.status) || typeof item.note !== "string" || item.note.length > 500) return null;
       if (item.observedStyle !== undefined && !["written", "circle", "shade", "box", "triangle", "underline", "other", "unknown"].includes(item.observedStyle)) return null;
       if (item.erasure !== undefined && !["present", "none", "uncertain"].includes(item.erasure)) return null;
       if (item.markShape !== undefined && !["circle", "box", "triangle", "unknown"].includes(item.markShape)) return null;
     }
-    return { items: value.items.map((i: ExtractionItem) => ({ number: i.number, section: i.section, answer: i.answer, status: i.status, note: i.note, ...(i.erasure !== undefined ? { erasure: i.erasure } : {}), ...(i.markShape !== undefined ? { markShape: i.markShape } : {}), ...(i.observedStyle !== undefined ? { observedStyle: i.observedStyle } : {}) })), ...(value.studentName !== undefined ? { studentName: value.studentName } : {}), ...(value.document !== undefined ? { document: parseDocumentCheck(value.document) } : {}) };
+    return { items: items.map((i: ExtractionItem) => ({ number: i.number, section: i.section, answer: i.answer, status: i.status, note: i.note, ...(i.erasure !== undefined ? { erasure: i.erasure } : {}), ...(i.markShape !== undefined ? { markShape: i.markShape } : {}), ...(i.observedStyle !== undefined ? { observedStyle: i.observedStyle } : {}) })), ...(value.studentName !== undefined ? { studentName: value.studentName } : {}), ...(value.document !== undefined ? { document: parseDocumentCheck(value.document) } : {}) };
   } catch { return null; }
 }
 export function needsReview(items: ExtractionItem[], confirmed: boolean, multipleChoice = false) {

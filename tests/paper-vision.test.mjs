@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { stripTypeScriptTypes } from "node:module";
+import { automaticDecision } from "../src/lib/auto-review.ts";
 
 // The app bundler resolves extensionless imports; use a file URL for Node's test runner.
 const source = (await readFile(new URL("../src/lib/paper-vision.ts", import.meta.url), "utf8"))
@@ -51,6 +52,18 @@ test("paper vision prefers Groq, then OpenRouter, then Gemini", async () => {
     assert.equal(request.provider.max_price.prompt, 0);
     assert.equal(calls.length, 2);
     assert.match(calls[1].url, /openrouter\.ai/);
+
+    calls = [];
+    const lingMark = JSON.stringify({ items: [{ number: 1, section: "1", answer: "B", status: "clear", note: "", observedStyle: "circle", markShape: "circle" }] });
+    globalThis.fetch = async url => { calls.push(url); return calls.length === 1 ? new Response("", { status: 503 }) : Response.json({ choices: [{ message: { content: lingMark } }] }); };
+    const cautious = await readPaperPhoto("prompt", Buffer.from("image"), "image/jpeg");
+    assert.equal(cautious.kind, "ok");
+    assert.equal(cautious.result.items[0].answer, "B");
+    assert.equal(cautious.result.items[0].section, 1);
+    assert.equal(cautious.result.items[0].observedStyle, "unknown");
+    assert.equal(cautious.result.items[0].markShape, "unknown");
+    assert.match(cautious.result.items[0].note, /uncertain/);
+    assert.equal(automaticDecision(cautious.result.items, "circle", "MULTIPLE_CHOICE", ["B"]), null);
 
     calls = [];
     globalThis.fetch = async url => {

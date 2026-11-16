@@ -10,6 +10,15 @@ test("validates extraction structure and rejects malformed or fabricated statuse
   assert.equal(parseExtraction("not json"), null);
 });
 
+test("accepts an explicitly numbered section returned as a numeric string without guessing", () => {
+  const item = { number: 16, section: "3", answer: "DLQ", status: "clear", note: "" };
+  assert.equal(parseExtraction(JSON.stringify({ items: [item] }))?.items[0].section, 3);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, section: "three" }] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, section: "501" }] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, section: "03" }] })), null);
+  assert.equal(parseExtraction(JSON.stringify({ items: [{ ...item, markShape: null }] }))?.items[0].markShape, undefined);
+});
+
 test("matches only unambiguous question numbers and flags duplicate suggestions", () => {
   const questions = [{ id: "a", number: 1, section: 1 }, { id: "b", number: 1, section: 2 }];
   const items = [{ number: 1, section: null, answer: "B", status: "clear", note: "" }];

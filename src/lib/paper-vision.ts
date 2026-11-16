@@ -1,6 +1,14 @@
 import { parseExtraction, parseDocumentCheck, retryDelayMs } from "./extraction";
 
 type VisionResult = { kind: "ok"; result: NonNullable<ReturnType<typeof parseExtraction>> & { document: ReturnType<typeof parseDocumentCheck> }; model: string } | { kind: "error"; message: string; retryAt: Date | null };
+/** Ling has misidentified non-circular marks as circles; preserve the answer and require mark review. */
+function requireLingMarkReview(result: Extract<VisionResult, { kind: "ok" }>): VisionResult {
+  return { ...result, result: { ...result.result, items: result.result.items.map(item => {
+    const marked = ["circle", "box", "triangle", "shade", "underline", "other"].includes(item.observedStyle ?? "") || ["circle", "box", "triangle"].includes(item.markShape ?? "");
+    if (!marked || item.status !== "clear") return item;
+    return { ...item, observedStyle: "unknown", markShape: "unknown", note: `${item.note ? `${item.note} ` : ""}Mark shape uncertain; check the photo.`.slice(0, 500) };
+  }) } };
+}
 /** Read with Groq first, then Ling on OpenRouter, and finally Gemini if needed. */
 export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string): Promise<VisionResult> {
   const groqKey = process.env.GROQ_API_KEY;
@@ -46,7 +54,7 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
       const body = await response.json();
       const raw = typeof body?.choices?.[0]?.message?.content === "string" ? body.choices[0].message.content : "";
       const result = parse(raw, `openrouter:${model}`);
-      if (result) return result;
+      if (result) return requireLingMarkReview(result as Extract<VisionResult, { kind: "ok" }>);
       message = "OpenRouter returned an unreadable result.";
     }
   } catch { message = "OpenRouter could not be reached."; }

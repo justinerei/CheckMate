@@ -15,7 +15,7 @@ export async function saveOutline(quizId: string, _previous: { error: string }, 
   try {
     const ok = await db.$transaction(async tx => {
       const quiz = await tx.quiz.findFirst({ where: { id: quizId, teacherId: teacher.id, source: "BUILT" }, include: { _count: { select: { submissions: true } }, sections: { orderBy: { position: "asc" }, include: { questions: true } } } });
-      if (!quiz || quiz._count.submissions || quiz.sections.some(section => !section.questions.length || section.instructions.trim() || Number(section.defaultPoints) !== 1 || section.title !== labels[section.questions[0].type] || section.questions.some(question => question.text.trim() || question.type !== section.questions[0].type))) return false;
+      if (!quiz || quiz._count.submissions || quiz.sections.some(section => !section.questions.length || section.questionLayout !== "CUSTOM" || section.instructions.trim() || Number(section.defaultPoints) !== 1 || section.title !== labels[section.questions[0].type] || section.questions.some(question => question.text.trim() || question.type !== section.questions[0].type))) return false;
       const existing = quiz.sections.map(section => ({ type: section.questions[0].type, count: section.questions.length }));
       if (sameQuizOutline(existing, sections)) return "unchanged";
       await tx.quizSection.deleteMany({ where: { quizId } });

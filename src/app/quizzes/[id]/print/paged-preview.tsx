@@ -3,13 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { currentPagination, paginate, type Pagination } from "@/lib/pagination";
 import { groupSectionRubrics } from "@/lib/print-rubrics";
-import { questionRows, sectionDirections } from "@/lib/standard-quiz-layout";
+import { questionRows, sectionDirections, validQuestionLayout } from "@/lib/standard-quiz-layout";
 import { instructionTemplates } from "@/lib/instruction-templates";
 import PrintDocumentTitle from "../print-document-title";
 import styles from "./print.module.css";
 
 type Question = { id: string; type: string; text: string; besideNext: boolean; essayLineCount: number | null; choices: { id: string; label: string; text: string }[]; rubric: { id: string; title: string; description: string; points: string }[] };
-type Section = { id: string; title: string; instructions: string; questions: Question[] };
+type Section = { id: string; title: string; instructions: string; questionLayout: string; questions: Question[] };
 type Block = { kind: "header"; title: string } | { kind: "instructions"; text: string } | { kind: "section"; title: string; instructions: string; number: number; keepWithNext: boolean } | { kind: "row"; questions: { question: Question; number: number }[] } | { kind: "rubric"; rubric: Question["rubric"]; numbers: number[] };
 type Paper = { page: string; width: string; height: string; label: string };
 
@@ -27,7 +27,7 @@ function BlockContent({ block }: { block: Block }) {
 
 export default function PagedPreview({ title, generalInstructions, code, paper, numbering, sections, back }: { title: string; generalInstructions: string; code: string; paper: Paper; numbering: string; sections: Section[]; back: { href: string; label: string } }) {
   const [labels, setLabels] = useState(true);
-  const hasSavedPairings = sections.some(section => section.questions.some((question, index) => question.besideNext && index + 1 < section.questions.length));
+  const hasSavedPairings = sections.some(section => section.questions.length > 1 && (section.questionLayout === "TWO_COLUMN" && section.questions.every(question => question.type === "MULTIPLE_CHOICE") || section.questionLayout === "CUSTOM" && section.questions.some((question, index) => question.besideNext && index + 1 < section.questions.length)));
   const [standard, setStandard] = useState(() => !hasSavedPairings);
   const [measurement, setMeasurement] = useState<{ blocks: Block[]; width: string; height: string; layout: Pagination } | null>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -38,8 +38,9 @@ export default function PagedPreview({ title, generalInstructions, code, paper, 
     sections.forEach((section, index) => {
       const start = numbering === "RESET_PER_SECTION" ? 0 : total;
       total += section.questions.length;
-      output.push({ kind: "section", title: section.title, instructions: sectionDirections(section.instructions, section.questions.map(question => question.type), instructionTemplates, standard), number: index + 1, keepWithNext: section.questions.length > 0 });
-      for (const row of questionRows(section.questions, start, standard)) output.push({ kind: "row", questions: row });
+      output.push({ kind: "section", title: section.title, instructions: sectionDirections(section.instructions, section.questions.map(question => question.type), instructionTemplates, standard || section.questionLayout !== "CUSTOM"), number: index + 1, keepWithNext: section.questions.length > 0 });
+      const preset = section.questions.every(question => question.type === "MULTIPLE_CHOICE") && validQuestionLayout(section.questionLayout) ? section.questionLayout : "CUSTOM";
+      for (const row of questionRows(section.questions, start, standard, preset)) output.push({ kind: "row", questions: row });
       for (const group of groupSectionRubrics(section.questions, start)) output.push({ kind: "rubric", ...group });
     });
     return output;

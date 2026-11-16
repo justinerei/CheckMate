@@ -113,6 +113,7 @@ model QuizSection {
   answerStyle   String     @default("circle")
   position      Int
   defaultPoints Decimal    @default(1) @db.Decimal(8, 2)
+  questionLayout String    @default("CUSTOM")
   quiz          Quiz       @relation(fields: [quizId], references: [id], onDelete: Cascade)
   questions     Question[]
 

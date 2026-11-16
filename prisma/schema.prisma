@@ -52,6 +52,21 @@ model User {
   keyChanges    AnswerKeyHistory[]
   resultChanges ResultHistory[]
   studentRecord Student?
+  adminActions AdminActivity[] @relation("AdminActor")
+  accountEvents AdminActivity[] @relation("AdminTarget")
+}
+
+model AdminActivity {
+  id        String   @id @default(cuid())
+  actorId   String
+  targetId  String
+  action    String
+  createdAt DateTime @default(now())
+  actor     User     @relation("AdminActor", fields: [actorId], references: [id], onDelete: Restrict)
+  target    User     @relation("AdminTarget", fields: [targetId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([targetId, createdAt])
 }
 
 model Student {

@@ -1,0 +1,29 @@
+.shell { min-height:100svh; max-width:1600px; margin:auto; padding:38px 6vw 28px; display:flex; flex-direction:column; }
+.header { display:flex; justify-content:space-between; align-items:center; }
+.logo { font-family:var(--font-display); font-size:27px; letter-spacing:-.04em; color:#f4f4f5; text-decoration:none; }
+.logo span,.eyebrow span,.cardTop span:last-child { color:#ff6a00; }
+.headerNote,.eyebrow,.cardTop,.footer,.classInfo span { font-family:var(--font-geist-mono),monospace; font-size:10px; letter-spacing:.1em; color:#a3a3aa; }
+.layout { flex:1; display:grid; grid-template-columns:1.2fr .8fr; align-items:center; gap:8%; padding:90px 0; }
+.intro { max-width:650px; }
+.eyebrow { margin:0 0 27px; }
+.intro h1 { margin:0; font-weight:500; font-size:clamp(42px,5.3vw,76px); line-height:1.06; }
+.intro h1 span { color:#929299; }
+.intro > p:last-child { color:#b0b0b5; line-height:1.7; max-width:440px; margin:24px 0 0; }
+.card { background:#18181b; border:1px solid #303036; border-radius:18px; padding:32px; max-width:480px; width:100%; justify-self:end; }
+.cardTop { display:flex; justify-content:space-between; }
+.mascot { display:block; object-fit:contain; margin:22px 0 12px -8px; }
+.card h2 { font-size:26px; font-weight:500; margin:0 0 16px; }
+.card p { color:#bcbcc4; line-height:1.6; font-size:14px; margin:20px 0; }
+.classInfo { display:grid; gap:8px; background:#222226; border:1px solid #383840; border-radius:9px; padding:16px; }
+.classInfo strong { font-size:17px; overflow-wrap:anywhere; }
+.classInfo small { color:#bcbcc4; font-size:13px; }
+.actions { display:grid; gap:10px; }
+.primary,.secondary { width:100%; min-height:48px; border-radius:8px; padding:12px 15px; font:inherit; font-weight:600; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+.primary { background:var(--action-primary); color:var(--action-primary-text); border:1px solid transparent; }
+.primary:hover { background:var(--action-primary-hover); }
+.secondary { background:var(--action-secondary); color:var(--action-secondary-text); border:1px solid var(--action-secondary-border); }
+.secondary:hover { background:var(--action-secondary-hover); }
+.primary:focus-visible,.secondary:focus-visible { outline:2px solid #ff9b63; outline-offset:3px; }
+.card .warning { color:#ffbd86; }
+.footer { border-top:1px solid #29292e; padding-top:20px; }
+@media(max-width:760px) { .shell { padding:25px 22px; } .headerNote { display:none; } .layout { grid-template-columns:1fr; gap:36px; padding:65px 0; } .card { justify-self:stretch; max-width:none; padding:24px; } }

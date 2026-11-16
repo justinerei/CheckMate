@@ -1,7 +1,7 @@
 "use server";
 
 import { randomBytes } from "node:crypto";
-import { auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { db } from "@/lib/db";
 import { createStudentCode } from "@/lib/student-code";
 import { revalidatePath } from "next/cache";
@@ -14,6 +14,12 @@ export async function continueToSignIn(form: FormData) {
   const code = String(form.get("code") ?? "").toLowerCase();
   if (/^[a-f0-9]{32}$/.test(code)) (await cookies()).set("class-invite", code, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 3600 });
   redirect(form.get("register") === "1" ? "/register?role=student" : "/");
+}
+
+export async function switchToStudentAccount(form: FormData) {
+  const code = String(form.get("code") ?? "").toLowerCase();
+  if (/^[a-f0-9]{32}$/.test(code)) (await cookies()).set("class-invite", code, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 3600 });
+  await signOut({ redirectTo: "/" });
 }
 
 export async function cancelClassInvite() {

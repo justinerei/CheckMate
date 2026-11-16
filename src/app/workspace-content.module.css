@@ -127,3 +127,4 @@
 .overview .welcome h1 { font:500 clamp(28px,3vw,38px)/1.18 var(--font-pixel),monospace; letter-spacing:0; }
 .overview .actionIcon { display:grid; place-items:center; width:26px; height:26px; flex:none; }
 .overview .actionIcon svg,.attentionSymbol svg { display:block; }
+.overview .actionIcon { width:32px; height:32px; }

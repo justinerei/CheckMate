@@ -1,9 +1,11 @@
 import { parseExtraction, parseDocumentCheck, retryDelayMs } from "./extraction";
 
 type VisionResult = { kind: "ok"; result: NonNullable<ReturnType<typeof parseExtraction>> & { document: ReturnType<typeof parseDocumentCheck> }; model: string } | { kind: "error"; message: string; retryAt: Date | null };
+export const GROQ_SHORT_WAIT = "Groq is busy. Waiting briefly before retrying; Gemini is reserved as a backup.";
+const MAX_GROQ_WAIT_MS = 60_000;
 
 /** Read with Groq first; only send the photo to Gemini if Groq cannot produce a valid result. */
-export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string): Promise<VisionResult> {
+export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string, previousError?: string | null): Promise<VisionResult> {
   const groqKey = process.env.GROQ_API_KEY;
   const geminiKey = process.env.GEMINI_API_KEY;
   const groqModel = process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b";
@@ -19,7 +21,12 @@ export async function readPaperPhoto(prompt: string, photo: Buffer, mime: string
   if (groqKey) {
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${groqKey}`, "Content-Type": "application/json" }, signal: AbortSignal.timeout(50_000), body: JSON.stringify({ model: groqModel, temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: `data:${mime};base64,${photo.toString("base64")}` } }] }] }) });
-      if (response.status === 429) { retryAt = new Date(Date.now() + retryDelayMs(response.headers.get("retry-after"), Date.now())); message = "Groq rate limit reached. Retry after the displayed time."; }
+      if (response.status === 429) {
+        const delay = Math.max(1000, retryDelayMs(response.headers.get("retry-after"), Date.now()));
+        retryAt = new Date(Date.now() + delay);
+        if (delay <= MAX_GROQ_WAIT_MS && previousError !== GROQ_SHORT_WAIT) return { kind: "error", message: GROQ_SHORT_WAIT, retryAt };
+        message = "Groq rate limit reached. Retry after the displayed time.";
+      }
       else if (!response.ok) message = response.status === 401 ? "Groq rejected the API key. Check .env.local and restart the server." : `Groq could not process this page (HTTP ${response.status}).`;
       else {
         const body = await response.json();

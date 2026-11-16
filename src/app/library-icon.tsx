@@ -1,7 +1,23 @@
 export default function LibraryIcon({ type }: { type: "quiz" | "key" | "paper" }) {
-  return <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
-    <path d="M4 2h11v2h2v2h2v16H4z" fill="#f9e8d6" stroke="#100e0e" strokeWidth="2" strokeLinejoin="miter" />
-    <path d="M15 2v5h4" stroke="#100e0e" strokeWidth="2" />
-    {type === "key" ? <><path d="M6 13h3v2h2v2h2v-2h2v-2h2v-2h2v3h-2v2h-2v2h-2v2h-2v-1H9v-2H7v-2H6z" fill="#ff7000" /><path d="M7 8h5v2H7z" fill="#191414" /></> : type === "quiz" ? <><path d="M8 8h2V7h5v2h2v3h-2v2h-2v2h-3v-3h2v-2h2V9h-4v1H8zM10 18h3v2h-3z" fill="#191414" /><path d="M7 8h2v2H7z" fill="#ff7000" /></> : <><path d="M7 9h9v2H7zm0 4h9v2H7zm0 4h6v2H7z" fill="#191414" /><path d="M14 17h3v2h-3z" fill="#ff7000" /></>}
+  return <svg aria-hidden="true" width="28" height="28" viewBox="0 0 32 32" fill="none" shapeRendering="crispEdges">
+    {type === "key" && <>
+      {/* An answer key has its own key-shaped silhouette. */}
+      <path d="M17 3h7v2h3v3h2v7h-2v3h-3v2h-5v-2h-2v2h-2v2h-2v2h-2v3H8v2H3v-5h2v-3h3v-2h2v-2h2v-2h2v-2h1V8h2V5h2z" fill="#100e0e" />
+      <path d="M19 5h5v2h2v2h1v5h-2v2h-2v2h-3v-2h-3v2h-2v2h-2v2h-2v2H9v3H5v-2h2v-3h3v-2h2v-2h2v-2h2v-2h1V9h2z" fill="#f9e8d6" />
+      <path d="M20 8h4v4h-4z" fill="#100e0e" /><path d="M10 21h2v2h-2zm2-2h2v2h-2z" fill="#ff7000" />
+    </>}
+    {type === "quiz" && <>
+      {/* A clipboard and question mark distinguish quizzes from keys. */}
+      <path d="M6 5h7V3h6v2h7v24H6z" fill="#100e0e" />
+      <path d="M8 7h4v2h8V7h4v20H8z" fill="#f9e8d6" />
+      <path d="M13 5h6v3h-6z" fill="#ff7000" />
+      <path d="M12 12h2v-2h5v2h2v4h-2v2h-2v2h-3v-4h3v-2h1v-2h-4v2h-2zm2 10h3v3h-3z" fill="#191414" />
+    </>}
+    {type === "paper" && <>
+      <path d="M5 3h15v3h3v3h2v20H5z" fill="#100e0e" />
+      <path d="M7 5h12v4h4v18H7z" fill="#f9e8d6" />
+      <path d="M10 12h10v2H10zm0 5h10v2H10zm0 5h7v2h-7z" fill="#191414" />
+      <path d="M18 22h3v2h-3z" fill="#ff7000" />
+    </>}
   </svg>;
 }

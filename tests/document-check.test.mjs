@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { documentNeedsReview, paperDocumentConcern, parseDocumentCheck, parseExtraction } from "../src/lib/extraction.ts";
+import { documentNeedsReview, documentReviewed, paperDocumentConcern, parseDocumentCheck, parseExtraction } from "../src/lib/extraction.ts";
 
 const question = [{ id: "q1", number: 1, section: 1 }];
 const item = { number: 1, section: 1, answer: "A", status: "clear", note: "" };
@@ -15,8 +15,19 @@ test("validates classifications and treats missing or malformed classifications 
 
 test("requires manual review for unrelated or uncertain pages even if numbers happen to match", () => {
   assert.match(paperDocumentConcern([page("other")], question, false), /may not be a student paper/);
-  assert.match(paperDocumentConcern([page("uncertain")], question, false), /unclear/);
+  assert.match(paperDocumentConcern([page("uncertain")], question, false), /could not be identified/);
   assert.equal(paperDocumentConcern([page("expected")], question, false), null);
+});
+
+test("only a recorded teacher page confirmation removes its identification block", () => {
+  const uncertain = page("uncertain");
+  const confirmed = { ...uncertain, documentReview: { confirmed: true, teacherId: "teacher", reviewedAt: "2026-11-16T00:00:00.000Z" } };
+  assert.equal(documentReviewed(confirmed), true);
+  assert.equal(paperDocumentConcern([confirmed], question, false), null);
+  assert.ok(paperDocumentConcern([uncertain], question, false));
+  assert.ok(paperDocumentConcern([{ ...uncertain, documentReview: { confirmed: true } }], question, false));
+  assert.match(paperDocumentConcern([{ ...confirmed, items: [] }], question, false), /No readings/);
+  assert.equal(parseExtraction(JSON.stringify(confirmed)).documentReview, undefined);
 });
 
 test("accepts supporting pages when answers match elsewhere, but flags no matches across the paper", () => {

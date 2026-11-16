@@ -14,6 +14,14 @@ export function documentNeedsReview(check: DocumentCheck | undefined) {
   return !!check && (check.kind === "other" || check.kind === "uncertain");
 }
 
+// Set by the teacher-confirmation action, never copied from the AI response.
+export function documentReviewed(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const review = (value as Record<string, unknown>).documentReview;
+  if (!review || typeof review !== "object" || Array.isArray(review)) return false;
+  const record = review as Record<string, unknown>;
+  return record.confirmed === true && typeof record.teacherId === "string" && typeof record.reviewedAt === "string";
+}
 
 export type ExtractionItem = { number: number | null; section: number | null; answer: string | null; status: "clear" | "blank" | "unclear" | "multiple" | "erased"; note: string; erasure?: "present" | "none" | "uncertain"; markShape?: "circle" | "box" | "triangle" | "unknown"; observedStyle?: "written" | "circle" | "shade" | "box" | "triangle" | "underline" | "other" | "unknown" };
 export function parseExtraction(input: string): { items: ExtractionItem[]; studentName?: string | null; document?: DocumentCheck } | null {
@@ -54,8 +62,8 @@ export function paperDocumentConcern(extractions: unknown[], questions: { id: st
   for (const extraction of extractions) {
     const parsed = extraction ? parseExtraction(JSON.stringify(extraction)) : null;
     if (!parsed) continue;
-    if (parsed.document?.kind === "other") return "A page may not be a student paper. Check the photos and confirm each answer manually.";
-    if (parsed.document?.kind === "uncertain") return "A page is too unclear to identify confidently. Check the photos and confirm each answer manually.";
+    if (!documentReviewed(extraction) && parsed.document?.kind === "other") return "A page may not be a student paper. Check and confirm the page, or confirm each answer manually.";
+    if (!documentReviewed(extraction) && parsed.document?.kind === "uncertain") return "A page could not be identified confidently. Check and confirm the page, or confirm each answer manually.";
     const mapped = matchCandidates(questions, ignoreSections ? parsed.items.map(item => ({ ...item, section: null })) : parsed.items);
     matched += Object.values(mapped.byQuestion).reduce((sum, items) => sum + items.length, 0);
   }

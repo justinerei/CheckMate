@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { matchCandidates, paperDocumentConcern, parseExtraction, preferredReviewCandidate, type ExtractionItem } from "@/lib/extraction";
+import { documentNeedsReview, documentReviewed, matchCandidates, paperDocumentConcern, parseExtraction, preferredReviewCandidate, type ExtractionItem } from "@/lib/extraction";
 import ReviewBackLink, { ReviewPhotosLink } from "./review-back-link";
 import NextPaperButton from "../next-paper-button";
 import NameForm from "./name-form";
@@ -20,6 +20,7 @@ import { analyzeAutomaticReview, automaticDecision, forbidsErasures } from "@/li
 import ReviewWorkspace from "./review-workspace";
 import { AnswerVisibility, ReleaseResult } from "@/app/student/invite-controls";
 import ResultConcerns from "./result-concerns";
+import DocumentConfirmation from "./document-confirmation";
 import { hasInstructionConcern } from "@/lib/auto-review";
 
 export const instant = false;
@@ -34,6 +35,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
   const studentLinks = submission.status !== "DRAFT" ? await db.teacherStudent.findMany({ where: { teacherId: teacher.id }, orderBy: { student: { name: "asc" } }, select: { student: { select: { id: true, name: true, code: true } } } }) : [];
   const students = studentLinks.map(({ student }) => ({ id: student.id, name: student.name, codeSuffix: student.code.slice(-4) }));
   const unfinished = submission.pages.filter(page => page.status !== "COMPLETE");
+  const pagesNeedingIdentification = submission.status === "IN_REVIEW" ? submission.pages.filter(page => page.status === "COMPLETE" && page.extraction && !documentReviewed(page.extraction) && documentNeedsReview(parseExtraction(JSON.stringify(page.extraction))?.document)) : [];
   let counter = 0;
   const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, sectionTitle: section.title, answerStyle: submission.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle, instructions: section.instructions })));
   const suggestions: Record<string, { item: ExtractionItem; page: number }[]> = Object.create(null);
@@ -101,6 +103,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       return <div className={styles.scoreRow} key={question.id}><div className={styles.scoreRowHead}><div className={styles.scoreLabel}><span className={styles.scoreNumber}>{String(question.number).padStart(2, "0")}</span><strong>Question {question.number}</strong><span className={`${styles.scoreBadge} ${outcomeClass}`}>{outcome}</span></div><strong className={styles.scorePoints}>{points === null ? "—" : points} <span>/ {question.points.toString()} pts</span></strong></div><div className={styles.scoreAnswers}><p><span>Student answer</span><strong>{answer}</strong></p>{!essay && <p><span>Correct answer</span><strong>{key}</strong></p>}</div>{(saved?.instructionDecision === "VIOLATION" || (!saved && autoDecision(question) === "VIOLATION")) && <p className={styles.scoreInstruction}>Instructions not followed · {saved?.reviewStatus === "CONFIRMED" ? "confirmed by teacher" : "detected automatically; check the photo"}</p>}</div>;
     })}</div></section>;
     return <main className={styles.shell}><header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><ReviewBackLink id={id} quizId={submission.quizId} batchId={submission.batchId} studentId={submission.studentId} from={from} finalized={submission.status === "FINALIZED"} /></header><div className={`${styles.content} ${styles.reviewContent}`}><h1>Review and score</h1><p className={styles.description}>{submission.paperName || submission.student?.name || "Unnamed paper"} · {submission.quiz.title}. </p>{submission.status !== "FINALIZED" && <ReviewPhotosLink id={id} from={from} />}{submission.status === "FINALIZED" && <><p className={styles.success}>Final score: {submission.totalScore?.toString()} / {maximum}</p><div className={styles.resultActions}>{!submission.batchId && <NextPaperButton id={id} />}<Link href={`/submissions/${encodeURIComponent(id)}?from=review${paperOrigin(from) ? `&origin=${paperOrigin(from)}` : ""}`} className={styles.secondary}>View paper photos</Link></div></>}{unfinished.length > 0 && <p className={styles.help}>Some pages have not been extracted. You can extract them from the photos page, or enter answers manually after checking the photos.</p>}{unmatchedBlocked && <div className={styles.error} role="alert"><strong>Some readings could not be matched to a question.</strong><p>Open All answers and confirm every response against the photos before finalizing. Clear matched answers remain visible as suggestions.</p><ul>{unmatched.map(({ item, page }, index) => <li key={index}>Page {page} · question {item.number ?? "unknown"}: {item.answer ?? "unreadable"}</li>)}</ul></div>}
+      {pagesNeedingIdentification.length > 0 && <section className={styles.documentReview} aria-labelledby="check-paper-pages"><h2 id="check-paper-pages">Confirm paper pages</h2><p>Some pages need identification. Confirm each photo belongs to this quiz and student to continue with normal answer review. This does not confirm the detected answers.</p>{pagesNeedingIdentification.map(page => <DocumentConfirmation key={page.id} submissionId={id} pageId={page.id} pageNumber={page.pageNumber} />)}</section>}
       <ResultConcerns concerns={submission.concerns.map(concern => ({ id: concern.id, label: questions.find(question => question.id === concern.questionId) ? `Question ${questions.find(question => question.id === concern.questionId)!.number}` : "Question", message: concern.message, response: concern.response, resolved: !!concern.resolvedAt, currentStudent: concern.studentId === submission.studentId }))} /><ReviewWorkspace id={id} items={items} pages={submission.pages.map(({id,pageNumber}) => ({id,pageNumber}))} name={nameReview} score={score} finalized={submission.status === "FINALIZED"} nameReviewed={submission.nameReviewed} reviewBlocked={unmatchedBlocked} finalizationReason={finalizationReason} />
       </div></main>;
   }

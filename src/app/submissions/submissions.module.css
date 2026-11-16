@@ -478,3 +478,12 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .danger { display:inline-flex; align-items:center; justify-content:center; min-height:44px; width:max-content; padding:10px 16px; border:1px solid var(--action-danger); border-radius:7px; background:var(--action-danger); color:var(--action-danger-text); font:inherit; font-weight:600; cursor:pointer; }
 .danger:not(:disabled):hover { background:var(--action-danger-hover); border-color:var(--action-danger-hover); }
 @media(max-width:600px) { .confirmDialogActions .danger { width:100%; } }
+
+.documentReview { display:grid; gap:14px; margin:24px 0; padding:20px; border:1px solid #765541; border-radius:12px; background:#211b19; }
+.documentReview h2 { margin:0; font-size:18px; }
+.documentReview > p, .documentConfirm p { margin:0; color:#d5c3b9; font-size:13px; line-height:1.55; }
+.documentConfirm { display:grid; gap:12px; padding:16px; border:1px solid #51413a; border-radius:9px; background:#191719; }
+.documentConfirm > div { display:grid; gap:7px; }
+.documentConfirm a { width:fit-content; color:#ffad7d; font-size:13px; }
+.documentConfirm .check { margin:0; font-size:13px; }
+.documentConfirm button { justify-self:start; }

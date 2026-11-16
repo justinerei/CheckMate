@@ -1,4 +1,6 @@
-.panel { margin:0 0 24px; padding:18px 20px; border:1px solid #3b393b; border-radius:12px; background:#17171b; }
+.panel { display:flex; align-items:center; gap:16px; margin:0 0 24px; padding:18px 20px; border:1px solid #3b393b; border-radius:12px; background:#17171b; }
+.content { flex:1; min-width:0; }
+.mascot { width:64px; height:64px; flex:none; object-fit:contain; image-rendering:pixelated; }
 .head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
 .head > div { display:grid; gap:7px; min-width:0; }
 .label { color:#bcbcc4; font-size:12px; font-weight:600; }
@@ -10,5 +12,5 @@
 .bar::-webkit-progress-value { background:#ff8d4f; border-radius:999px; transition:width .3s ease; }
 .bar::-moz-progress-bar { background:#ff8d4f; border-radius:999px; }
 .note { margin:9px 0 0; color:#a8a8b1; font-size:12px; line-height:1.5; }
-@media(max-width:480px) { .panel { padding:16px; } .head { align-items:flex-start; flex-wrap:wrap; gap:10px; } }
+@media(max-width:480px) { .panel { padding:16px; gap:10px; } .mascot { width:52px; height:52px; } .head { align-items:flex-start; flex-wrap:wrap; gap:10px; } }
 @media(prefers-reduced-motion:reduce) { .bar::-webkit-progress-value { transition:none; } }

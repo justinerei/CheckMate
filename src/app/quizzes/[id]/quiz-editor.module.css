@@ -85,3 +85,18 @@
 .management { min-width:0; }.management > summary { cursor:pointer; padding:16px; border:1px solid #34343a; border-radius:9px; background:#161619; font-weight:600; }.management[open] > summary { margin-bottom:20px; }
 @media (min-width:901px) and (min-height:680px) { .shell { height:auto; min-height:100svh; overflow:visible; }.content { display:block; padding:28px 24px 80px; }.editorLayout { align-items:start; }.editorMain,.editorSidebar { overflow:visible; }.editorSidebar { max-height:none; }.questionNav { position:sticky; top:20px; } }
 @media(max-width:700px) { .focusedLayout { grid-template-columns:1fr; }.questionNav { max-height:230px; }.focusedHeader { padding:22px 22px 0; }.focusedCard .form { padding:12px 22px 22px; }.form .radioChoice input { width:auto; } }
+
+/* Keep quiz actions beside the question editor on wide screens. */
+.editorLayout { align-items:start; }
+.editorLayout > .focusedLayout { min-width:0; }
+.editorLayout .management { margin:0 0 14px; }
+@media (min-width:1101px) {
+  .editorLayout { grid-template-columns:minmax(0, 1fr) minmax(280px, 320px); gap:22px; }
+  .editorSidebar { position:sticky; top:20px; max-height:calc(100dvh - 40px); overflow-y:auto; overscroll-behavior:contain; }
+  .focusedLayout { grid-template-columns:minmax(170px, 210px) minmax(0, 1fr); }
+}
+@media (max-width:1100px) {
+  .editorLayout { display:flex; flex-direction:column; }
+  .editorLayout > .focusedLayout,.editorSidebar { width:100%; }
+  .editorSidebar { order:0; position:static; max-height:none; overflow:visible; }
+}

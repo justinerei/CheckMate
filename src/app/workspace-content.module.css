@@ -91,3 +91,36 @@
   .overview .rowAction { display:none; }
 }
 @media(max-width:380px) { .overview .row { grid-template-columns:34px minmax(0,1fr); } .overview .status,.overview .row time { grid-column:2; } }
+
+/* Give the dashboard an extra column only when there is room for it. */
+.dashboardLayout { display:grid; gap:32px; width:100%; }
+.dashboardLayout .overview { width:100%; }
+.attentionPanel { align-self:start; padding:24px; border:1px solid #393940; border-radius:16px; background:#151519; }
+.attentionHeading { display:flex; align-items:center; gap:12px; padding-bottom:22px; border-bottom:1px solid #34343b; }
+.attentionSymbol { display:grid; place-items:center; flex:none; width:42px; height:42px; border-radius:12px; color:#ffad7d; background:#39271e; font-size:21px; }
+.attentionHeading h2 { margin:0; font-size:16px; }
+.attentionHeading p { margin:5px 0 0; color:#b4b4be; font-size:12px; }
+.attentionGroup { padding:22px 0; border-bottom:1px solid #34343b; }
+.attentionGroup:last-child { padding-bottom:0; border-bottom:0; }
+.attentionGroupHeading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.attentionGroupHeading h3 { margin:0; font-size:13px; }
+.attentionGroupHeading > span { min-width:26px; padding:4px 8px; border-radius:20px; background:#303036; color:#d9d9e0; text-align:center; font-size:12px; }
+.attentionGroupHeading > .issueCount { background:#52301f; color:#ffbd91; }
+.attentionGroupHeading > a,.attentionMore { color:#ffad7d; font-size:12px; text-decoration:none; }
+.attentionGroupHeading > a:hover,.attentionMore:hover { text-decoration:underline; }
+.attentionList { display:grid; gap:4px; margin-top:12px; }
+.attentionList a { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:53px; padding:8px 10px; border-radius:8px; color:#f4f4f5; text-decoration:none; }
+.attentionList a:hover { background:#24242a; }
+.attentionList a:focus-visible,.attentionGroup a:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.attentionList a > span:first-child { display:grid; min-width:0; gap:5px; }
+.attentionList strong { overflow-wrap:anywhere; font-size:13px; }
+.attentionList small,.attentionEmpty { color:#b4b4be; font-size:12px; line-height:1.5; }
+.attentionList a > span:last-child { color:#ffad7d; font-size:20px; }
+.attentionEmpty { margin:14px 0 0; }
+.attentionMore { display:inline-block; margin:12px 10px 0; }
+@media(min-width:1500px) { .dashboardLayout { grid-template-columns:minmax(0,1000px) minmax(280px,340px); align-items:start; gap:clamp(28px,3vw,52px); } .attentionPanel { margin-top:52px; } }
+/* Balance the dashboard across the available desktop width. */
+@media(min-width:1500px) {
+  .dashboardLayout { max-width:1450px; margin-inline:auto; grid-template-columns:minmax(0,1fr) minmax(280px,320px); }
+  .attentionPanel { margin-top:200px; }
+}

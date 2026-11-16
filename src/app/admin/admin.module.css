@@ -38,14 +38,6 @@
 .workspaceCard small { display:block; margin-top:4px; color:#bcbcc4; font-size:11px; }
 .adminNav { display:grid; gap:5px; }
 .navLabel { margin:31px 9px 12px; color:#bcbcc4; font:11px var(--font-geist-mono),monospace; letter-spacing:.11em; }
-.adminNavItem { position:relative; display:flex; align-items:center; gap:11px; min-height:44px; padding:10px 11px; border:1px solid transparent; border-radius:9px; color:#c3c3cb; font-size:14px; text-decoration:none; transition:background-color .18s ease,color .18s ease,border-color .18s ease; }
-.adminNavItem svg { flex:none; color:#aaaab3; }
-.adminNavItem:hover { color:#fff; background:#26262d; }
-.adminNavItem:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
-.adminNavActive,.adminNavActive:hover { color:#ffd4ba; background:#372a26; border-color:#684636; font-weight:600; }
-.adminNavActive::before { content:""; position:absolute; left:-15px; top:8px; bottom:8px; width:3px; border-radius:3px; background:#ff9a62; }
-.adminNavActive svg,.adminNavActive .navArrow { color:#ff9a62; }
-.navArrow { margin-left:auto; color:transparent; font-size:20px; line-height:1; }
 .adminProfile { margin-top:auto; padding-top:14px; border-top:1px solid #38383f; }
 .profileAvatar { border-radius:50%; }
 .accountMenu { position:relative; }
@@ -84,5 +76,5 @@
 .overviewActivity li { display:grid; gap:5px; padding:13px 0; border-top:1px solid #393940; font-size:13px; }
 .overviewActivity span,.overviewEmpty { color:#bcbcc7; font-size:12px; line-height:1.5; }
 .overviewEmpty { margin:0; padding-top:14px; border-top:1px solid #393940; }
-@media(max-width:760px) { .adminNavActive::before { left:-10px; } .overviewPanels { grid-template-columns:1fr; } .accountPopover { position:static; margin-top:8px; box-shadow:none; } }
+@media(max-width:760px) { .overviewPanels { grid-template-columns:1fr; } .accountPopover { position:static; margin-top:8px; box-shadow:none; } }
 @media(max-width:420px) { .metrics > div + div { border-left:1px solid #393940; border-top:1px solid #393940; } }

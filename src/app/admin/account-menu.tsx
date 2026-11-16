@@ -24,7 +24,7 @@ export default function AccountMenu({ email, children }: { email: string; childr
   }}>
     <summary className={styles.accountTrigger}>
       <span className={styles.profileAvatar} aria-hidden="true">A</span>
-      <span className={styles.accountTriggerText}>My acc <small>Administrator</small></span>
+      <span className={styles.accountTriggerText}>My profile <small>Administrator</small></span>
       <span className={styles.accountChevron} aria-hidden="true">⌃</span>
     </summary>
     <div className={styles.accountPopover}>

@@ -16,6 +16,19 @@ const reading = { number: 1, section: 1, answer: "T", status: "clear", note: "",
 const page = (items, status = "COMPLETE") => ({ pageNumber: 1, status, extraction: { items } });
 const paper = (items = [reading]) => ({ expectedPages: 1, nameReviewed: true, pages: [page(items)], answers: [] });
 
+test("questionable documents require manual confirmation even when a number matches", () => {
+  const suspect = paper();
+  suspect.pages[0].extraction.document = { kind: "other", reason: "Unrelated text" };
+  const blocked = paperReviewSummary(suspect, [question], "BUILT");
+  assert.equal(blocked.flagged, 1);
+  assert.equal(blocked.finalizationBlocked, true);
+  assert.match(blocked.finalizationReason, /may not be a student paper/);
+  suspect.answers = [{ questionId: "q1", reviewStatus: "CONFIRMED", confirmedText: "T", instructionDecision: "FOLLOWED", objectiveScore: null, teacherScore: null }];
+  const confirmed = paperReviewSummary(suspect, [question], "BUILT");
+  assert.equal(confirmed.finalizationBlocked, false);
+  assert.equal(confirmed.proposed, 1);
+});
+
 test("summary matches automatic scoring and reports pending review and name", () => {
   assert.deepEqual(paperReviewSummary(paper(), [question], "BUILT"), { flagged: 0, unmatchedBlocked: false, finalizationBlocked: false, finalizationReason: null, nameReviewed: true, proposed: 1 });
   assert.deepEqual(paperReviewSummary(paper([{ ...reading, answer: "F" }]), [question], "BUILT"), { flagged: 0, unmatchedBlocked: false, finalizationBlocked: false, finalizationReason: null, nameReviewed: true, proposed: 0 });

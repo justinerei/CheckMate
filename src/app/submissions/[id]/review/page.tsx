@@ -6,7 +6,7 @@ import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { matchCandidates, parseExtraction, preferredReviewCandidate, type ExtractionItem } from "@/lib/extraction";
+import { matchCandidates, paperDocumentConcern, parseExtraction, preferredReviewCandidate, type ExtractionItem } from "@/lib/extraction";
 import ReviewBackLink, { ReviewPhotosLink } from "./review-back-link";
 import NextPaperButton from "../next-paper-button";
 import NameForm from "./name-form";
@@ -49,7 +49,8 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
   const nameReview = <>{submission.status === "IN_REVIEW" && <NameForm id={id} value={submission.paperName} suggestion={nameSuggestion} reviewed={submission.nameReviewed} />}{submission.status !== "DRAFT" && <PaperStudent id={id} selectedId={submission.studentId} selectedName={submission.student?.name ?? null} students={students} />}</>;
   {
     const maximum = questions.reduce((sum, q) => sum + Number(q.points), 0);
-    const autoDecision = (question: typeof questions[number]) => unfinished.length ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions);
+    const documentConcern = !unfinished.length && submission.status === "IN_REVIEW" ? paperDocumentConcern(submission.pages.map(page => page.extraction), questions, submission.quiz.source === "EXISTING") : null;
+    const autoDecision = (question: typeof questions[number]) => unfinished.length || documentConcern ? null : automaticDecision((suggestions[question.id] ?? []).map(c => c.item), question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions);
     const scored = questions.map(question => { const saved = submission.answers.find(a => a.questionId === question.id); const automatic = !saved ? autoDecision(question) : null; const points = reviewPoints(saved, submission.status === "FINALIZED", question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, suggestions[question.id]?.[0]?.item.answer ?? "", objectivePoints); return { question, saved, points }; });
     const flagged = scored.filter(item => item.points === null);
     const unmatchedBlocked = requiresUnmatchedReview(unmatched.length, questions, submission.answers);
@@ -67,6 +68,7 @@ export default async function ReviewPage({ params, searchParams }: { params: Pro
       let reason = "";
       if (points === null) {
         if (saved) reason = question.type === "ESSAY" && saved.teacherScore === null ? "The essay score has not been saved. Score it using the rubric." : "This answer has not been fully confirmed. Check the answer and save your decision.";
+        else if (documentConcern) reason = documentConcern;
         else if (question.type === "ESSAY") reason = "Essay answers need a teacher to score the response using the rubric.";
         else if (preferred && candidates.length > 1) reason = "One photo has a readable answer; another was reported blank. Check the paper before confirming.";
         else if (unfinished.length) reason = "Some paper pages have not finished checking. Read or retry those pages, or review answers manually.";

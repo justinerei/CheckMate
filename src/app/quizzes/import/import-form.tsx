@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PendingScreen } from "@/app/pending-screen";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
 import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
+import { documentNeedsReview } from "@/lib/extraction";
 import { saveImportedQuiz } from "./actions";
 import styles from "./import.module.css";
 
@@ -114,18 +115,21 @@ export default function ImportQuizForm() {
       const pages = await imagePages(quizFiles, setProgress);
       const extracted: ImportRow[] = [];
       let emptyPages = 0;
+      const questionable: string[] = [];
       for (const [index, image] of pages.entries()) {
         setProgress(`Scanning quiz page ${index + 1} of ${pages.length}…`);
         const data = new FormData(); data.set("file", image, "quiz-page.jpg");
         const response = await fetch("/api/quizzes/import/extract", { method: "POST", body: data });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Could not scan this quiz page.");
+        if (documentNeedsReview(result.document)) questionable.push(`quiz page ${index + 1}`);
         if (!result.questions.length) emptyPages++;
         extracted.push(...result.questions);
         if (extracted.length > 200) throw new Error("A quiz can contain at most 200 questions.");
       }
-      if (!extracted.length) throw new Error("No complete questions were found. Try clearer files.");
+      if (!extracted.length) throw new Error("No recognizable quiz questions were found across the uploaded pages. Check the files or try clearer images.");
       let reviewed = extracted;
+      let noKeyAnswers = false;
       if (keyFiles.length) {
         const keyPages = await imagePages(keyFiles, setProgress);
         const keyItems: KeyItem[] = [];
@@ -135,13 +139,16 @@ export default function ImportQuizForm() {
           const response = await fetch("/api/answer-key/extract", { method: "POST", body: data });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || "Could not scan the answer key.");
+          if (documentNeedsReview(result.document)) questionable.push(`answer key page ${index + 1}`);
           keyItems.push(...result.items);
         }
         reviewed = applyImportedKey(extracted, keyItems);
+        noKeyAnswers = !keyItems.some(item => item.answer?.trim());
       }
+      if (questionable.length && !window.confirm(`Check ${questionable.join(", ")}: the scan could not confidently identify the page. Continue to review the extracted content?`)) return;
       setRows(reviewed);
       setScanned(true); setFilesChanged(false);
-      setNotice(`${reviewed.length} questions found.${emptyPages ? ` No complete questions were found on ${emptyPages} page(s).` : ""} Compare every question, choice and answer with the original. Questions may be missing or split across pages.`);
+      setNotice(`${reviewed.length} questions found.${emptyPages ? ` No complete questions were found on ${emptyPages} page(s).` : ""}${noKeyAnswers ? " No recognizable answers were found in the answer key; add them manually." : ""}${questionable.length ? ` Check: ${questionable.join(", ")}.` : ""} Compare every question, choice and answer with the original. Questions may be missing or split across pages.`);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not scan the files. Please try again."); }
     finally { setBusy(false); setScanning(false); setProgress(""); }
   }

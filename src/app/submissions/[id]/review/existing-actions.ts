@@ -1,7 +1,7 @@
 "use server";
 import { db } from "@/lib/db";
 import { getTeacher } from "@/lib/teacher";
-import { canConfirmClearSuggestion, matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
+import { canConfirmClearSuggestion, matchCandidates, paperDocumentConcern, parseExtraction, type ExtractionItem } from "@/lib/extraction";
 import { objectivePoints } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
 import { sumCriterionScores } from "@/lib/rubric";
@@ -47,6 +47,8 @@ export async function finalizeExisting(submissionId: string): Promise<{ error: s
       if (!questions.length) return "The answer key has no questions.";
       if (!pagesComplete(submission.expectedPages, submission.pages.map(page => page.pageNumber))) return "Upload and confirm all pages before finalizing.";
       const manuallyComplete = questions.every(q => submission.answers.some(a => a.questionId === q.id && a.reviewStatus === "CONFIRMED" && a.confirmedText !== null));
+      const documentConcern = paperDocumentConcern(submission.pages.map(page => page.extraction), questions, submission.quiz.source === "EXISTING");
+      if (!manuallyComplete && documentConcern) return documentConcern;
       const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
       let unmatched = false;
       if (!manuallyComplete) {
@@ -99,6 +101,8 @@ export async function confirmClearAnswers(submissionId: string, expectedItems: {
       if (!submission || !submission.pages.length || submission.pages.some(page => page.status !== "COMPLETE")) return { error: "Read every page before confirming suggestions together.", count: 0 };
       let counter = 0;
       const questions = submission.quiz.sections.flatMap((section, index) => section.questions.map((question, position) => ({ ...question, number: submission.quiz.numbering === "CONTINUOUS" ? ++counter : position + 1, section: index + 1, instructions: section.instructions, answerStyle: submission.quiz.source === "BUILT" ? builtAnswerStyle(question.type) : section.answerStyle })));
+      const documentConcern = paperDocumentConcern(submission.pages.map(page => page.extraction), questions, submission.quiz.source === "EXISTING");
+      if (documentConcern) return { error: documentConcern, count: 0 };
       const suggestions: Record<string, ExtractionItem[]> = Object.create(null);
       for (const page of submission.pages) {
         const parsed = page.extraction ? parseExtraction(JSON.stringify(page.extraction)) : null;

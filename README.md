@@ -121,6 +121,8 @@ Each groupmate's local PostgreSQL database starts empty. Cloning the repo does n
 
 Teachers may also create an account from the sign-in page using their name, email, and a password of at least 12 characters. Existing Google accounts continue to use Google sign-in. Accounts with the same email are not linked automatically. After five failed password attempts, the account is temporarily locked for 15 minutes. Email verification and password reset are not yet available, so keep your password safe.
 
+On the shared sign-in page, Continue with Google signs existing users in to their saved role. A new verified Google user chooses Teacher or Student before the account is created; the role-selection session expires after 10 minutes. If an email is already registered by another sign-in method, accounts are not linked automatically.
+
 ### Local demo data
 
 After applying migrations, set a local demo password (12–128 characters) and run the seeder in PowerShell:

@@ -36,17 +36,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const collision = await db.user.findFirst({ where: { email: { equals: identity.email, mode: "insensitive" } } });
         if (collision) return false;
         const signupRole = (await cookies()).get("checkmate-signup-role")?.value;
-        if (signupRole !== "TEACHER" && signupRole !== "STUDENT") return false;
-        await db.user.create({ data: { ...identity, role: signupRole } });
+        if (signupRole === "TEACHER" || signupRole === "STUDENT") await db.user.create({ data: { ...identity, role: signupRole } });
       }
       return true;
     },
-    async jwt({ token, profile }) {
+    async jwt({ token, profile, account }) {
       if (profile?.sub) token.sub = profile.sub;
+      if (account?.provider === "credentials") delete token.pendingGoogle;
+      if (account?.provider === "google" && profile) {
+        const identity = googleIdentity(profile);
+        if (identity && !await db.user.findUnique({ where: { googleId: identity.googleId }, select: { id: true } })) {
+          token.pendingGoogle = { ...identity, expiresAt: Date.now() + 10 * 60 * 1000 };
+        } else delete token.pendingGoogle;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.sub) session.user.id = token.sub;
+      if (token.pendingGoogle) (session as typeof session & { pendingGoogle?: unknown }).pendingGoogle = token.pendingGoogle;
       return session;
     },
   },

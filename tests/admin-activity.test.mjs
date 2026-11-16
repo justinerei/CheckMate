@@ -17,6 +17,15 @@ test('unchanged or unavailable accounts do not produce an audit event', async ()
   assert.equal(await changeAccountAccess(tx, 'admin', 'missing', false), false);
 });
 
+test('disable reasons are recorded without attaching them to enable actions', async () => {
+  const events = [];
+  const tx = { user: { async updateMany() { return { count: 1 }; } }, adminActivity: { async create(args) { events.push(args.data); } } };
+  await changeAccountAccess(tx, 'admin', 'teacher', false, 'Duplicate account');
+  await changeAccountAccess(tx, 'admin', 'teacher', true, 'Old reason');
+  assert.equal(events[0].reason, 'Duplicate account');
+  assert.equal(events[1].reason, undefined);
+});
+
 test('an audit write failure is propagated so the enclosing transaction can roll back', async () => {
   const tx = { user: { async updateMany() { return { count: 1 }; } }, adminActivity: { async create() { throw new Error('audit unavailable'); } } };
   await assert.rejects(() => changeAccountAccess(tx, 'admin', 'teacher', false), /audit unavailable/);

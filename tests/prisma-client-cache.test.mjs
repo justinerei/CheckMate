@@ -12,5 +12,6 @@ test("a cached client without the archive field is not reused", () => {
   assert.equal(isCurrentClient(old), false);
   const beforeAdmin = { ...old, studentInvite: { findFirst() {} }, submission: { fields: { releasedAt: {} } } };
   assert.equal(isCurrentClient(beforeAdmin), false);
-  assert.equal(isCurrentClient({ ...beforeAdmin, adminActivity: { findFirst() {} } }), true);
+  assert.equal(isCurrentClient({ ...beforeAdmin, adminActivity: { findFirst() {} } }), false);
+  assert.equal(isCurrentClient({ ...beforeAdmin, adminActivity: { findFirst() {}, fields: { reason: {} } } }), true);
 });

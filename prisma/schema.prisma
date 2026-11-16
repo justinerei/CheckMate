@@ -61,6 +61,7 @@ model AdminActivity {
   actorId   String
   targetId  String
   action    String
+  reason    String?
   createdAt DateTime @default(now())
   actor     User     @relation("AdminActor", fields: [actorId], references: [id], onDelete: Restrict)
   target    User     @relation("AdminTarget", fields: [targetId], references: [id], onDelete: Restrict)

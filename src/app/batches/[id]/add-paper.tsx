@@ -10,7 +10,7 @@ export default function AddPaper({ id }: { id: string }) {
     <summary><span aria-hidden="true">+</span> Add another paper</summary>
     <form action={action} className={styles.addForm}><PendingScreen pending={pending} message="Adding the paper…" />
       <label htmlFor="batch-pages">How many pages are in this paper?</label>
-      <div className={styles.addControls}><select id="batch-pages" name="expectedPages" defaultValue="1"><option value="1">1 page</option><option value="2">2 pages</option><option value="3">3 pages</option></select><button disabled={pending}>{pending ? "Adding…" : "Continue to photos"}</button></div>
+      <div className={styles.addControls}><select id="batch-pages" name="expectedPages" defaultValue="1"><option value="1">1 page</option><option value="2">2 pages</option><option value="3">3 pages</option></select><button disabled={pending}>{pending ? "Adding…" : "Add paper & upload photos"}</button></div>
       {state.error && <p className={styles.error} role="alert">{state.error}</p>}
     </form>
   </details>;

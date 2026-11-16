@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { PendingScreen } from "@/app/pending-screen";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
 import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
+import { documentNeedsReview } from "@/lib/extraction";
+import { clipboardImages } from "@/lib/clipboard-images";
 import { saveImportedQuiz } from "./actions";
 import styles from "./import.module.css";
 
@@ -114,18 +116,21 @@ export default function ImportQuizForm() {
       const pages = await imagePages(quizFiles, setProgress);
       const extracted: ImportRow[] = [];
       let emptyPages = 0;
+      const questionable: string[] = [];
       for (const [index, image] of pages.entries()) {
         setProgress(`Scanning quiz page ${index + 1} of ${pages.length}…`);
         const data = new FormData(); data.set("file", image, "quiz-page.jpg");
         const response = await fetch("/api/quizzes/import/extract", { method: "POST", body: data });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Could not scan this quiz page.");
+        if (documentNeedsReview(result.document)) questionable.push(`quiz page ${index + 1}`);
         if (!result.questions.length) emptyPages++;
         extracted.push(...result.questions);
         if (extracted.length > 200) throw new Error("A quiz can contain at most 200 questions.");
       }
-      if (!extracted.length) throw new Error("No complete questions were found. Try clearer files.");
+      if (!extracted.length) throw new Error("No recognizable quiz questions were found across the uploaded pages. Check the files or try clearer images.");
       let reviewed = extracted;
+      let noKeyAnswers = false;
       if (keyFiles.length) {
         const keyPages = await imagePages(keyFiles, setProgress);
         const keyItems: KeyItem[] = [];
@@ -135,13 +140,16 @@ export default function ImportQuizForm() {
           const response = await fetch("/api/answer-key/extract", { method: "POST", body: data });
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || "Could not scan the answer key.");
+          if (documentNeedsReview(result.document)) questionable.push(`answer key page ${index + 1}`);
           keyItems.push(...result.items);
         }
         reviewed = applyImportedKey(extracted, keyItems);
+        noKeyAnswers = !keyItems.some(item => item.answer?.trim());
       }
+      if (questionable.length && !window.confirm(`Check ${questionable.join(", ")}: the scan could not confidently identify the page. Continue to review the extracted content?`)) return;
       setRows(reviewed);
       setScanned(true); setFilesChanged(false);
-      setNotice(`${reviewed.length} questions found.${emptyPages ? ` No complete questions were found on ${emptyPages} page(s).` : ""} Compare every question, choice and answer with the original. Questions may be missing or split across pages.`);
+      setNotice(`${reviewed.length} questions found.${emptyPages ? ` No complete questions were found on ${emptyPages} page(s).` : ""}${noKeyAnswers ? " No recognizable answers were found in the answer key; add them manually." : ""}${questionable.length ? ` Check: ${questionable.join(", ")}.` : ""} Compare every question, choice and answer with the original. Questions may be missing or split across pages.`);
     } catch (err) { setError(err instanceof Error ? err.message : "Could not scan the files. Please try again."); }
     finally { setBusy(false); setScanning(false); setProgress(""); }
   }
@@ -163,8 +171,8 @@ export default function ImportQuizForm() {
     <fieldset className={styles.formFields} disabled={busy}>
     <section className={styles.panel} aria-labelledby="import-files-heading"><h2 id="import-files-heading">1 / Choose your files</h2>
       <label>Quiz title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Science Quiz 1" /></label>
-      <label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label>
-      <label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label>
+      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Quiz files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectQuiz([...quizFiles, ...images]); } }}><label>Quiz PDF or photos<input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {quizFiles.length} files selected</small></div>
+      <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Answer key files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectKey([...keyFiles, ...images]); } }}><label>Separate answer key <span>(optional)</span><input ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label><small>Click here and press Ctrl+V to paste a screenshot · {keyFiles.length} files selected</small></div>
       {keyFiles.length > 0 && <button type="button" className={styles.secondary} disabled={busy} onClick={() => { if (keyInput.current) keyInput.current.value = ""; selectKey([]); }}>Remove answer key</button>}
       <p>Up to 10 pages per upload; answer keys can include at most 2 photos. PDFs: 10 MB per file; photos: 8 MB each. Supports multiple choice (A–D), true/false, identification and essay questions. Files are sent to Groq for scanning; avoid uploading sensitive information.</p>
       <button type="button" disabled={busy || !quizFiles.length} onClick={scan}>{busy ? "Working…" : "Scan quiz"}</button>
@@ -177,7 +185,7 @@ export default function ImportQuizForm() {
       <div className={styles.sources}>{previews.map(preview => <a key={preview.url} href={preview.url} target="_blank" rel="noreferrer">Open {preview.name} ↗</a>)}</div>
       {keyPreviews.length > 0 && <div className={styles.sources}>{keyPreviews.map(preview => <a key={preview.url} href={preview.url} target="_blank" rel="noreferrer">Open answer key: {preview.name} ↗</a>)}</div>}
       {missing > 0 && <p className={styles.notice}>{missing} {missing === 1 ? "question needs" : "questions need"} an answer. You can save the draft and add answers later; complete them before printing or checking.</p>}
-      {rows.map((row, index) => <article className={styles.question} key={index}><div className={styles.rowTop}><h3>Question {index + 1}</h3><div className={styles.actions}><button type="button" className={styles.secondary} disabled={busy || index === 0} onClick={() => move(index, -1)} aria-label={`Move question ${index + 1} earlier`}>↑</button><button type="button" className={styles.secondary} disabled={busy || index === rows.length - 1} onClick={() => move(index, 1)} aria-label={`Move question ${index + 1} later`}>↓</button><button type="button" className={styles.secondary} disabled={busy} onClick={() => setRows(previous => previous.filter((_, i) => i !== index))}>Remove</button></div></div>
+      {rows.map((row, index) => <article className={styles.question} key={index}><div className={styles.rowTop}><h3>Question {index + 1}</h3><div className={styles.actions}><button type="button" className={styles.secondary} disabled={busy || index === 0} onClick={() => move(index, -1)} aria-label={`Move question ${index + 1} up`}>↑</button><button type="button" className={styles.secondary} disabled={busy || index === rows.length - 1} onClick={() => move(index, 1)} aria-label={`Move question ${index + 1} down`}>↓</button><button type="button" className={styles.secondary} disabled={busy} onClick={() => setRows(previous => previous.filter((_, i) => i !== index))}>Remove</button></div></div>
         <div className={styles.columns}><label>Printed number<input type="number" min="1" max="500" value={row.number} onChange={event => edit(index, { number: Number(event.target.value), answer: "" })} /></label><label>Type<select value={row.type} onChange={event => edit(index, { type: event.target.value as ImportType, choices: [], answer: "" })}>{types.map(type => <option value={type.value} key={type.value}>{type.label}</option>)}</select></label></div>
         <label>Section title<input value={row.sectionTitle} maxLength={120} onChange={event => edit(index, { sectionTitle: event.target.value })} placeholder="Same section as previous question" /></label>
         <label>Section instructions<textarea value={row.directions} maxLength={1000} rows={2} onChange={event => edit(index, { directions: event.target.value })} /></label>

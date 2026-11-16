@@ -10,6 +10,7 @@ datasource db {
 enum UserRole {
   TEACHER
   ADMIN
+  STUDENT
 }
 
 enum QuestionType {
@@ -50,6 +51,7 @@ model User {
   batches       CheckingBatch[]
   keyChanges    AnswerKeyHistory[]
   resultChanges ResultHistory[]
+  studentRecord Student?
 }
 
 model Student {
@@ -58,8 +60,23 @@ model Student {
   name        String
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  accountId   String?          @unique
+  account     User?            @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  invites     StudentInvite[]
   teachers    TeacherStudent[]
   submissions Submission[]
+}
+
+model StudentInvite {
+  id        String    @id @default(cuid())
+  studentId String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }
 
 model TeacherStudent {
@@ -113,6 +130,7 @@ model QuizSection {
   answerStyle   String     @default("circle")
   position      Int
   defaultPoints Decimal    @default(1) @db.Decimal(8, 2)
+  questionLayout String    @default("CUSTOM")
   quiz          Quiz       @relation(fields: [quizId], references: [id], onDelete: Cascade)
   questions     Question[]
 
@@ -220,6 +238,7 @@ model Submission {
   essayScore     Decimal?           @db.Decimal(8, 2)
   totalScore     Decimal?           @db.Decimal(8, 2)
   finalizedAt    DateTime?
+  releasedAt     DateTime?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   quiz           Quiz               @relation(fields: [quizId], references: [id], onDelete: Restrict)

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createExisting, type KeyRow } from "./actions";
 import { isPdfFile, MAX_ANSWER_KEY_PHOTOS, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
 import { hasReadableKeyAnswer } from "@/lib/answer-key-reading";
+import { documentNeedsReview, type DocumentCheck } from "@/lib/extraction";
 import { answerKeyReturnPath } from "@/lib/answer-key-navigation";
 import { groupExtractedKeyRows } from "@/lib/answer-key-sections";
 import EssayRubric from "./essay-rubric";
@@ -50,7 +51,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
   const [draftReady, setDraftReady] = useState(false);
   const [progress, setProgress] = useState("");
   const previewPanelRef = useRef<HTMLElement>(null);
-  const scanCache = useRef(new Map<File, { rows: KeyRow[]; pages: number }>());
+  const scanCache = useRef(new Map<File, { rows: KeyRow[]; pages: number; checks: DocumentCheck[] }>());
   const [scanItems, setScanItems] = useState<{ name: string; message: string; ok: boolean }[]>([]);
   useEffect(() => { const timer = window.setTimeout(() => { try { const raw = localStorage.getItem(draftKey); if (raw) { const draft = JSON.parse(raw); if (Array.isArray(draft.rows) && typeof draft.title === "string") { setRows(draft.rows); setQuizNoErasuresEnabled(typeof draft.quizNoErasures === "boolean" ? draft.quizNoErasures : draft.rows.length > 0 && draft.rows.every((row: KeyDraftRow) => forbidsErasures(row.directions))); setTitle(draft.title); setReviewStarted(draft.reviewStarted ?? hasAnswerKeyDraft(draft.title, draft.rows)); } } } catch {} setDraftReady(true); }, 0); return () => window.clearTimeout(timer); }, [draftKey]);
   useEffect(() => { if (!draftReady) return; try { if (quizNoErasures || hasAnswerKeyDraft(title, rows)) localStorage.setItem(draftKey, JSON.stringify({ title, rows, reviewStarted, quizNoErasures })); else localStorage.removeItem(draftKey); } catch {} }, [title, rows, reviewStarted, draftReady, draftKey, quizNoErasures]);
@@ -72,6 +73,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
     setScanning(true); setBusy(true);
     const statuses: { name: string; message: string; ok: boolean }[] = [];
     const allRows: KeyRow[] = [];
+    const checks: DocumentCheck[] = [];
     let totalPages = 0;
     try {
       for (const [index, selectedFile] of selected.entries()) {
@@ -98,22 +100,25 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
             } else images.push(selectedFile);
             if (totalPages + images.length > 10) throw new Error("The answer key can have at most 10 pages in total.");
             const detected: KeyRow[] = [];
+            const pageChecks: DocumentCheck[] = [];
             for (const image of images) {
               const data = new FormData(); data.set("file", image, "key.jpg");
               const response = await fetch("/api/answer-key/extract", { method: "POST", body: data }); const result = await response.json();
               if (!response.ok) throw new Error(result.error || "Could not check this file.");
+              pageChecks.push(result.document);
               detected.push(...result.items.map((item: Partial<KeyRow>) => ({ ...blank(Number(item.number)), ...item, section: 1, points: 1 })));
             }
-            if (!hasReadableKeyAnswer(detected)) throw new Error("No answers found. Retake in good lighting, choose a clearer file, or enter answers manually.");
-            cached = { rows: detected, pages: images.length }; scanCache.current.set(selectedFile, cached);
+            cached = { rows: detected, pages: images.length, checks: pageChecks }; scanCache.current.set(selectedFile, cached);
           }
           totalPages += cached.pages;
           if (totalPages > 10) throw new Error("The answer key can have at most 10 pages in total.");
-          allRows.push(...cached.rows); statuses.push({ name: selectedFile.name, message: "Answers detected — check the preview", ok: true });
+          allRows.push(...cached.rows); checks.push(...cached.checks); statuses.push({ name: selectedFile.name, message: cached.checks.some(documentNeedsReview) ? "Some pages need a closer look" : cached.rows.length ? "Answers detected — check the preview" : "No answers detected in this file", ok: true });
         } catch (err) { statuses.push({ name: selectedFile.name, message: err instanceof TypeError ? "Could not connect. Check your connection, then retry the file check. You can also enter answers manually." : err instanceof Error ? err.message : "Could not read this file. Retry the file check or enter answers manually.", ok: false }); }
         setScanItems([...statuses]);
       }
       if (statuses.every(item => item.ok)) {
+        if (!hasReadableKeyAnswer(allRows)) { reportUploadError("No recognizable answers were found across the uploaded pages. Check the files, retry clearer images, or enter the key manually."); return null; }
+        if (checks.some(documentNeedsReview) && !window.confirm("Some uploaded pages may not be an answer key or are hard to identify. Check the original pages and the detected answers. Continue to review?")) return null;
         setNotification({ message: "Scan complete. Review the detected answers.", error: false });
         return allRows;
       }
@@ -160,7 +165,7 @@ export default function KeyForm({ teacherId, fromChecking = false }: { teacherId
       {notification && <ScanNotification message={notification.message} error={notification.error} onDismiss={() => setNotification(null)} />}
       {file && <section ref={previewPanelRef} className={styles.uploadPreviewPanel} aria-label="Selected answer key files">
         <div className={styles.uploadPreviewHeader}><div><strong>Review your files</strong><p>Check the pages before scanning.</p><p aria-live="polite">{photoCount} of {MAX_ANSWER_KEY_PHOTOS} photos selected · PDFs do not count toward the photo limit</p></div><span>{files.length} {files.length === 1 ? "file" : "files"}</span></div>
-        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add photos or PDF</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy || files.length >= 10 || photoCount >= MAX_ANSWER_KEY_PHOTOS} onClick={() => setCameraTarget("add")}>+ Add photo with camera</button>}</div>
+        <div className={styles.uploadPreviewActions}><label className={styles.previewReplace}><span>+ Add photos or PDF</span><input type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={e => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (selected.length) selectFiles(selected, true); }} /></label>{mobile && <button type="button" className={styles.previewReplace} disabled={busy || files.length >= 10 || photoCount >= MAX_ANSWER_KEY_PHOTOS} onClick={() => setCameraTarget("add")}>+ Add photo with camera</button>}</div><p className={styles.help}>On a computer, paste another screenshot with Ctrl+V.</p>
         <div className={styles.previewPages}>{files.map((item, index) => {
           const url = index === 0 ? preview : otherPreviews[index - 1]?.url;
           const status = scanItems[index];

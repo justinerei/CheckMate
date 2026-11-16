@@ -11,6 +11,8 @@
 @media(prefers-reduced-motion:reduce) { .action { transition:none; } }
 .libraryCount { display:inline-flex; align-items:center; justify-content:center; min-width:26px; padding:4px 8px; margin-left:6px; border:1px solid #45454c; border-radius:20px; color:#bcbcc4; font-size:12px; vertical-align:middle; }
 .quizGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr)); gap:14px; margin-top:20px; }
+.quizCardWrap { position:relative; min-width:0; }
+.quizCardWrap .quizCard { height:100%; }
 .quizCard { min-height:185px; display:flex; flex-direction:column; gap:12px; padding:20px; border:1px solid #393940; border-radius:11px; background:#17171b; color:#f4f4f5; text-decoration:none; }
 .quizCard:hover { background:#202024; border-color:#777780; }.quizCard:focus-visible { outline:3px solid #ff9b63; outline-offset:3px; }.quizCard>strong { margin-top:4px; font-size:17px; line-height:1.35; overflow-wrap:anywhere; }.cardTop { display:flex; justify-content:space-between; align-items:center; color:#ffad7d; }.cardMeta { color:#bcbcc4; font-size:13px; }.cardFooter { display:flex; justify-content:space-between; gap:8px; margin-top:auto; padding-top:12px; border-top:1px solid #393940; color:#bcbcc4; font-size:12px; }.cardFooter span { color:#f4f4f5; }
 .libraryRow { display:flex; align-items:center; gap:20px; border-bottom:1px solid #34343b; }
@@ -41,7 +43,7 @@
 .emptyWithMate { display:flex; align-items:center; gap:20px; }
 .emptyMate { width:112px; height:112px; object-fit:contain; flex:none; image-rendering:pixelated; }
 @media(max-width:480px) { .emptyWithMate { gap:14px; }.emptyMate { width:76px; height:76px; } }
-.archiveSection details { border:1px solid #3a3a42; border-radius:12px; padding:18px 20px; background:#17171b; }.archiveSection summary { cursor:pointer; font-weight:600; min-height:36px; }.archiveSection p { color:#bcbcc4; font-size:14px; line-height:1.5; }
+.archiveSection > details { border:1px solid #3a3a42; border-radius:12px; padding:18px 20px; background:#17171b; }.archiveSection > details > summary { cursor:pointer; font-weight:600; min-height:36px; }.archiveSection > details > p { color:#bcbcc4; font-size:14px; line-height:1.5; }
 .eyebrow,.sectionIndex,.metrics span { font-size:12px; color:#bcbcc4; }
 .metrics small,.rowMain small,.row time,.libraryMain time,.cardFooter,.librarySearch p { font-size:13px; color:#c3c3ca; }
 .viewAll,.empty a { display:inline-flex; align-items:center; min-height:44px; }

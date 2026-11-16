@@ -53,7 +53,8 @@ export async function removeStudentFromList(studentId: string): Promise<{ error:
     const removed = await db.$transaction(async tx => {
       const link = await tx.teacherStudent.findUnique({ where: { teacherId_studentId: { teacherId, studentId } }, select: { studentId: true } });
       if (!link) return false;
-      await tx.submission.updateMany({ where: { teacherId, studentId, quiz: { teacherId } }, data: { studentId: null } });
+      await tx.submission.updateMany({ where: { teacherId, studentId, quiz: { teacherId } }, data: { studentId: null, releasedAt: null } });
+      await tx.studentInvite.updateMany({ where: { studentId, usedAt: null }, data: { usedAt: new Date() } });
       await tx.teacherStudent.deleteMany({ where: { teacherId, studentId } });
       return true;
     }, { isolationLevel: "Serializable" });

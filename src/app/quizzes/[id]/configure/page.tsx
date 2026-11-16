@@ -15,7 +15,7 @@ export default async function ConfigureQuiz({ params }: { params: Promise<{ id: 
   const quiz = await db.quiz.findFirst({ where: { id, teacherId: teacher.id, source: "BUILT" }, include: { _count: { select: { submissions: true } }, sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" } } } } } });
   if (!quiz) notFound();
   const labels: Record<string, string> = { MULTIPLE_CHOICE: "Multiple Choice", IDENTIFICATION: "Identification", TRUE_FALSE: "True or False", ESSAY: "Essay" };
-  const editable = !quiz._count.submissions && quiz.sections.every(s => s.questions.length > 0 && !s.instructions.trim() && Number(s.defaultPoints) === 1 && s.title === labels[s.questions[0].type] && s.questions.every(q => !q.text.trim() && q.type === s.questions[0].type));
+  const editable = !quiz._count.submissions && quiz.sections.every(s => s.questions.length > 0 && s.questionLayout === "CUSTOM" && !s.instructions.trim() && Number(s.defaultPoints) === 1 && s.title === labels[s.questions[0].type] && s.questions.every(q => !q.text.trim() && q.type === s.questions[0].type));
   if (!editable) redirect(`/quizzes/${encodeURIComponent(id)}`);
   const initial = quiz.sections.filter(section => section.questions.length > 0 && section.questions.every(q => q.type === section.questions[0].type)).map(section => ({ type: section.questions[0].type, count: section.questions.length }));
   if (initial.length !== quiz.sections.length) redirect(`/quizzes/${encodeURIComponent(id)}`);

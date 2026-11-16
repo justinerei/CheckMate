@@ -1,0 +1,13 @@
+.actions { position: absolute; top: 12px; right: 12px; z-index: 1; }
+.menu { position: relative; }
+.menu summary { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid transparent; border-radius: 9px; color: #d4d4da; cursor: pointer; font-size: 24px; line-height: 1; list-style: none; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary:hover, .menu[open] summary { background: #29292e; border-color: #45454c; color: #fff; }
+.menu summary:focus-visible, .dropdown button:focus-visible { outline: 2px solid #ff9b63; outline-offset: 2px; }
+.dropdown { position: absolute; top: 44px; right: 0; width: 210px; padding: 6px; border: 1px solid #45454c; border-radius: 10px; background: #202024; box-shadow: 0 12px 30px #0008; }
+.dropdown button { display: block; width: 100%; padding: 11px 12px; border: 0; border-radius: 6px; background: transparent; color: #f4f4f5; text-align: left; cursor: pointer; }
+.dropdown button:hover { background: #34343a; }
+.dropdown button.delete { color: #ffaaa2; }
+.dropdown button:disabled { opacity: .5; cursor: wait; }
+.hint { display: block; padding: 8px 12px; color: #bcbcc4; font-size: 12px; line-height: 1.4; }
+.error { position: absolute; right: 0; width: 210px; padding: 10px; border-radius: 8px; background: #502b26; color: #fff; font-size: 13px; }

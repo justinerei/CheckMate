@@ -1,6 +1,6 @@
 import { automaticDecision } from "@/lib/auto-review";
 import { normalizeBuiltReading } from "@/lib/built-review";
-import { matchCandidates, parseExtraction, type ExtractionItem } from "@/lib/extraction";
+import { matchCandidates, paperDocumentConcern, parseExtraction, type ExtractionItem } from "@/lib/extraction";
 import { reviewPoints } from "@/lib/review-points";
 import { requiresUnmatchedReview } from "@/lib/review-safety";
 import { objectivePoints } from "@/lib/scoring";
@@ -23,16 +23,17 @@ export function paperReviewSummary(paper: Paper, questions: Question[], source: 
     }
   }
   const unfinished = paper.pages.some(page => page.status !== "COMPLETE");
+  const documentConcern = !unfinished ? paperDocumentConcern(paper.pages.map(page => page.extraction), questions, source === "EXISTING") : null;
   const points = questions.map(question => {
     const saved = paper.answers.find(answer => answer.questionId === question.id);
     const items = suggestions[question.id] ?? [];
-    const automatic = !saved && !unfinished ? automaticDecision(items, question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions) : null;
+    const automatic = !saved && !unfinished && !documentConcern ? automaticDecision(items, question.answerStyle, question.type, question.answerKey?.acceptedAnswers, question.instructions) : null;
     return reviewPoints(saved, false, question.type, question.answerKey?.acceptedAnswers ?? [], Number(question.points), automatic, items[0]?.answer ?? "", objectivePoints);
   });
   const flagged = points.filter(point => point === null).length;
   const unmatchedBlocked = requiresUnmatchedReview(unmatched, questions, paper.answers);
   const manuallyComplete = questions.every(question => paper.answers.some(answer => answer.questionId === question.id && answer.reviewStatus === "CONFIRMED" && answer.confirmedText !== null));
-  const finalizationReason = !questions.length ? "The answer key has no questions." : !pagesComplete(paper.expectedPages, paper.pages.map(page => page.pageNumber)) ? "Upload and confirm all paper pages before finalizing." : !manuallyComplete && (unfinished || invalidReading) ? "Finish checking all pages or confirm every answer manually." : questions.some(question => question.type !== "ESSAY" && !question.answerKey?.acceptedAnswers.length) ? "A question is missing its answer key." : null;
+  const finalizationReason = !questions.length ? "The answer key has no questions." : !pagesComplete(paper.expectedPages, paper.pages.map(page => page.pageNumber)) ? "Upload and confirm all paper pages before finalizing." : !manuallyComplete && (unfinished || invalidReading) ? "Finish checking all pages or confirm every answer manually." : !manuallyComplete && documentConcern ? documentConcern : questions.some(question => question.type !== "ESSAY" && !question.answerKey?.acceptedAnswers.length) ? "A question is missing its answer key." : null;
   const finalizationBlocked = !!finalizationReason;
   return { flagged, unmatchedBlocked, finalizationBlocked, finalizationReason, nameReviewed: paper.nameReviewed, proposed: points.reduce<number>((sum, point) => sum + (point ?? 0), 0) };
 }

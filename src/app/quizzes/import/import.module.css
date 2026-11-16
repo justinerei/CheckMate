@@ -4,3 +4,4 @@
 .importer button:not(.secondary):not(:disabled):hover { background:var(--action-primary-hover); border-color:var(--action-primary-hover); }
 .importer .secondary { background:var(--action-secondary); border-color:var(--action-secondary-border); color:var(--action-secondary-text); }
 .importer .secondary:not(:disabled):hover { background:var(--action-secondary-hover); }
+.pasteArea { display:grid; gap:8px; padding:14px; border:1px solid #45454d; border-radius:8px; }.pasteArea small { color:#bcbcc4; font-size:12px; line-height:1.45; }.pasteArea:focus-visible,.pasteArea:focus-within { outline:2px solid #ffad7d; outline-offset:2px; }

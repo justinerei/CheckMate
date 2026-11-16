@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { clipboardImages, isTextEditingTarget } from "@/lib/clipboard-images";
 import styles from "./submissions.module.css";
 
 type Props = { title: string; description: string; formats: string; accept: string; disabled?: boolean; hidden?: boolean; onFiles: (files: File[]) => void; onCamera?: () => void; showCamera?: boolean };
@@ -19,13 +20,23 @@ export default function FileDropzone({ title, description, formats, accept, disa
     window.addEventListener("dragenter", enter); window.addEventListener("dragover", over); window.addEventListener("dragleave", leave); window.addEventListener("drop", drop); window.addEventListener("blur", reset);
     return () => { clearTimeout(leaveTimer); window.removeEventListener("dragenter", enter); window.removeEventListener("dragover", over); window.removeEventListener("dragleave", leave); window.removeEventListener("drop", drop); window.removeEventListener("blur", reset); };
   }, [disabled]);
+  useEffect(() => {
+    const paste = (event: ClipboardEvent) => {
+      if (disabled || event.defaultPrevented || isTextEditingTarget(event.target) || document.querySelector("dialog[open]")) return;
+      const files = clipboardImages(event.clipboardData?.items ?? []);
+      if (!files.length) return;
+      event.preventDefault(); onFilesRef.current(files);
+    };
+    window.addEventListener("paste", paste);
+    return () => window.removeEventListener("paste", paste);
+  }, [disabled]);
   function select(event: React.ChangeEvent<HTMLInputElement>) { const files = Array.from(event.currentTarget.files ?? []); event.currentTarget.value = ""; if (files.length) onFiles(files); }
   return <>
     <section className={styles.dropzone} aria-label={title} hidden={hidden}>
       <div className={styles.dropIcon} aria-hidden="true"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4m-4 4 4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></div>
       <h3>{title}</h3><p>{description}</p>
       <div className={styles.dropActions}><label className={styles.photoFileButton}><span>Choose files</span><input type="file" accept={accept} multiple disabled={disabled} onChange={select} aria-label={`Choose files: ${title}`} /></label>{showCamera && (onCamera ? <button type="button" className={styles.secondary} disabled={disabled} onClick={onCamera}>Open camera</button> : <label className={styles.cameraFileButton}><span>Take a photo</span><input type="file" accept="image/jpeg,image/png" capture="environment" disabled={disabled} onChange={select} aria-label={`Take a photo: ${title}`} /></label>)}</div>
-      <span className={styles.dropFormats}>{formats}</span>
+      <span className={styles.dropFormats}>{formats} · On a computer, paste a screenshot with Ctrl+V.</span>
     </section>
     <div className={`${styles.dropOverlay} ${dragging && !disabled ? styles.dropOverlayVisible : ""}`} aria-hidden="true"><div className={styles.dropOverlayFrame}><div className={styles.dropOverlayContent}><span className={styles.dropOverlayIcon}><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15V3m-4 4 4-4 4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span><span className={styles.dropOverlayEyebrow}>READY TO UPLOAD</span><strong>Drop your files here</strong><p>{formats}</p></div></div></div>
   </>;

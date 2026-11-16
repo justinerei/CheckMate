@@ -1,0 +1,1 @@
+ALTER TABLE "QuizSection" ADD COLUMN "questionLayout" TEXT NOT NULL DEFAULT 'CUSTOM';

@@ -59,8 +59,8 @@ function PageSlot({ submissionId, batchId, number, page, editable, canExtract, d
   return <section className={styles.pageCard}><PendingScreen pending={busy} message="Processing the photo…" /><div className={styles.pageTop}><h3>Page {number}</h3><span>{page ? "UPLOADED" : "MISSING"}</span></div>
     {page ? <><PhotoPreview className={styles.photo} src={`/api/submissions/${submissionId}/pages/${page.id}`} alt={`Page ${number} photo`} onLoad={() => setImageError(false)} onError={() => setImageError(true)} />{imageError && <p className={styles.error} role="alert">This photo could not be loaded. {editable ? "Remove it and upload it again." : "Contact the app administrator."}</p>}{editable && <div className={styles.pageToolbar}>
       <div className={styles.pageOrderControls} role="group" aria-label={`Reorder page ${number}`}>
-        <button type="button" onClick={onEarlier} disabled={busy || disabled || !onEarlier} aria-label={`Move page ${number} earlier`}><span aria-hidden="true">←</span> Earlier</button>
-        <button type="button" onClick={onLater} disabled={busy || disabled || !onLater} aria-label={`Move page ${number} later`}>Later <span aria-hidden="true">→</span></button>
+        <button type="button" onClick={onEarlier} disabled={busy || disabled || !onEarlier} aria-label={onEarlier ? `Move page ${number} to page ${number - 1}` : "Move to previous page"}><span aria-hidden="true">←</span> {onEarlier ? `Move to page ${number - 1}` : "Move to previous page"}</button>
+        <button type="button" onClick={onLater} disabled={busy || disabled || !onLater} aria-label={onLater ? `Move page ${number} to page ${number + 1}` : "Move to next page"}>{onLater ? `Move to page ${number + 1}` : "Move to next page"} <span aria-hidden="true">→</span></button>
       </div>
       <button type="button" className={styles.removePageButton} onClick={() => setConfirmRemove(true)} disabled={busy || disabled}>{busy ? "Removing…" : "Remove"}</button>
     </div>}</> : <div className={styles.pagePlaceholder}><span aria-hidden="true">+</span><p>Waiting for page {number}</p></div>}

@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 import { googleIdentity } from "@/lib/google-identity";
 import { normalizeEmail, verifyPassword } from "@/lib/password-auth";
+import { cookies } from "next/headers";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET }), Credentials({
@@ -34,7 +35,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!existing) {
         const collision = await db.user.findFirst({ where: { email: { equals: identity.email, mode: "insensitive" } } });
         if (collision) return false;
-        await db.user.create({ data: identity });
+        const studentSignup = (await cookies()).get("checkmate-student-signup")?.value === "1";
+        await db.user.create({ data: { ...identity, role: studentSignup ? "STUDENT" : "TEACHER" } });
       }
       return true;
     },

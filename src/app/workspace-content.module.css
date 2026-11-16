@@ -58,3 +58,36 @@
 .actionPrimary .actionTop { justify-content:flex-end; }
 .welcome { margin-top:0; }
 .headingRow h2 { margin-top:0; }
+
+/* Home keeps the reference's compact layout in the workspace's dark palette. */
+.overview { max-width: 1000px; }
+.homeTitle { font-size: 24px; font-weight: 700; }
+.overview .welcome { display:flex; align-items:center; justify-content:center; gap:26px; min-height:170px; margin:10px 0 0; }
+.welcomeMate { width:145px; height:145px; object-fit:contain; image-rendering:pixelated; }
+.overview .welcome p { margin:0 0 4px; color:#c3c3ca; font-size:14px; font-weight:600; }
+.overview .welcome h1 { font:700 clamp(30px,3.5vw,40px)/1.08 var(--font-geist-sans),Arial,sans-serif; letter-spacing:-.035em; }
+.overview .start { margin-top:12px; }
+.overview .start h2 { margin:0 0 12px; color:#c3c3ca; font-size:14px; font-weight:600; }
+.overview .actionGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:auto; gap:12px; margin:0; }
+.overview .action { min-height:60px; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:12px; padding:12px 16px; border:1px solid #393940; border-radius:18px; background:#1b1b20; }
+.overview .action:hover { background:#28242a; border-color:#a75a32; }
+.overview .action strong { margin:0; font-size:14px; }
+.overview .actionIcon { width:auto; height:auto; border:0; color:#ff9b63; font-size:20px; }
+.overview .metrics { margin-top:32px; }
+.overview .listSection { margin-top:38px; }
+.overview .headingRow h2 { font-size:18px; }
+.overview .list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; border:0; }
+.overview .row { padding:16px; border:1px solid #393940; border-radius:15px; background:#17171b; }
+.overview .row:hover { border-color:#777780; background:#202024; }
+.overview .rowAction { display:none; }
+.overview .row { grid-template-columns:36px minmax(0,1fr) auto; }
+@media(max-width:760px) {
+  .overview .welcome { justify-content:flex-start; min-height:150px; gap:16px; }
+  .welcomeMate { width:105px; height:105px; }
+  .overview .welcome h1 { font-size:30px; }
+  .overview .actionGrid { grid-template-columns:1fr; }
+  .overview .action { justify-content:flex-start; min-height:54px; }
+  .overview .list { grid-template-columns:1fr; }
+  .overview .rowAction { display:none; }
+}
+@media(max-width:380px) { .overview .row { grid-template-columns:34px minmax(0,1fr); } .overview .status,.overview .row time { grid-column:2; } }

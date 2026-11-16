@@ -10,9 +10,10 @@ import styles from "../workspace-content.module.css";
 type Quiz = { id: string; title: string; source: string; archived: boolean; updated: string; papers: number; questions: number; missingAnswers: number };
 
 function LibraryIcon({ type }: { type: "quiz" | "key" }) {
-  return <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="4.5" y="3" width="15" height="18" rx="2" />
-    {type === "key" ? <><path d="m7.5 8 1.1 1.1L10.5 7M12.5 8h3.5M7.5 14l1.1 1.1 1.9-2.1M12.5 14h3.5" /></> : <><path d="M8 8h8M8 12h5M8 16h3" /><circle cx="16.5" cy="16" r="1.5" /></>}
+  return <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M4 2h11v2h2v2h2v16H4z" fill="#f9e8d6" stroke="#100e0e" strokeWidth="2" strokeLinejoin="miter" />
+    <path d="M15 2v5h4" stroke="#100e0e" strokeWidth="2" />
+    {type === "key" ? <><path d="M7 9h2v2H7zm0 5h2v2H7z" fill="#191414" /><path d="M10 9h5v2h-5zm0 5h3v2h-3z" fill="#191414" /><path d="M13 16h2v2h-2zm2 2h2v2h-2zm2-4h2v4h-2z" fill="#ff7000" /></> : <><path d="M7 9h2v2H7zm3 0h6v2h-6zm-3 4h2v2H7zm3 0h4v2h-4zm-3 4h2v2H7zm3 0h6v2h-6z" fill="#191414" /><path d="M15 13h3v3h-3z" fill="#ff7000" /></>}
   </svg>;
 }
 export default function QuizLibrary({ quizzes }: { quizzes: Quiz[] }) {

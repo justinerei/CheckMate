@@ -17,6 +17,6 @@ export default function PaperStudent({ id, selectedId, selectedName, selectedCla
       {classes.length > 0 ? <label>Class<select className={styles.keyInput} name="classroomId" value={classId} onChange={event => setClassId(event.target.value)}><option value="">No class selected</option>{classes.map(classroom => <option key={classroom.id} value={classroom.id}>{classroom.name}</option>)}</select></label> : <input type="hidden" name="classroomId" value="" />}
       <label>Student record<select className={styles.keyInput} name="studentId" defaultValue={selectedId ?? ""} key={classId}><option value="">No student linked</option>{visible.map(student => <option key={student.id} value={student.id}>{student.name} · {student.codeSuffix}</option>)}</select></label>
       <button className={styles.secondary} disabled={pending}>{pending ? "Saving…" : "Save student link"}</button>{state.message && <p role="status" className={state.ok ? styles.success : styles.error}>{state.message}</p>}
-    </form> : <p>No students in your list yet. <Link href="/students">Open student list</Link>, add a student, then return here.</p>}
+    </form> : <p>No students in your list yet. <Link href="/students">Open Classes</Link> to invite students or add a record, then return here.</p>}
   </div></details>;
 }

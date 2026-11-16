@@ -62,16 +62,28 @@
 .classCardHeader details summary { margin:10px 0 0; color:#c7c7cf; font-size:12px; cursor:pointer; }
 .classCardHeader code { display:block; max-width:280px; margin-top:8px; color:#f4f4f5; font-size:12px; }
 .classMembers { border-top:1px solid #34343b; }
-.classMembers summary { margin:0; padding:15px 22px; color:#eeeef2; font-size:13px; font-weight:600; cursor:pointer; }
-.classMembers summary:hover { background:#202024; }
-.classMembers summary span { color:#aaaab5; font-weight:400; }
-.classMembers ul { list-style:none; margin:0; padding:0 22px 14px; }
-.classMembers li + li { border-top:1px solid #34343b; }
-.classMembers li a { display:flex; justify-content:space-between; align-items:center; gap:16px; min-height:44px; color:#f4f4f5; text-decoration:none; font-size:13px; }
-.classMembers li a span:first-child { overflow-wrap:anywhere; }
-.classMembers li a span:last-child { flex:none; color:#ffad7d; font-size:12px; }
-.classMembers li a:hover span:last-child { text-decoration:underline; }
+.classMembers > summary { margin:0; padding:15px 22px; color:#eeeef2; font-size:13px; font-weight:600; cursor:pointer; }
+.classMembers > summary:hover { background:#202024; }
+.classMembers > summary span { color:#aaaab5; font-weight:400; }
+.classMembers > ul { list-style:none; margin:0; padding:0 22px 14px; }
 .classMembers > p { margin:0; padding:0 22px 18px; font-size:13px; }
 .classCard :is(button,summary,a):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 .row { scroll-margin-top:24px; }
-@media (max-width:600px) { .classHeading { align-items:start; } .classCardHeader { flex-direction:column; padding:18px; } .classCardHeader > div:last-child { width:100%; text-align:left; } .classMembers summary { padding:15px 18px; } .classMembers ul { padding:0 18px 14px; } }
+@media (max-width:600px) { .classHeading { align-items:start; } .classCardHeader { flex-direction:column; padding:18px; } .classCardHeader > div:last-child { width:100%; text-align:left; } .classMembers > summary { padding:15px 18px; } .classMembers > ul { padding:0 18px 14px; } }
+.classMembers > ul { padding-bottom:12px; }
+.classRecord { border-top:1px solid #34343b; }
+.classRecord > details { scroll-margin-top:24px; }
+.classRecord > details > summary { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:50px; margin:0; padding:12px 2px; color:#f4f4f5; list-style:none; font-size:14px; font-weight:600; }
+.classRecord > details > summary::-webkit-details-marker { display:none; }
+.classRecord > details > summary span:first-child { overflow-wrap:anywhere; }
+.classRecord > details > summary span:last-child { flex:none; color:#ffad7d; font-size:12px; font-weight:500; }
+.classRecord > details[open] > summary span:last-child { color:#b7b7bf; }
+.recordDetails { padding:4px 0 18px; }
+.recordStatus { color:#b7b7bf; font-size:13px; }
+.unassignedRecords { padding:0 4px; }
+.unassignedRecords > li:first-child { border-top:0; }
+.manageRecords { margin-top:40px; border:1px solid #414149; border-radius:10px; background:#161619; }
+.manageRecords > summary { padding:18px 22px; color:#f4f4f5; font-size:14px; font-weight:600; cursor:pointer; }
+.manageRecords > summary span { display:block; color:#b7b7bf; font-size:12px; font-weight:400; margin:6px 0 0 18px; }
+.manageRecords > .toolGrid { margin:0; padding:0 16px 16px; }
+.manageRecords:focus-within > summary:focus-visible,.classRecord summary:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }

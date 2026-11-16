@@ -7,7 +7,7 @@ import styles from "./workspace.module.css";
 const links = [
   { id: "overview", label: "Overview", href: "/dashboard", path: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
   { id: "quizzes", label: "Quizzes & keys", href: "/quizzes", path: "M6 3h9l3 3v15H6z M14 3v4h4 M9 11h6 M9 15h6" },
-  { id: "students", label: "Students", href: "/students", path: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M5 20a7 7 0 0 1 14 0" },
+  { id: "students", label: "Classes", href: "/students", path: "M4 5h16v14H4z M4 10h16 M9 10v9" },
 ] as const;
 export default function WorkspaceNavigation() {
   const active = workspaceActive(usePathname());

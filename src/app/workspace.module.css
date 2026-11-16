@@ -21,3 +21,5 @@
   .mobileMenu[open] summary { border-color:#ffad7d; background:#29221f; }
   .menuPanel { width:min(230px,calc(100vw - 40px)); max-height:calc(100dvh - 90px); overflow-y:auto; overscroll-behavior:contain; }
 }
+@media(min-width:1500px) { .main:has([data-dashboard]) { max-width:1500px; } }
+@media(min-width:1500px) { .main:has([data-dashboard]) { max-width:none; } }

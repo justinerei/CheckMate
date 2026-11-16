@@ -26,3 +26,4 @@
 @media(max-width:600px) { .panel { padding:20px; }.uploadCards { grid-template-columns:1fr; }.scanActions { align-items:stretch; flex-direction:column-reverse; }.scanActions button { width:100%; }.scanActions a { min-height:44px; display:inline-flex; align-items:center; } }
 .importer button.removeKey { border:0; background:transparent; color:#ffbfa7; }
 .importer button.removeKey:not(:disabled):hover { background:transparent; color:#ffe0d4; }
+.fileIcon svg { width:28px; height:28px; }

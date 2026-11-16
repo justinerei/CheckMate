@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PendingScreen } from "@/app/pending-screen";
+import LibraryIcon from "@/app/library-icon";
 import { applyImportedKey, parseImportedDraft, type ImportRow, type ImportType } from "@/lib/quiz-import";
 import { isPdfFile, withinAnswerKeyPhotoLimit } from "@/lib/answer-key-file-policy";
 import { documentNeedsReview } from "@/lib/extraction";
@@ -175,14 +176,14 @@ export default function ImportQuizForm() {
       <label>Quiz title<input value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="e.g. Science Quiz 1" /></label>
       <div className={styles.uploadCards}>
         <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Quiz files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectQuiz([...quizFiles, ...images]); } }}>
-          <span className={styles.fileIcon} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6M9 16h6" /></svg></span>
+          <span className={styles.fileIcon}><LibraryIcon type="quiz" /></span>
           <div><strong>Quiz document</strong><p>Choose a PDF or clear photos of your quiz.</p></div>
           <label className={styles.fileButton}>Choose quiz files<input className={styles.fileInput} aria-label="Choose quiz files" type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectQuiz(Array.from(event.currentTarget.files ?? []))} /></label>
           <small>{quizFiles.length ? `${quizFiles.length} ${quizFiles.length === 1 ? "file" : "files"} selected` : "No files selected"} · Paste screenshots here with Ctrl+V</small>
           {quizFiles.length > 0 && <ul className={styles.fileNames}>{quizFiles.map((file, index) => <li key={`${file.name}-${index}`}>{file.name}</li>)}</ul>}
         </div>
         <div className={styles.pasteArea} tabIndex={0} role="group" aria-label="Answer key files; paste screenshots here" onPaste={event => { if (busy) return; const images = clipboardImages(event.clipboardData.items); if (images.length) { event.preventDefault(); selectKey([...keyFiles, ...images]); } }}>
-          <span className={styles.fileIcon} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v7M14 3v5h4M6 3v18h6m2-3 2 2 4-5" /></svg></span>
+          <span className={styles.fileIcon}><LibraryIcon type="key" /></span>
           <div><strong>Answer key</strong> <span className={styles.optional}>Optional</span><p>Add a separate key to match answers to questions.</p></div>
           <label className={styles.fileButton}>Choose answer key<input className={styles.fileInput} aria-label="Choose answer key" ref={keyInput} type="file" accept="application/pdf,image/jpeg,image/png" multiple disabled={busy} onChange={event => selectKey(Array.from(event.currentTarget.files ?? []))} /></label>
           <small>{keyFiles.length ? `${keyFiles.length} ${keyFiles.length === 1 ? "file" : "files"} selected` : "No files selected"} · Paste screenshots here with Ctrl+V</small>

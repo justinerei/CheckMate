@@ -22,7 +22,7 @@
 /* Preview controls are screen-only; the printed paper keeps its original dimensions. */
 @media screen {
   .preview { background:#0c0c0f; padding:36px 24px 72px; }
-  .toolbar { max-width:1000px; display:grid; gap:14px; margin:0 auto 16px; font:14px var(--font-geist-sans),Arial,sans-serif; }
+  .toolbar { width:100%; max-width:1000px; box-sizing:border-box; display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; align-items:stretch; gap:14px; margin:0 auto 16px; font:14px var(--font-geist-sans),Arial,sans-serif; }
   .previewHeading { display:flex; justify-content:space-between; align-items:start; gap:20px; padding:0 0 12px; }
   .previewHeading h1 { margin:0; color:#f4f4f5; font-size:clamp(28px,3vw,36px); line-height:1.2; }
   .previewHeading p { margin:8px 0 0; color:#bcbcc4; line-height:1.5; }

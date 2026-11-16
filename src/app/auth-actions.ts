@@ -10,7 +10,7 @@ export type AuthState = { error: string };
 
 export async function login(_state: AuthState, form: FormData): Promise<AuthState> {
   try {
-    await signIn("credentials", { email: normalizeEmail(form.get("email")), password: form.get("password"), redirectTo: "/dashboard" });
+    await signIn("credentials", { email: normalizeEmail(form.get("email")), password: form.get("password"), redirectTo: "/" });
   } catch (error) {
     if (error instanceof AuthError) return { error: "Could not sign in. Check your details or try again in 15 minutes." };
     throw error;
@@ -56,7 +56,7 @@ export async function registerStudent(_state: AuthState, form: FormData): Promis
 }
 
 export async function loginStudent(_state: AuthState, form: FormData): Promise<AuthState> {
-  try { await signIn("credentials", { email: normalizeEmail(form.get("email")), password: form.get("password"), redirectTo: "/student" }); }
+  try { await signIn("credentials", { email: normalizeEmail(form.get("email")), password: form.get("password"), redirectTo: "/" }); }
   catch (error) { if (error instanceof AuthError) return { error: "Could not sign in. Check your details or try again in 15 minutes." }; throw error; }
   return { error: "" };
 }

@@ -89,3 +89,10 @@
   .addArea { align-items:start; padding:20px; }
   .addArea > p { margin:0; }
 }
+@media (min-width:701px) and (max-width:900px) {
+  .listHead { display:none; }
+  .row { grid-template-columns:40px minmax(0,1fr) auto; gap:12px; }
+  .reviewInfo { grid-column:2; }
+  .rowAction { grid-column:3; grid-row:1 / span 2; }
+  .row .deleteControl { grid-column:2; justify-self:start; }
+}

@@ -8,6 +8,13 @@ import QuizCardActions from "./quiz-card-actions";
 import styles from "../workspace-content.module.css";
 
 type Quiz = { id: string; title: string; source: string; archived: boolean; updated: string; papers: number; questions: number; missingAnswers: number };
+
+function LibraryIcon({ type }: { type: "quiz" | "key" }) {
+  return <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4.5" y="3" width="15" height="18" rx="2" />
+    {type === "key" ? <><path d="m7.5 8 1.1 1.1L10.5 7M12.5 8h3.5M7.5 14l1.1 1.1 1.9-2.1M12.5 14h3.5" /></> : <><path d="M8 8h8M8 12h5M8 16h3" /><circle cx="16.5" cy="16" r="1.5" /></>}
+  </svg>;
+}
 export default function QuizLibrary({ quizzes }: { quizzes: Quiz[] }) {
   const [query, setQuery] = useState("");
   const visible = quizzes.filter(quiz => matchesSearch([quiz.title], query));
@@ -17,13 +24,13 @@ export default function QuizLibrary({ quizzes }: { quizzes: Quiz[] }) {
   const created = active.filter(quiz => quiz.source !== "EXISTING");
   function listing(items: Quiz[]) {
     return <div className={styles.quizGrid}>{items.map(item => <div className={styles.quizCardWrap} key={item.id}><Link className={styles.quizCard} href={quizDestination(item.id, item.source)}>
-      <span className={styles.cardTop}><span className={styles.rowIcon} aria-hidden="true">{item.source === "EXISTING" ? "▤" : "▦"}</span></span>
+      <span className={styles.cardTop}><span className={styles.rowIcon}><LibraryIcon type={item.source === "EXISTING" ? "key" : "quiz"} /></span></span>
       <strong>{item.title}</strong><span className={styles.cardMeta}>{item.source === "EXISTING" ? "Existing quiz" : "Created quiz"} · {item.papers} {item.papers === 1 ? "paper" : "papers"}</span><span className={styles.cardFooter}>Updated {item.updated} <span>Open quiz →</span></span>
     </Link><QuizCardActions quiz={item} /></div>)}</div>;
   }
   function keyListing(items: Quiz[]) {
     return <div className={styles.quizGrid}>{items.map(item => <Link className={styles.quizCard} href={`/quizzes/${encodeURIComponent(item.id)}/overview?view=key#answer-key`} key={item.id}>
-      <span className={styles.cardTop}><span className={styles.rowIcon} aria-hidden="true">▤</span><span aria-hidden="true">↗</span></span>
+      <span className={styles.cardTop}><span className={styles.rowIcon}><LibraryIcon type="key" /></span><span aria-hidden="true">↗</span></span>
       <strong>{item.title}</strong><span className={styles.cardMeta}>{item.source === "EXISTING" ? "Added manually" : "Created in CheckMate"} · {item.questions === 0 ? "No questions yet" : item.missingAnswers ? `${item.missingAnswers} ${item.missingAnswers === 1 ? "answer" : "answers"} missing` : `${item.questions} ${item.questions === 1 ? "question" : "questions"}`}</span><span className={styles.cardFooter}>Updated {item.updated} <span>View key →</span></span>
     </Link>)}</div>;
   }

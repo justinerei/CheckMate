@@ -71,3 +71,17 @@
 @media(max-width:700px) { .form input:not([type=checkbox]),.form textarea,.form select,.quickPoints input { font-size:16px; } }
 .primary { background:var(--action-primary); color:var(--action-primary-text); }
 .primary:not(:disabled):hover { background:var(--action-primary-hover); }
+/* Focused question editor */
+.steps { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:16px 0 22px; color:#bcbcc4; font-size:14px; }
+.steps > * + *::before { content:'›'; display:inline-block; margin-right:12px; color:#81818a; }
+.steps a { color:#c3c3ca; text-decoration:none; }.steps [aria-current] { color:#ff9b60; font-weight:700; }
+.focusedLayout { display:grid; grid-template-columns:minmax(190px, 245px) minmax(0,1fr); gap:20px; align-items:start; }
+.questionNav,.focusedCard { border:1px solid #34343a; border-radius:12px; background:#161619; }
+.questionNav { padding:20px 12px; max-height:70vh; overflow:auto; }.questionNav h2 { margin:0 8px; font-size:16px; }.questionNav > p { margin:8px; color:#bcbcc4; font-size:13px; }
+.navGroup { margin-top:24px; }.navGroup h3 { margin:0 8px 8px; color:#aaaab1; font-size:11px; text-transform:uppercase; letter-spacing:.08em; overflow-wrap:anywhere; }
+.navGroup button { width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 8px; border:0; border-radius:7px; background:transparent; color:#f4f4f5; text-align:left; cursor:pointer; }.navGroup button:hover { background:#29292e; }.navGroup button small { color:#c3c3ca; font-size:11px; }.navGroup button.navActive { background:#48291d; color:#ffb185; font-weight:700; }.navGroup button:focus-visible,.steps a:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.focusedPanels { min-width:0; }.focusedCard { overflow:hidden; }.focusedHeader { padding:24px 28px 0; }.focusedHeader h2 { margin:0; font-size:20px; }.focusedHeader p { color:#bcbcc4; font-size:13px; text-transform:capitalize; }.focusedCard .form { border:0; padding-top:12px; }.focusedCard .formTitle { display:none; }.focusedCard .formActions { border-top:1px solid #34343a; padding-top:20px; justify-content:space-between; flex-direction:row-reverse; }
+.answerChoices { border:0; padding:0; margin:0; min-width:0; display:grid; gap:9px; }.answerChoices legend { padding:0; font-size:14px; font-weight:600; }.answerChoices small { margin:0 0 8px; }.choiceRow { display:grid; grid-template-columns:44px minmax(0,1fr); align-items:center; gap:10px; }.form .radioChoice { display:flex; align-items:center; gap:8px; font-weight:400; }.form .radioChoice input { width:auto; accent-color:#ff6a00; }.form .choiceRow > input { min-width:0; }
+.management { min-width:0; }.management > summary { cursor:pointer; padding:16px; border:1px solid #34343a; border-radius:9px; background:#161619; font-weight:600; }.management[open] > summary { margin-bottom:20px; }
+@media (min-width:901px) and (min-height:680px) { .shell { height:auto; min-height:100svh; overflow:visible; }.content { display:block; padding:28px 24px 80px; }.editorLayout { align-items:start; }.editorMain,.editorSidebar { overflow:visible; }.editorSidebar { max-height:none; }.questionNav { position:sticky; top:20px; } }
+@media(max-width:700px) { .focusedLayout { grid-template-columns:1fr; }.questionNav { max-height:230px; }.focusedHeader { padding:22px 22px 0; }.focusedCard .form { padding:12px 22px 22px; }.form .radioChoice input { width:auto; } }

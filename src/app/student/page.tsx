@@ -1,17 +1,16 @@
-import { auth, signOut } from "@/auth";
-import { db } from "@/lib/db";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { connection } from "next/server";
+import Mascot from "@/app/mascot";
 import { ClaimInvite } from "./invite-controls";
-import styles from "./student.module.css";
-import { releasedStudentResults } from "@/lib/student-portal";
+import ResultList from "./result-list";
+import StudentShell from "./student-shell";
+import { studentResults, studentUser } from "./student-data";
+import styles from "./student-workspace.module.css";
 
 export const instant = false;
 export default async function StudentHome() {
   await connection();
-  const session = await auth();
-  const user = session?.user?.id ? await db.user.findUnique({ where: { googleId: session.user.id }, select: { id: true, name: true, role: true, enabled: true } }) : null;
-  if (!user?.enabled) redirect("/student/sign-in");
-  const student = user.role === "STUDENT" ? await db.student.findUnique({ where: { accountId: user.id }, select: { name: true, submissions: { where: releasedStudentResults(user.id), orderBy: { releasedAt: "desc" }, select: { id: true, totalScore: true, releasedAt: true, quiz: { select: { title: true, sections: { select: { questions: { select: { points: true } } } } } } } } } }) : null;
-  return <main className={styles.page}><header className={styles.header}><span className={styles.brand}>checkmate<span>.</span></span><form action={async () => { "use server"; await signOut({ redirectTo: "/student/sign-in" }); }}><button>Sign out</button></form></header><h1>Hello, {user.name.split(" ")[0]}.</h1>{user.role !== "STUDENT" ? <p>This account is a {user.role.toLowerCase()} account. Sign out and use a separate student account to connect a student invite.</p> : !student ? <><p>Connect your account with the invite code your teacher gave you.</p><ClaimInvite /></> : <><p>Scores released by your teachers for {student.name}.</p>{student.submissions.length ? <ul className={styles.results}>{student.submissions.map(paper => <li key={paper.id}><span><strong>{paper.quiz.title}</strong><small>Released {paper.releasedAt ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "Asia/Manila" }).format(paper.releasedAt) : ""}</small></span><strong>{paper.totalScore?.toString()} / {paper.quiz.sections.flatMap(section => section.questions).reduce((sum, question) => sum + Number(question.points), 0)}</strong></li>)}</ul> : <p>No released scores yet. Your teacher will let you know when results are ready.</p>}</>}</main>;
+  const user = await studentUser();
+  const student = await studentResults(user.id);
+  return <StudentShell email={user.email} active="overview"><div className={styles.content}><header className={styles.welcome}><h1>Hello, {user.name.trim().split(/\s+/)[0] || "student"}.</h1><p>{student ? `Your released quiz scores for ${student.name}, all in one place.` : "Connect with your teacher to see your released scores."}</p></header>{student ? <><section className={styles.metrics} aria-label="Results summary"><div><span>RELEASED RESULTS</span><strong>{String(student.results.length).padStart(2, "0")}</strong><small>Scores available to you</small></div><div><span>CONNECTED AS</span><strong className={styles.studentName}>{student.name}</strong><small>Your student record</small></div></section><section className={styles.section}><div className={styles.sectionHeading}><div><h2>Recent results</h2><p>Scores your teachers have released.</p></div><Link href="/student/results">View all <span aria-hidden="true">↗</span></Link></div><ResultList results={student.results.slice(0, 5)} /></section></> : <section className={styles.connect}><Mascot state="ready" width={104} height={104} /><div><p className={styles.eyebrow}>GET STARTED</p><h2>Connect your student record</h2><p>Enter the one-time invite code from your teacher. Once connected, released scores will appear here.</p><ClaimInvite /></div></section>}</div></StudentShell>;
 }

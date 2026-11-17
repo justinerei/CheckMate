@@ -87,3 +87,18 @@
 .manageRecords > summary span { display:block; color:#b7b7bf; font-size:12px; font-weight:400; margin:6px 0 0 18px; }
 .manageRecords > .toolGrid { margin:0; padding:0 16px 16px; }
 .manageRecords:focus-within > summary:focus-visible,.classRecord summary:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+/* Keep classes and student records together on wide workspaces. */
+.classWorkspace { display:grid; gap:0; }
+.recordsColumn { min-width:0; }
+@media(min-width:1200px) {
+  .content { max-width:none; }
+  .classWorkspace { grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr); gap:32px; align-items:start; margin-top:46px; }
+  .classWorkspace .classes,.recordsColumn .listSection { margin-top:0; }
+  .recordsColumn { padding:22px; border:1px solid #414149; border-radius:12px; background:#17171b; }
+  .recordsColumn .listHeader { align-items:start; padding-bottom:16px; }
+  .recordsColumn .manageRecords { margin-top:20px; background:#1d1d22; }
+  .recordsColumn .manageRecords:first-child { margin-top:0; }
+  .recordsColumn .toolGrid { grid-template-columns:1fr; }
+  .classes .createClass { border-color:#81573f; background:#291f1b; }
+  .classes .createClass summary:hover { background:#38271f; }
+}

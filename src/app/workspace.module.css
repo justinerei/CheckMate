@@ -44,7 +44,9 @@
 .accountTrigger:hover,.accountMenu[open] > .accountTrigger { background:#29292e; }
 .accountTrigger:focus-visible,.accountActions :is(a,button):focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
 .accountAvatar { display:grid; place-items:center; flex:none; width:34px; height:34px; border-radius:50%; background:#493327; color:#ffd2b5; font-size:13px; font-weight:700; }
-.accountName { display:grid; gap:3px; flex:1; min-width:0; color:#f4f4f5; font-size:13px; font-weight:600; overflow-wrap:anywhere; }
+.accountAvatar img { display:block; width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+.accountName { display:grid; gap:3px; flex:1; min-width:0; color:#f4f4f5; font-size:13px; font-weight:600; }
+.accountName strong { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:inherit; }
 .accountName small { color:#bcbcc4; font-size:12px; font-weight:400; }
 .accountChevron { color:#bcbcc4; font-size:15px; }
 .accountPopover { position:absolute; z-index:20; bottom:calc(100% + 8px); left:0; width:min(270px,calc(100vw - 48px)); padding:8px; border:1px solid #484850; border-radius:14px; background:#242428; box-shadow:0 16px 40px #0009; }

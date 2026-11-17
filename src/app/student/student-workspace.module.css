@@ -54,3 +54,25 @@
 .editSchoolName input { min-width:0; min-height:44px; padding:10px; border:1px solid #575761; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
 .editSchoolName button:disabled { opacity:.65; cursor:wait; }
 .recordCard :is(a,summary,input,button):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+
+/* Student overview */
+.home { max-width:none; }
+.homeGrid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr); gap:24px; align-items:start; margin-top:44px; }
+.homeResults,.homeClasses { min-width:0; }
+.homeClasses { padding:22px; border:1px solid #514039; border-radius:var(--card-radius); background:#1b1818; }
+.homeClassHeader { display:flex; align-items:center; gap:16px; }
+.homeClassHeader h2 { margin:0; font-size:18px; }
+.homeClassHeader p,.homeJoin p { margin:7px 0 0; color:#d0c2bb; font-size:13px; line-height:1.5; }
+.homeMascot { flex:none; display:grid; place-items:center; width:72px; height:72px; }
+.homeMascot img { width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+.homeClassesLink { display:flex; align-items:center; justify-content:space-between; min-height:48px; margin-top:18px; padding:10px 0; border-top:1px solid #4a3a35; color:#f4f4f5; text-decoration:none; font-size:14px; font-weight:600; }
+.homeClassesLink span { color:#ffad7d; }.homeClassesLink:hover { color:#ffbd98; }
+.homeJoin { margin-top:12px; border-top:1px solid #4a3a35; }
+.homeJoin summary { display:flex; align-items:center; min-height:48px; color:#ffbd98; font-size:14px; font-weight:600; }
+.homeJoin form { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-top:14px; }
+.homeJoin form label { display:grid; gap:8px; flex:1; min-width:min(100%,180px); font-size:13px; font-weight:600; }
+.homeJoin form input { width:100%; min-height:44px; padding:10px 12px; border:1px solid #56565f; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
+.homeJoin form button { min-height:44px; padding:10px 14px; border:1px solid var(--action-primary); border-radius:7px; background:var(--action-primary); color:var(--action-primary-text); font:600 13px var(--font-geist-sans),sans-serif; cursor:pointer; }
+.homeJoin form p { width:100%; }.homeJoin :is(input,button):focus-visible,.homeClassesLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+@media(max-width:1050px) { .homeGrid { grid-template-columns:1fr; gap:28px; }.homeClasses { max-width:none; } }
+@media(max-width:480px) { .homeGrid { margin-top:34px; }.homeClasses { padding:18px; }.homeMascot { width:60px; height:60px; } }

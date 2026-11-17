@@ -15,6 +15,7 @@ export default function ActivityHistory({ events }: { events: Event[] }) {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
+  const invalidRange = Boolean(from && to && from > to);
   const term = query.trim().toLowerCase();
   const filtered = events.filter(event => (!term || `${event.actor.name} ${event.actor.email} ${event.target.name} ${event.target.email}`.toLowerCase().includes(term)) && (action === "ALL" || event.action === action) && (!from || dateKey(event.createdAt) >= from) && (!to || dateKey(event.createdAt) <= to));
   const totalPages = Math.max(1, Math.ceil(filtered.length / 25));
@@ -30,7 +31,8 @@ export default function ActivityHistory({ events }: { events: Event[] }) {
       <label>From<input type="date" value={from} onChange={event => { setFrom(event.target.value); setPage(1); }} /></label>
       <label>To<input type="date" value={to} onChange={event => { setTo(event.target.value); setPage(1); }} /></label>
     </div>
-    <div className={styles.queueToolbar}><p className={styles.count}>{filtered.length} events · Page {currentPage} of {totalPages}</p><button type="button" onClick={exportEvents} disabled={!filtered.length}>Export CSV</button></div>
+    {invalidRange && <p role="alert" className={styles.error}>The start date must be on or before the end date.</p>}
+    <div className={styles.queueToolbar}><p className={styles.count}>{filtered.length} events · Page {currentPage} of {totalPages} · Manila time</p><div className={styles.queueActions}><button type="button" onClick={() => { setQuery(""); setAction("ALL"); setFrom(""); setTo(""); setPage(1); }}>Reset filters</button><button type="button" onClick={exportEvents} disabled={invalidRange || !filtered.length}>Export CSV</button></div></div>
     {visible.length ? <ul className={styles.activity}>{visible.map(event => <li key={event.id}><span className={styles.activityIcon} aria-hidden="true">↗</span><div><strong>{labels[event.action] ?? event.action}</strong><p>{event.target.name} · {event.target.email}</p>{event.reason && <p>{event.reason}</p>}<small>By {event.actor.name} ({event.actor.email}) · {displayDate(event.createdAt)}</small></div></li>)}</ul> : <div className={styles.empty}><strong>No matching activity</strong></div>}
     <div className={styles.queueToolbar}><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>Previous</button><button type="button" disabled={currentPage >= totalPages} onClick={() => setPage(currentPage + 1)}>Next</button></div>
   </>;

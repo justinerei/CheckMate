@@ -19,7 +19,7 @@ export default async function StudentResult({ params, searchParams }: { params: 
   const questions = paper.quiz.sections.flatMap(section => section.questions.map((question, index) => ({ ...question, label: paper.quiz.numbering === "CONTINUOUS" ? `Question ${++continuous}` : `${section.title} · Question ${index + 1}` })));
   const max = questions.reduce((sum, question) => sum + Number(question.points), 0);
   const concerns = paper.concerns.filter(concern => concern.studentId === paper.student!.id);
-  return <StudentShell email={user.email} active={fromThisClass ? "classes" : "results"}>
+  return <StudentShell user={user} active={fromThisClass ? "classes" : "results"}>
     <div className={styles.content}>
       <Link className={resultStyles.back} href={fromThisClass ? `/student/classes/${encodeURIComponent(fromClass!)}` : "/student/results"}>{fromThisClass ? "← Back to class" : "← My results"}</Link>
       <header className={resultStyles.header}>

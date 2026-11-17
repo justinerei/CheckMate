@@ -31,6 +31,26 @@
 .classFooter strong { font-size:12px; white-space:nowrap; }
 .classFooter strong span { color:#ff9b63; }
 @media(prefers-reduced-motion:reduce) { .classLink { transition:none; } }
-.detailCard input.profileInput { box-sizing:border-box; width:100%; max-width:480px; min-height:44px; padding:10px; border:1px solid #575761; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
-.detailCard input.profileInput:focus-visible { outline:2px solid #ff9b63; outline-offset:2px; }
 .detailCard form p { margin:0; font-size:13px; }
+.profileContent { container-type:inline-size; }
+.profileGrid { display:grid; gap:16px; margin-top:36px; }
+@container (min-width:650px) { .profileGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.profileTitle { margin:0 0 20px; font-size:18px; }
+.profileName { font-size:18px; overflow-wrap:anywhere; }
+.recordHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.recordHeading h2 { margin:0; }
+.recordStatus { padding:3px 8px; border:1px solid #565660; border-radius:999px; background:#2a2a30; color:#e4e4e9; font-size:11px; font-weight:600; }
+.recordActions { display:grid; gap:18px; margin-top:20px; }
+.recordActions a { color:#f4f4f5; font-size:14px; font-weight:600; text-underline-offset:3px; }
+.recordActions .joinProfile,.editSchoolName button { display:inline-flex; align-items:center; min-height:44px; padding:9px 14px; border:1px solid #aa7554; border-radius:8px; background:#ffad7d; color:#29180e; text-decoration:none; font:600 14px var(--font-geist-sans),sans-serif; cursor:pointer; }
+.recordActions .joinProfile:hover,.editSchoolName button:not(:disabled):hover { background:#ffc19b; }
+.recordHelp { margin-top:20px; padding-top:16px; border-top:1px solid #3a3a42; }
+.recordHelp h3 { margin:0; font-size:14px; }
+.recordCard p { margin:6px 0 0; color:#d0d0d8; font-size:13px; line-height:1.5; }
+.editSchoolName { margin-top:14px; }
+.editSchoolName summary { width:fit-content; cursor:pointer; font-size:14px; font-weight:600; }
+.editSchoolName form { display:grid; justify-items:start; gap:10px; margin-top:14px; }
+.editSchoolName label { display:grid; gap:6px; width:100%; font-size:13px; }
+.editSchoolName input { min-width:0; min-height:44px; padding:10px; border:1px solid #575761; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
+.editSchoolName button:disabled { opacity:.65; cursor:wait; }
+.recordCard :is(a,summary,input,button):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

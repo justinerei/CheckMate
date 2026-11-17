@@ -4,11 +4,58 @@ import { db } from "@/lib/db";
 import { studentUser } from "../student-data";
 import StudentShell from "../student-shell";
 import styles from "../student-workspace.module.css";
+import account from "@/app/account-profile.module.css";
 import SchoolNameForm from "./school-name-form";
 
 export const instant = false;
 export default async function StudentProfile() {
-  await connection(); const user = await studentUser();
+  await connection();
+  const user = await studentUser();
   const student = await db.student.findUnique({ where: { accountId: user.id }, select: { name: true } });
-  return <StudentShell email={user.email} active="profile"><div className={styles.content}><header className={styles.welcome}><h1>My profile.</h1><p>Your account and student details.</p></header><section className={styles.section}><div className={styles.detailCard}><h2>School name</h2>{student ? <SchoolNameForm name={student.name} /> : <><p>Choose your school name when you join a class, or connect an existing student record using your teacher&apos;s invite.</p><Link className={styles.link} href="/student">Join a class or connect a record →</Link></>}</div><div className={styles.detailCard}><h2>Account details</h2><p>Account name: <strong>{user.name}</strong></p><p>Email: <strong>{user.email}</strong></p></div><div className={styles.detailCard}><h2>Need help?</h2><p>If this is the wrong student record or you need help with your account, contact your teacher or administrator. Do not share your password.</p></div></section></div></StudentShell>;
+  const initial = (user.name.trim() || "Student").charAt(0).toUpperCase();
+
+  return <StudentShell user={user} active="profile">
+    <div className={`${styles.content} ${styles.profileContent}`}>
+      <header className={styles.welcome}><h1>My profile.</h1><p>Your account and student details.</p></header>
+      <div className={styles.profileGrid}>
+        <section className={account.card} aria-labelledby="student-account-details">
+          <h2 id="student-account-details" className={styles.profileTitle}>Account details</h2>
+          <div className={account.identity}>
+            <span className={account.avatar} aria-hidden="true">{initial}</span>
+            <div><strong className={styles.profileName}>{user.name}</strong><p>Student account</p></div>
+          </div>
+          <dl className={account.details}>
+            <div><dt>Account name</dt><dd>{user.name}</dd></div>
+            <div><dt>Email address</dt><dd>{user.email}</dd></div>
+          </dl>
+        </section>
+        <section className={`${account.card} ${styles.recordCard}`} aria-labelledby="student-record">
+          <div className={styles.recordHeading}>
+            <h2 id="student-record" className={styles.profileTitle}>Student record</h2>
+            <span className={student ? account.activeBadge : styles.recordStatus}>{student ? "Linked" : "Not linked"}</span>
+          </div>
+          {student ? <>
+            <dl className={account.details}><div><dt>School name</dt><dd>{student.name}</dd></div></dl>
+            <details className={styles.editSchoolName}>
+              <summary>Edit school name</summary>
+              <SchoolNameForm name={student.name} />
+            </details>
+          </> : <div className={styles.recordActions}>
+            <div>
+              <Link className={styles.joinProfile} href="/student/join">Join a class</Link>
+              <p>Use a class code from your teacher.</p>
+            </div>
+            <div>
+              <Link href="/student?connect=1#connect-record">Connect an existing record <span aria-hidden="true">→</span></Link>
+              <p>Use a one-time student record invite.</p>
+            </div>
+          </div>}
+          <div className={styles.recordHelp}>
+            <h3>Need help?</h3>
+            <p>Contact your teacher if your student record is incorrect.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </StudentShell>;
 }

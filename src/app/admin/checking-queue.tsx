@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { retryPages } from "./actions";
 import styles from "./admin.module.css";
+import { canRetryPage, eligibleVisiblePageIds } from "@/lib/admin-queue";
 
 type Page = { id: string; pageNumber: number; status: string; error: string | null; retryAt: string | null; createdAt: string; quiz: string; teacher: string; batch: boolean; inReview: boolean };
 const format = (value: string) => new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" }).format(new Date(value));
@@ -15,7 +16,8 @@ export default function CheckingQueue({ pages, initialStatus }: { pages: Page[];
   const [busy, setBusy] = useState(false);
   const router = useRouter();
   const visible = pages.filter(page => status === "ALL" || page.status === status);
-  const eligible = (page: Page) => page.status === "FAILED" && !page.retryAt && page.batch && page.inReview;
+  const eligibleIds = eligibleVisiblePageIds(pages, status);
+  const visibleSelection = selected.filter(id => visible.some(page => page.id === id && canRetryPage(page)));
   async function retry(ids: string[]) {
     setBusy(true);
     setMessage("");
@@ -29,8 +31,8 @@ export default function CheckingQueue({ pages, initialStatus }: { pages: Page[];
   }
   return <>
     <div className={styles.queueToolbar}>
-      <label>Page status <select value={status} onChange={event => setStatus(event.target.value)}><option value="ALL">All statuses</option>{["PENDING", "PROCESSING", "COMPLETE", "FAILED"].map(value => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></label>
-      <button type="button" disabled={!selected.length || busy} onClick={() => void retry(selected)}>Retry selected ({selected.length})</button>
+      <label>Page status <select value={status} onChange={event => { setStatus(event.target.value); setSelected([]); }}><option value="ALL">All statuses</option>{["PENDING", "PROCESSING", "COMPLETE", "FAILED"].map(value => <option key={value} value={value}>{value.toLowerCase()}</option>)}</select></label>
+      <div className={styles.queueActions}><button type="button" disabled={!eligibleIds.length || busy} onClick={() => setSelected(eligibleIds)}>Select eligible pages (up to 100)</button><button type="button" disabled={!visibleSelection.length || busy} onClick={() => void retry(visibleSelection)}>Retry selected ({visibleSelection.length})</button></div>
     </div>
     <p className={styles.count} role="status">{message || `${visible.length} pages shown. Automatic retries keep their scheduled time.`}</p>
     {visible.length ? <ul className={styles.activity}>{visible.map(page => <li key={page.id}>
@@ -41,7 +43,7 @@ export default function CheckingQueue({ pages, initialStatus }: { pages: Page[];
           {!page.batch && <small>Individual paper · retry from the teacher workspace</small>}
           {page.batch && !page.inReview && <small>Paper is no longer in review</small>}
         </div>
-        {eligible(page) && <div className={styles.queueActions}><label><input type="checkbox" checked={selected.includes(page.id)} onChange={event => setSelected(current => event.target.checked ? [...current, page.id].slice(0, 100) : current.filter(id => id !== page.id))} /> Select</label><button type="button" disabled={busy} onClick={() => void retry([page.id])}>Retry page</button></div>}
+        {canRetryPage(page) && <div className={styles.queueActions}><label><input type="checkbox" checked={selected.includes(page.id)} onChange={event => setSelected(current => event.target.checked ? [...current, page.id].slice(0, 100) : current.filter(id => id !== page.id))} /> Select</label><button type="button" disabled={busy} onClick={() => void retry([page.id])}>Retry page</button></div>}
       </div>
     </li>)}</ul> : <div className={styles.empty}><strong>No pages found</strong><p>Pages will appear here when teachers upload papers.</p></div>}
   </>;

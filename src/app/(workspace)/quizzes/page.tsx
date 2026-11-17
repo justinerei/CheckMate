@@ -15,7 +15,7 @@ export default async function Quizzes() {
   const date = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "Asia/Manila" });
   const items = quizzes.map(quiz => { const questions = quiz.sections.flatMap(section => section.questions); return { id: quiz.id, title: quiz.title, source: quiz.source, archived: !!quiz.archivedAt, updated: date.format(quiz.updatedAt), papers: quiz._count.submissions, questions: questions.length, missingAnswers: questions.filter(question => question.type !== "ESSAY" && !question.answerKey?.acceptedAnswers.some(answer => answer.trim())).length }; });
   return <>
-    <header className={styles.pageHeader}><div><h1>My quizzes &amp; keys.</h1><p>Find your saved answer keys and quizzes here. Choose one to check a student’s paper.</p></div><div className={styles.pageActions}><Link className={styles.buttonSecondary} href="/quizzes/import">↑ Import quiz</Link><Link className={styles.buttonSecondary} href="/quizzes/existing">+ Add an answer key</Link><Link className={styles.button} href="/quizzes/new">+ Create a quiz</Link></div></header>
+    <header className={styles.pageHeader} data-quiz-library><div><h1>My quizzes &amp; keys.</h1><p>Find your saved answer keys and quizzes here. Choose one to check a student’s paper.</p></div><div className={styles.pageActions}><Link className={styles.buttonSecondary} href="/quizzes/import">↑ Import quiz</Link><Link className={styles.buttonSecondary} href="/quizzes/existing">+ Add an answer key</Link><Link className={styles.button} href="/quizzes/new">+ Create a quiz</Link></div></header>
     <QuizLibrary quizzes={items} />
   </>;
 }

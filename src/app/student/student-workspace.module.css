@@ -77,4 +77,11 @@
 .homeJoin form input { width:100%; min-height:44px; padding:10px 12px; border:1px solid #56565f; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
 .homeJoin form button { min-height:44px; padding:10px 14px; border:1px solid var(--action-primary); border-radius:7px; background:var(--action-primary); color:var(--action-primary-text); font:600 13px var(--font-geist-sans),sans-serif; cursor:pointer; }
 .homeJoin form p { width:100%; }.homeJoin :is(input,button):focus-visible,.homeClassesLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.classesEmpty { display:flex; align-items:center; gap:24px; padding:28px; border:1px solid #514039; border-radius:var(--card-radius); background:#1b1818; }
+.classesEmptyMascot { flex:none; width:96px; height:96px; object-fit:contain; image-rendering:pixelated; }
+.classesEmpty h2 { margin:0; font-size:20px; }
+.classesEmpty p { margin:8px 0 0; color:#d0c2bb; font-size:14px; line-height:1.5; }
+.classesJoinButton { display:inline-flex; align-items:center; gap:12px; min-height:44px; margin-top:16px; padding:10px 16px; border:1px solid var(--action-primary); border-radius:8px; background:var(--action-primary); color:var(--action-primary-text); font-size:14px; font-weight:700; text-decoration:none; }
+.classesJoinButton:hover { background:var(--action-primary-hover); }.classesJoinButton:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 @media(max-width:480px) { .homeGrid { margin-top:34px; }.homeClasses { padding:18px; }.homeMascot { width:60px; height:60px; } }
+@media(max-width:480px) { .classesEmpty { align-items:flex-start; gap:14px; padding:20px; }.classesEmptyMascot { width:64px; height:64px; } }

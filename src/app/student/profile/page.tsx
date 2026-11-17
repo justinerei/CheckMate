@@ -15,19 +15,15 @@ export default async function StudentProfile() {
   const initial = (user.name.trim() || "Student").charAt(0).toUpperCase();
 
   return <StudentShell user={user} active="profile">
-    <div className={`${styles.content} ${styles.profileContent}`}>
+    <div className={`${styles.content} ${styles.profileContent}`} data-student-profile>
       <header className={styles.welcome}><h1>My profile.</h1><p>Your account and student details.</p></header>
       <div className={styles.profileGrid}>
         <section className={account.card} aria-labelledby="student-account-details">
           <h2 id="student-account-details" className={styles.profileTitle}>Account details</h2>
-          <div className={account.identity}>
+          <div className={`${account.identity} ${styles.profileIdentity}`}>
             <span className={account.avatar} aria-hidden="true">{initial}</span>
-            <div><strong className={styles.profileName}>{user.name}</strong><p>Student account</p></div>
+            <div><strong className={styles.profileName}>{user.name}</strong><p>Student · {user.email}</p></div>
           </div>
-          <dl className={account.details}>
-            <div><dt>Account name</dt><dd>{user.name}</dd></div>
-            <div><dt>Email address</dt><dd>{user.email}</dd></div>
-          </dl>
         </section>
         <section className={`${account.card} ${styles.recordCard}`} aria-labelledby="student-record">
           <div className={styles.recordHeading}>
@@ -36,6 +32,7 @@ export default async function StudentProfile() {
           </div>
           {student ? <>
             <dl className={account.details}><div><dt>School name</dt><dd>{student.name}</dd></div></dl>
+            <p>This is the name your teachers see on your school papers.</p>
             <details data-accordion className={styles.editSchoolName}>
               <summary>Edit school name</summary>
               <SchoolNameForm name={student.name} />

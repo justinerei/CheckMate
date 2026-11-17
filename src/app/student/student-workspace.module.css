@@ -32,11 +32,12 @@
 .classFooter strong span { color:#ff9b63; }
 @media(prefers-reduced-motion:reduce) { .classLink { transition:none; } }
 .detailCard form p { margin:0; font-size:13px; }
-.profileContent { container-type:inline-size; }
+.profileContent { width:100%; max-width:840px; margin-inline:auto; }
 .profileGrid { display:grid; gap:16px; margin-top:36px; }
-@container (min-width:650px) { .profileGrid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .profileTitle { margin:0 0 20px; font-size:18px; }
 .profileName { font-size:18px; overflow-wrap:anywhere; }
+.profileContent .profileIdentity { padding-bottom:0; border-bottom:0; }
+.profileIdentity > div { min-width:0; overflow-wrap:anywhere; }
 .recordHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
 .recordHeading h2 { margin:0; }
 .recordStatus { padding:3px 8px; border:1px solid #565660; border-radius:999px; background:#2a2a30; color:#e4e4e9; font-size:11px; font-weight:600; }

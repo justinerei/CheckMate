@@ -26,6 +26,8 @@ test("highlights the current workspace area, including quiz overviews", async ()
   const { workspaceActive } = await import("../src/lib/workspace-navigation.ts");
   assert.equal(workspaceActive("/dashboard"), "overview");
   assert.equal(workspaceActive("/students"), "students");
+  assert.equal(workspaceActive("/profile"), "profile");
+  assert.equal(workspaceActive("/profile/settings"), "profile");
   assert.equal(workspaceActive("/quizzes"), "quizzes");
   assert.equal(workspaceActive("/quizzes/quiz-1/overview"), "quizzes");
 });

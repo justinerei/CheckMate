@@ -1,0 +1,45 @@
+.top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.top > div { min-width:0; }
+.notifications { position:relative; flex:none; margin-left:auto; }
+.bell { position:relative; display:grid; place-items:center; width:44px; height:44px; list-style:none; cursor:pointer; border:1px solid #393940; border-radius:9px; background:#17171b; color:#ededf0; }
+.bell::-webkit-details-marker { display:none; }
+.notifications[open] .bell,.bell:hover { background:#242428; }
+.badge { position:absolute; right:-5px; top:-6px; min-width:19px; height:19px; padding:0 4px; display:grid; place-items:center; border-radius:10px; background:#ffad7d; color:#26160f; font-size:11px; font-weight:700; }
+.popover { position:absolute; z-index:25; width:min(390px,calc(100vw - 44px)); top:calc(100% + 10px); right:0; overflow:hidden; border:1px solid #42424b; border-radius:12px; background:#1b1b20; box-shadow:0 12px 28px #0007; }
+.popoverHeader { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid #393940; }
+.popoverHeader h2 { margin:0; font-size:15px; }
+.popoverHeader button { min-height:36px; padding:4px; background:none; border:0; color:#ffad7d; cursor:pointer; font:inherit; font-size:12px; }
+.popoverHeader button:hover { text-decoration:underline; }
+.notificationList { list-style:none; padding:0; margin:0; overflow:auto; max-height:min(440px,65vh); }
+.notificationList li + li { border-top:1px solid #393940; }
+.notification { display:grid; align-items:start; grid-template-columns:20px minmax(0,1fr) 8px; gap:12px; padding:13px 14px; color:#ededf0; text-decoration:none; }
+.notification:hover { background:#28282d; }
+.notification svg { margin-top:2px; color:#c3c3ca; }
+.notification strong,.notification small,.notification time { display:block; overflow-wrap:anywhere; }
+.notification strong { font-size:13px; }
+.notification small { margin-top:4px; color:#d0d0d7; font-size:13px; }
+.notification time,.notice { color:#bcbcc4; font-size:12px; }
+.notification time { margin-top:5px; }
+.unread { width:7px; height:7px; margin-top:6px; border-radius:50%; background:#ffad7d; }
+.notice { margin:0; padding:14px; }
+.bell:focus-visible,.popover :is(a,button):focus-visible,.queueLink:focus-visible { outline:2px solid #ffad7d; outline-offset:-2px; }
+
+.checkingGrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; margin-top:28px; }
+.panelTitle { margin:0; font-size:16px; }
+.caption,.queueStatus { margin:8px 0 16px; color:#bcbcc4; font-size:13px; }
+.queueStatus { display:flex; align-items:center; gap:8px; }
+.pulse,.idleDot { width:8px; height:8px; flex:none; border-radius:50%; background:#74747e; }
+.pulse { background:#f97316; animation:pulse 2s ease-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow:0 0 0 0 #f9731600; } 35% { box-shadow:0 0 0 4px #f9731650; } }
+@media(prefers-reduced-motion:reduce) { .pulse { animation:none; } }
+.queueLink { display:inline-block; margin-top:12px; color:#ffad7d; font-size:13px; text-decoration:none; }
+.queueLink:hover { text-decoration:underline; }
+.chart { --plot-height:150px; display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; padding:6px 0 22px; }
+.axis { height:var(--plot-height); display:flex; flex-direction:column; justify-content:space-between; align-items:end; color:#bcbcc4; font-size:11px; font-variant-numeric:tabular-nums; }
+.axis span { line-height:0; }
+.bars { margin:0; padding:0; height:var(--plot-height); list-style:none; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-bottom:1px solid #42424b; background:repeating-linear-gradient(to bottom,#393940 0 1px,transparent 1px 25%); }
+.bars li { position:relative; display:flex; align-items:flex-end; justify-content:center; }
+.bar { display:block; width:62%; max-width:58px; border-radius:3px 3px 0 0; background:#f97316; }
+.day { position:absolute; top:calc(100% + 7px); color:#bcbcc4; font-size:11px; }
+.emptyChart { min-height:178px; margin:0; display:grid; place-items:center; color:#bcbcc4; font-size:13px; }
+@media(max-width:900px) { .checkingGrid { grid-template-columns:1fr; } }

@@ -2,12 +2,17 @@
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 
-export async function requireAdmin() {
+export async function getAdmin() {
   const session = await auth();
   const admin = session?.user?.id ? await db.user.findUnique({
     where: { googleId: session.user.id },
-    select: { role: true, enabled: true, email: true, name: true },
+    select: { id: true, role: true, enabled: true, email: true, name: true },
   }) : null;
-  if (!admin?.enabled || admin.role !== "ADMIN") redirect("/");
+  return admin?.enabled && admin.role === "ADMIN" ? admin : null;
+}
+
+export async function requireAdmin() {
+  const admin = await getAdmin();
+  if (!admin) redirect("/");
   return admin;
 }

@@ -5,6 +5,9 @@ import WorkspaceMobileMenu from "@/app/workspace-mobile-menu";
 import workspace from "@/app/workspace.module.css";
 import styles from "./admin.module.css";
 import WorkspaceProfileLink from "@/app/workspace-profile-link";
+import { AdminLiveProvider } from "./admin-live-data";
+import AdminNotifications from "./admin-notifications";
+import live from "./admin-live.module.css";
 
 const links = [
   { href: "/admin", label: "Overview", path: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z" },
@@ -15,7 +18,7 @@ const links = [
 ];
 
 export default function AdminShell({ admin, active, title, description, children }: {
-  admin: { name: string; email: string };
+  admin: { id: string; name: string; email: string };
   active: string;
   title?: string;
   description?: string;
@@ -32,11 +35,16 @@ export default function AdminShell({ admin, active, title, description, children
     <aside className={workspace.rail}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link>{nav}<div className={workspace.railBottom}>{accountMenu}</div></aside>
     <header className={workspace.mobileHeader}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link><WorkspaceMobileMenu>{nav}<div className={workspace.mobileProfile}>{accountMenu}</div></WorkspaceMobileMenu></header>
     <main id="admin-content" tabIndex={-1} className={workspace.main}><div className={styles.page}>
-      {title && <>
-        <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {links.find(link => link.href === active)?.label.toUpperCase()}</p>
-        <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>
-      </>}
-      {children}
+      <AdminLiveProvider overview={active === "/admin"}>
+        <div className={live.top}>
+          {title && <div>
+            <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {links.find(link => link.href === active)?.label.toUpperCase()}</p>
+            <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>
+          </div>}
+          <AdminNotifications adminId={admin.id} />
+        </div>
+        {children}
+      </AdminLiveProvider>
     </div></main>
   </div>;
 }

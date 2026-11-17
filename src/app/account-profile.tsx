@@ -1,5 +1,6 @@
 import { signOut } from "@/auth";
 import { PendingSubmit } from "./pending-screen";
+import AccountProfileEdit from "./account-profile-edit";
 import styles from "./account-profile.module.css";
 
 export default function AccountProfile({ user, role }: {
@@ -23,6 +24,7 @@ export default function AccountProfile({ user, role }: {
         <div><dt>Email address</dt><dd>{user.email}</dd></div>
         <div><dt>Account type</dt><dd>{role}</dd></div>
       </dl>
+      <AccountProfileEdit name={user.name} />
     </section>
     <form className={styles.signOutForm} action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
       <PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out</PendingSubmit>

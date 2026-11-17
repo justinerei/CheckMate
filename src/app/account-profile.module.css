@@ -15,3 +15,16 @@
 .signOut { min-height:44px; padding:10px 16px; border:1px solid #80564c; border-radius:8px; background:#302220; color:#ffd1c6; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
 .signOut:hover { background:#462a25; border-color:#bd8274; }
 .signOut:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.editor { margin-top:24px; }
+.editForm { display:grid; gap:8px; max-width:400px; }
+.editForm label { color:#e4e4e9; font-size:14px; font-weight:600; }
+.editForm input { min-width:0; min-height:44px; padding:10px 12px; border:1px solid #565660; border-radius:8px; background:#141418; color:#f4f4f5; font:inherit; }
+.editActions { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.editButton,.editPrimary { min-height:44px; padding:10px 16px; border:1px solid #565660; border-radius:8px; background:#29292f; color:#f4f4f5; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.editPrimary { border-color:#aa7554; background:#ffad7d; color:#29180e; }
+.editButton:hover:not(:disabled) { background:#35353c; }
+.editPrimary:hover:not(:disabled) { background:#ffc19b; }
+.editActions button:disabled { opacity:.65; cursor:default; }
+.editor :is(button,input):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
+.editMessage { margin:10px 0 0; color:#d5ebd7; font-size:14px; }
+.editMessage[role="alert"] { color:#ffd1c6; }

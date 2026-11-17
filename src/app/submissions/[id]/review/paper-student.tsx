@@ -11,7 +11,7 @@ export default function PaperStudent({ id, selectedId, selectedName, selectedCla
   const [classId, setClassId] = useState(selectedClassId ?? "");
   const classes = Array.from(new Map(students.flatMap(student => student.classes).map(classroom => [classroom.id, classroom])).values());
   const visible = classId ? students.filter(student => student.classes.some(classroom => classroom.id === classId) || student.id === selectedId) : students;
-  return <details className={styles.nameStrip}><summary>{selectedName ? `Linked student · ${selectedName}` : "Link to a student · optional"}</summary><div className={styles.paperStudent}>
+  return <details data-accordion className={styles.nameStrip}><summary>{selectedName ? `Linked student · ${selectedName}` : "Link to a student · optional"}</summary><div className={styles.paperStudent}>
     <p>Link this paper to a student in your list. The name written on the paper is confirmed separately. The last four characters of the sharing code help distinguish students with the same name.</p>
     {students.length ? <form action={action} className={styles.answerForm} key={selectedId ?? "unlinked"}><PendingScreen pending={pending} message="Saving the student link…" />
       {classes.length > 0 ? <label>Class<select className={styles.keyInput} name="classroomId" value={classId} onChange={event => setClassId(event.target.value)}><option value="">No class selected</option>{classes.map(classroom => <option key={classroom.id} value={classroom.id}>{classroom.name}</option>)}</select></label> : <input type="hidden" name="classroomId" value="" />}

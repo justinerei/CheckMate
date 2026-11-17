@@ -36,7 +36,7 @@ export default async function StudentProfile() {
           </div>
           {student ? <>
             <dl className={account.details}><div><dt>School name</dt><dd>{student.name}</dd></div></dl>
-            <details className={styles.editSchoolName}>
+            <details data-accordion className={styles.editSchoolName}>
               <summary>Edit school name</summary>
               <SchoolNameForm name={student.name} />
             </details>

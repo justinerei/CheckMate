@@ -6,7 +6,7 @@ import styles from "./batch.module.css";
 
 export default function AddPaper({ id }: { id: string }) {
   const [state, action, pending] = useActionState(addBatchPaper.bind(null, id), { error: "" });
-  return <details className={styles.addPaper}>
+  return <details data-accordion className={styles.addPaper}>
     <summary><span aria-hidden="true">+</span> Add another paper</summary>
     <form action={action} className={styles.addForm}><PendingScreen pending={pending} message="Adding the paper…" />
       <label htmlFor="batch-pages">How many pages are in this paper?</label>

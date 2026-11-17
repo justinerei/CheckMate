@@ -37,5 +37,5 @@ export function ShareClass({ code }: { code: string }) {
     const link = `${window.location.origin}/student/join?code=${encodeURIComponent(code)}`;
     try { await navigator.clipboard.writeText(link); setMessage("Invite link copied."); } catch { setMessage("Copy the code below and share it with your students."); }
   }
-  return <div><button type="button" onClick={copy}>Copy invite link</button><details><summary>Show class code</summary><code>{code}</code></details>{message && <p role="status">{message}</p>}</div>;
+  return <div><button type="button" onClick={copy}>Copy invite link</button><details data-accordion><summary>Show class code</summary><code>{code}</code></details>{message && <p role="status">{message}</p>}</div>;
 }

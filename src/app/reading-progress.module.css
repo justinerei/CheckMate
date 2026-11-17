@@ -14,3 +14,13 @@
 .note { margin:9px 0 0; color:#a8a8b1; font-size:12px; line-height:1.5; }
 @media(max-width:480px) { .panel { padding:16px; gap:10px; } .mascot { width:52px; height:52px; } .head { align-items:flex-start; flex-wrap:wrap; gap:10px; } }
 @media(prefers-reduced-motion:reduce) { .bar::-webkit-progress-value { transition:none; } }
+.combined { display:block; padding:20px 24px; border-color:#59443a; }
+.combinedHead { display:flex; align-items:center; gap:16px; }
+.notice { flex:1; min-width:0; }
+.notice strong { color:#f4f4f5; font-size:15px; }
+.notice p { margin:6px 0 0; color:#c9c1bf; font-size:13px; line-height:1.5; }
+.combinedCount { display:grid; gap:4px; flex:none; text-align:right; color:#c3c3ca; font-size:12px; }
+.combinedCount strong { color:#ffad7d; font-size:20px; line-height:1.1; }
+.combinedCount strong span { color:#c3c3ca; font-size:15px; }
+.combined .bar { margin-top:18px; }
+@media(max-width:480px) { .combined { padding:16px; }.combinedHead { flex-wrap:wrap; gap:10px; }.combinedHead .notice { flex-basis:calc(100% - 62px); }.combinedCount { display:flex; align-items:baseline; gap:6px; margin-left:62px; } }

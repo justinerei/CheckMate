@@ -56,10 +56,10 @@
 .recordCard :is(a,summary,input,button):focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 
 /* Student overview */
-.home { width:100%; max-width:1280px; margin-inline:auto; }
-.homeGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,320px); gap:32px; align-items:start; margin-top:44px; }
+.home { width:100%; max-width:840px; margin-inline:auto; }
+.homeGrid { display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-items:start; margin-top:44px; }
 .homeResults,.homeClasses { min-width:0; }
-.homeResults .results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; border:0; border-radius:0; background:transparent; overflow:visible; }
+.homeResults .results { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; border:0; border-radius:0; background:transparent; overflow:visible; }
 .homeResults .results li,.homeResults .results li + li { min-width:0; border:1px solid #42424b; border-radius:var(--card-radius); background:#1b1b20; overflow:hidden; }
 .homeResults .resultLink { height:100%; }
 .homeClasses { padding:22px; border:1px solid #514039; border-radius:var(--card-radius); background:#1b1818; }
@@ -77,6 +77,4 @@
 .homeJoin form input { width:100%; min-height:44px; padding:10px 12px; border:1px solid #56565f; border-radius:7px; background:#202025; color:#f4f4f5; font:inherit; }
 .homeJoin form button { min-height:44px; padding:10px 14px; border:1px solid var(--action-primary); border-radius:7px; background:var(--action-primary); color:var(--action-primary-text); font:600 13px var(--font-geist-sans),sans-serif; cursor:pointer; }
 .homeJoin form p { width:100%; }.homeJoin :is(input,button):focus-visible,.homeClassesLink:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
-@media(max-width:1050px) { .homeGrid { grid-template-columns:1fr; gap:28px; }.homeClasses { max-width:none; } }
 @media(max-width:480px) { .homeGrid { margin-top:34px; }.homeClasses { padding:18px; }.homeMascot { width:60px; height:60px; } }
-@media(max-width:600px) { .homeResults .results { grid-template-columns:1fr; } }

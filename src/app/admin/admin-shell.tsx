@@ -35,7 +35,7 @@ export default function AdminShell({ admin, active, title, description, heading,
     <a className={workspace.skipLink} href="#admin-content">Skip to content</a>
     <aside className={workspace.rail}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link>{nav}<div className={workspace.railBottom}>{accountMenu}</div></aside>
     <header className={workspace.mobileHeader}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link><WorkspaceMobileMenu>{nav}<div className={workspace.mobileProfile}>{accountMenu}</div></WorkspaceMobileMenu></header>
-    <main id="admin-content" tabIndex={-1} className={workspace.main}><div className={styles.page}>
+    <main id="admin-content" tabIndex={-1} className={`${workspace.main} ${styles.adminMain}`}><div className={styles.page}>
       <AdminLiveProvider overview={active === "/admin"}>
         <div className={live.top}>
           {heading ?? (title && <div>

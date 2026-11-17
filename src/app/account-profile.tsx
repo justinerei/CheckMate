@@ -1,6 +1,7 @@
 import { signOut } from "@/auth";
 import { PendingSubmit } from "./pending-screen";
 import AccountProfileEdit from "./account-profile-edit";
+import AccountPasswordForm from "./account-password-form";
 import styles from "./account-profile.module.css";
 
 export function AccountProfileHeading() {
@@ -10,11 +11,12 @@ export function AccountProfileHeading() {
   </header>;
 }
 
-export default function AccountProfile({ user, role, children, showHeading = true }: {
+export default function AccountProfile({ user, role, children, showHeading = true, canChangePassword = false }: {
   user: { name: string; email: string };
   role: "Teacher" | "Administrator";
   children?: React.ReactNode;
   showHeading?: boolean;
+  canChangePassword?: boolean;
 }) {
   const initial = (user.name.trim() || role).charAt(0).toUpperCase();
 
@@ -24,14 +26,23 @@ export default function AccountProfile({ user, role, children, showHeading = tru
       <section className={styles.card} aria-labelledby="account-heading">
         <div className={styles.identity}>
           <span className={styles.avatar} aria-hidden="true">{initial}</span>
-          <div><h2 id="account-heading">{user.name}</h2><p>{role} account</p></div>
+          <div>
+            <div className={styles.identityName}>
+              <h2 id="account-heading">{user.name}</h2>
+              {role === "Administrator" && <span className={styles.activeBadge}>Active</span>}
+            </div>
+            <p>{role} account</p>
+          </div>
         </div>
         <dl className={styles.details}>
           <div><dt>Account name</dt><dd>{user.name}</dd></div>
           <div><dt>Email address</dt><dd>{user.email}</dd></div>
           <div><dt>Account type</dt><dd>{role}</dd></div>
         </dl>
-        <AccountProfileEdit name={user.name} />
+        <div className={styles.profileActions}>
+          <AccountProfileEdit name={user.name} />
+          {canChangePassword && <AccountPasswordForm />}
+        </div>
       </section>
       {children}
     </div>

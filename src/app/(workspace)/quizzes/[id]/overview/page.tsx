@@ -48,7 +48,7 @@ export default async function QuizOverview({ params, searchParams }: { params: P
   const largestBand = Math.max(1, ...summary.bands.map(band => band.count));
   return <><div className={styles.page}>
     {batchDeleted === "1" && <BatchDeletedDialog quizId={id} />}
-    <Link href="/quizzes" className="back-navigation">All quizzes</Link>
+    <Link href="/quizzes" className="back-navigation">Back to quizzes &amp; keys</Link>
     <header className={styles.header}><div><p className={styles.eyebrow}>{quiz.source === "EXISTING" ? "Saved answer key" : "Created in CheckMate"}</p><h1>{quiz.title}</h1><p>{questions.length} {questions.length === 1 ? "question" : "questions"} · {maximum} points</p></div><div className={styles.headerActions}>{quiz.source === "BUILT" && <>{quiz._count.submissions === 0 && <Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}`}>Edit quiz</Link>}<Link className={styles.secondaryAction} href={`/quizzes/${encodeURIComponent(id)}/print?from=overview`}>Preview &amp; print</Link></>}<Link className={styles.primary} href={`/submissions/new?quizId=${encodeURIComponent(id)}`}>+ Upload papers</Link></div></header>
     <nav className={styles.overviewTabs} aria-label="Quiz overview"><Link href={`/quizzes/${encodeURIComponent(id)}/overview`} aria-current={!resultsView ? "page" : undefined}>Papers</Link><Link href={`/quizzes/${encodeURIComponent(id)}/overview?view=results`} aria-current={resultsView ? "page" : undefined}>Results</Link></nav>
     {!resultsView && <>

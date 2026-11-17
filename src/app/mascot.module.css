@@ -12,3 +12,17 @@
     70% { background-position:100% 0; }
   }
 }
+
+/* A quiet daydream sequence for the dashboard's idle mascot. */
+.homeIdle { display:inline-flex; align-items:center; justify-content:center; flex:none; }
+.homeIdleFrame { display:block; width:75%; height:100%; background:url('/images/mate/home-daydream-v1.png') 0 0 / 400% 100% no-repeat; image-rendering:pixelated; }
+@media (prefers-reduced-motion: no-preference) {
+  .homeIdleFrame { animation:home-daydream 12s steps(1,end) infinite; }
+  @keyframes home-daydream {
+    0%, 24% { background-position:0 0; }
+    25%, 49% { background-position:33.333% 0; }
+    50%, 69% { background-position:66.667% 0; }
+    70%, 89% { background-position:100% 0; }
+    90%, 100% { background-position:0 0; }
+  }
+}

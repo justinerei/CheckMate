@@ -10,6 +10,7 @@ import Link from "next/link";
 import Mascot from "@/app/mascot";
 import LibraryIcon from "@/app/library-icon";
 import HomeIcon from "@/app/home-icon";
+import HomeIdleMascot from "@/app/home-idle-mascot";
 import styles from "@/app/workspace-content.module.css";
 
 export const instant = false;
@@ -31,7 +32,7 @@ export default async function Dashboard() {
   const concerns = await db.resultConcern.findMany({ where: { resolvedAt: null, submission: { teacherId: teacher.id, quiz: { teacherId: teacher.id } } }, orderBy: { createdAt: "desc" }, select: { id: true, submissionId: true, message: true, submission: { select: { paperName: true, student: { select: { name: true } }, quiz: { select: { title: true } } } } } });
   return <div className={styles.dashboardLayout} data-dashboard><div className={styles.overview}>
 
-    <header className={styles.welcome}><Mascot state="ready" width={145} height={145} className={styles.welcomeMate} /><div><p>Ready when you are, {user?.name.split(" ")[0] || "teacher"}.</p><h1>What are we<br />working on?</h1></div></header>
+    <header className={styles.welcome}><HomeIdleMascot className={styles.welcomeMate} /><div><p>Ready when you are, {user?.name.split(" ")[0] || "teacher"}.</p><h1>What are we<br />working on?</h1></div></header>
     <section className={styles.start} aria-labelledby="start-heading"><h2 id="start-heading">Choose how you’d like to start</h2><div className={styles.actionGrid}>
       <Link href="/submissions/new" className={`${styles.action} ${styles.homePrimaryAction}`}><span className={styles.actionIcon}><HomeIcon type="check" /></span><strong>Check papers</strong></Link>
       <Link href="/quizzes/new" className={styles.action}><span className={styles.actionIcon}><HomeIcon type="create" /></span><strong>Create a quiz</strong></Link>

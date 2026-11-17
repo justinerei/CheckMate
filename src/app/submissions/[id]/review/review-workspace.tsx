@@ -63,28 +63,29 @@ export default function ReviewWorkspace({ id, items, pages, name, score, finaliz
   return <ReviewDraftContext.Provider value={{ markDirty, saveResult }}><div ref={workspace} className={styles.workspace} onInputCapture={event => { const form = (event.target as HTMLElement).closest("form[data-review-question]") as HTMLFormElement | null; if (form?.dataset.reviewQuestion) markDirty(form.dataset.reviewQuestion); }} onChangeCapture={event => { const form = (event.target as HTMLElement).closest("form[data-review-question]") as HTMLFormElement | null; if (form?.dataset.reviewQuestion) markDirty(form.dataset.reviewQuestion); }}>
     {name}
     <nav className={styles.tabs} aria-label="Review views">
-      {([["review", `Needs review (${flagged.length})`], ["all", `All answers (${items.length})`], ["score", "Score"]] as const).map(([key,label]) =>
+      {([["review", `Needs review (${flagged.length})`], ["all", `All answers (${items.length})`], ["score", "Score & finalize"]] as const).map(([key,label]) =>
         <button key={key} type="button" aria-pressed={currentView === key} disabled={key === "review" && !flagged.length} onClick={() => changeView(key)}>{label}</button>)}
     </nav>
     <div className={styles.view} hidden={currentView !== "score"}>{score}</div>
     <div className={styles.view} hidden={currentView === "score"}>
       {active && <div className={styles.columns}>
         <aside className={styles.paper}>
-          <div className={styles.row}><strong>Original paper</strong>{photo && <select aria-label="Paper page" value={photo.pageNumber} onChange={e => setManualPage({question:active.id,page:Number(e.target.value)})}>{pages.map(page => <option key={page.id} value={page.pageNumber}>Page {page.pageNumber}</option>)}</select>}</div>
+          <div className={`${styles.row} ${styles.panelHeader}`}><strong>Original paper</strong>{photo && <select aria-label="Paper page" value={photo.pageNumber} onChange={e => setManualPage({question:active.id,page:Number(e.target.value)})}>{pages.map(page => <option key={page.id} value={page.pageNumber}>Page {page.pageNumber}</option>)}</select>}</div>
           {photo && <PhotoPreview className={styles.photo} triggerClassName={styles.paperTrigger} triggerLabel="View paper" src={`/api/submissions/${id}/pages/${photo.id}`} alt={`Student paper page ${photo.pageNumber}`} pageOptions={pages.map(page => page.pageNumber)} selectedPage={photo.pageNumber} onPageChange={page => setManualPage({ question: active.id, page })} />}
           {!active.detected.length && <small>Page unknown. Choose a page to check the answer.</small>}
         </aside>
         <section className={styles.question}>
-          <div className={styles.row}><span aria-live="polite">{index + 1} of {queue.length} {currentView === "review" ? "to review" : "answers"}</span>
+          <div className={`${styles.row} ${styles.panelHeader}`}><strong>Review answer</strong>
             <select aria-label="Choose question" value={active.id} onChange={e => select(e.target.value)}>{queue.map(item => <option key={item.id} value={item.id}>Question {item.number}</option>)}</select></div>
+          <p className={styles.reviewProgress} aria-live="polite">{index + 1} of {queue.length} {currentView === "review" ? "to review" : "answers"} <span>Question {active.number} of {items.length}</span></p>
           {new Set(active.detected).size > 1 && <div className={styles.pageChoices} role="group" aria-label="Paper photos with readings"><span>Check paper photos:</span>{[...new Set(active.detected)].map(page => <button type="button" key={page} aria-pressed={photo?.pageNumber === page} onClick={() => setManualPage({ question: active.id, page })}>View page {page}</button>)}</div>}
           {dirty.includes(active.id) && <p className={styles.unsaved} role="status">Unsaved changes</p>}
           {items.map(item => <div key={`${item.id}:${versions[item.id] ?? 0}`} hidden={item.id !== active.id}>{item.form}</div>)}
-          <div className={styles.row}><button disabled={index === 0} onClick={() => select(queue[index-1].id)}>← Previous</button><button disabled={index === queue.length-1} onClick={() => select(queue[index+1].id)}>Next →</button></div>
+          <div className={`${styles.row} ${styles.questionNavigation}`}><button disabled={index === 0} onClick={() => select(queue[index-1].id)}>← Previous</button><button disabled={index === queue.length-1} onClick={() => select(queue[index+1].id)}>Next →</button></div>
         </section>
       </div>}
     </div>
-    {!finalized && <p role="status">{flagged.length ? `${flagged.length} answers awaiting confirmation.` : "No matched answers need attention."} {!nameReviewed ? "Confirm the student name to finish." : reviewBlocked ? "Confirm all answers to resolve unmatched readings." : finalizationReason ? finalizationReason : !flagged.length && "Ready to finalize in Score."}</p>}
+    {!finalized && <p className={styles.reviewStatus} role="status">{flagged.length ? `${flagged.length} answers awaiting confirmation.` : "No matched answers need attention."} {!nameReviewed ? "Confirm the student name to finish." : reviewBlocked ? "Confirm all answers to resolve unmatched readings." : finalizationReason ? finalizationReason : !flagged.length && "Ready to finalize in Score."}</p>}
     {prompt && <dialog ref={dialog} className={styles.draftDialog} aria-labelledby="draft-dialog-title" aria-describedby="draft-dialog-description" onCancel={event => { event.preventDefault(); dismissPrompt(); }}><h2 id="draft-dialog-title">Save your changes?</h2><p id="draft-dialog-description">You have edits for this answer that haven’t been confirmed.</p><div className={styles.dialogActions}><button type="button" onClick={dismissPrompt} autoFocus>Stay</button><button type="button" className={styles.discard} onClick={discardAndContinue}>Discard changes</button><button type="button" onClick={saveAndContinue}>Save &amp; continue</button></div></dialog>}
   </div></ReviewDraftContext.Provider>;
 }

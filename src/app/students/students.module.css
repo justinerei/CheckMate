@@ -87,18 +87,20 @@
 .manageRecords > summary span { display:block; color:#b7b7bf; font-size:12px; font-weight:400; margin:6px 0 0 18px; }
 .manageRecords > .toolGrid { margin:0; padding:0 16px 16px; }
 .manageRecords:focus-within > summary:focus-visible,.classRecord summary:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
-/* Keep classes and student records together on wide workspaces. */
-.classWorkspace { display:grid; gap:0; }
+/* Classes workspace */
+.content { max-width:1120px; margin-inline:auto; }
+.classWorkspace { display:block; }
 .recordsColumn { min-width:0; }
-@media(min-width:1200px) {
-  .content { max-width:none; }
-  .classWorkspace { grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr); gap:32px; align-items:start; margin-top:46px; }
-  .classWorkspace .classes,.recordsColumn .listSection { margin-top:0; }
-  .recordsColumn { padding:22px; border:1px solid #414149; border-radius:12px; background:#17171b; }
-  .recordsColumn .listHeader { align-items:start; padding-bottom:16px; }
-  .recordsColumn .manageRecords { margin-top:20px; background:#1d1d22; }
-  .recordsColumn .manageRecords:first-child { margin-top:0; }
-  .recordsColumn .toolGrid { grid-template-columns:1fr; }
-  .classes .createClass { border-color:#81573f; background:#291f1b; }
-  .classes .createClass summary:hover { background:#38271f; }
-}
+.createEmpty { background:#19191e; border-color:#42424b; }
+.classes .createEmpty summary { min-height:0; display:flex; align-items:center; justify-content:center; gap:24px; padding:28px; }
+.classEmptyMate { width:96px; height:96px; object-fit:contain; image-rendering:pixelated; flex:none; }
+.classes .createEmpty .classEmptyCopy { display:grid; gap:8px; margin:0; color:#f4f4f5; font-size:14px; }
+.classEmptyCopy strong { font-size:18px; }
+.classes .createEmpty .classEmptyCopy > span:not(.createClassButton) { margin:0; color:#c3c3ca; font-size:13px; }
+.classes .createEmpty .classEmptyCopy .createClassButton { display:inline-flex; justify-self:start; align-items:center; min-height:44px; margin:6px 0 0; padding:10px 15px; border-radius:7px; background:var(--action-primary); color:var(--action-primary-text); font-size:14px; font-weight:600; }
+.classes .createEmpty summary:hover .createClassButton { background:var(--action-primary-hover); }
+.classes .createEmpty > form { max-width:560px; margin:auto; }
+.recordsColumn .listSection { margin-top:46px; }
+.recordsColumn .manageRecords { margin-top:24px; }
+@media(min-width:1100px) { .classGrid { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; } }
+@media(max-width:480px) { .classes .createEmpty summary { gap:14px; padding:20px; }.classEmptyMate { width:72px; height:72px; } }

@@ -75,6 +75,7 @@ select:disabled { cursor:not-allowed; }
 [data-accordion] > summary:focus-visible, [data-accordion-trigger]:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }
 
 /* Shared navigation for returning to a parent screen. */
+.teacher-page-back { margin-bottom:28px; }
 .back-navigation { display:inline-flex; align-items:center; gap:9px; min-height:44px; max-width:100%; padding:9px 13px; border:1px solid #45454d; border-radius:8px; background:transparent; color:#f4f4f5; font-size:14px; font-weight:600; line-height:1.3; text-decoration:none; transition:background-color .15s, border-color .15s; }
 .back-navigation::before { content:'←'; color:#ffac70; font-size:18px; line-height:1; }
 .back-navigation:hover { background:#242429; border-color:#777780; }

@@ -37,8 +37,8 @@ export default async function BatchPage({ params }: { params: Promise<{ id: stri
   const full = batch.submissions.length >= 5;
 
   return <main className={styles.shell}>
-    <header className={styles.header}><Link href="/dashboard" className={styles.logo}>checkmate<span>.</span></Link><Link href={`/quizzes/${encodeURIComponent(batch.quizId)}/overview`} className="back-navigation">Back to quiz</Link></header>
     <div className={styles.content}>
+      <div className="teacher-page-back"><Link href={`/quizzes/${encodeURIComponent(batch.quizId)}/overview`} className="back-navigation">Back to quiz</Link></div>
       <div className={styles.heading}><div><h1>Checking papers</h1><p className={styles.intro}>{batch.quiz.title} · Batch of student papers</p></div></div>
       <Refresh active={active} />
       <ReadingProgress papers={batch.submissions} label="Batch reading progress" showMascot={!active} notice={active ? { title: progressLabel, mascot: batchMascotState(checking.kind), description: checking.kind === "rate_limit" ? <>The checker temporarily reached a rate limit. Checking will retry automatically after <RetryTime value={checking.retryAt} />. Keep the app server running.</> : checking.kind === "reading" ? "A page is being read. Other pages will wait their turn." : "Pages are waiting for the background checker. Keep the app server running." } : undefined} />

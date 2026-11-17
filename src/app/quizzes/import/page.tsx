@@ -10,5 +10,6 @@ export const instant = false;
 export default async function ImportQuizPage() {
   await connection();
   if (!await getTeacher()) redirect("/");
-  return <main className={styles.shell}><header className={styles.header}><Link className={styles.logo} href="/dashboard">checkmate<span>.</span></Link><Link className="back-navigation" href="/quizzes">Back to quizzes &amp; keys</Link></header><div className={`${styles.content} ${importStyles.importPage}`}><h1>Import a quiz</h1><p className={styles.description}>Upload a quiz and an optional answer key, then review the questions.</p><ImportQuizForm /></div></main>;
+  return <main className={styles.shell}><div className={`${styles.content} ${importStyles.importPage}`}>
+      <div className="teacher-page-back"><Link className="back-navigation" href="/quizzes">Back to quizzes &amp; keys</Link></div><h1>Import a quiz</h1><p className={styles.description}>Upload a quiz and an optional answer key, then review the questions.</p><ImportQuizForm /></div></main>;
 }

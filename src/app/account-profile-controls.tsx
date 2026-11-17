@@ -5,7 +5,7 @@ import AccountProfileEdit from "./account-profile-edit";
 import AccountPasswordForm from "./account-password-form";
 import styles from "./account-profile.module.css";
 
-export default function AccountProfileControls({ name, canChangePassword }: { name: string; canChangePassword: boolean }) {
+export default function AccountProfileControls({ name, canChangePassword, compact = false }: { name: string; canChangePassword: boolean; compact?: boolean }) {
   const [mode, setMode] = useState<"name" | "password" | null>(null);
   const [message, setMessage] = useState("");
 
@@ -23,7 +23,7 @@ export default function AccountProfileControls({ name, canChangePassword }: { na
     {mode === "name" ? <AccountProfileEdit name={name} onClose={close} />
       : mode === "password" ? <AccountPasswordForm onClose={close} />
         : <div className={styles.profileActions}>
-          <button type="button" className={styles.editButton} onClick={() => open("name")}>Edit profile</button>
+          <button type="button" className={styles.editButton} onClick={() => open("name")}>{compact ? "Edit name" : "Edit profile"}</button>
           {canChangePassword && <button type="button" className={styles.editButton} onClick={() => open("password")}>Change password</button>}
         </div>}
     {message && <p className={styles.editMessage} role="status">{message}</p>}

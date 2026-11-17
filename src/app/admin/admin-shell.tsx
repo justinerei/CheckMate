@@ -36,7 +36,7 @@ export default function AdminShell({ admin, active, title, description, heading,
     <header className={workspace.mobileHeader}><Link className={workspace.brand} href="/admin">checkmate<span>.</span></Link><WorkspaceMobileMenu>{nav}<div className={workspace.mobileProfile}>{accountMenu}</div></WorkspaceMobileMenu></header>
     <main id="admin-content" tabIndex={-1} className={`${workspace.main} ${styles.adminMain}`}><div className={styles.page}>
       <AdminLiveProvider overview={active === "/admin"}>
-        <div className={live.top}>
+        <div className={`${live.top} ${active === "/admin/profile" ? styles.profileTop : ""}`}>
           {heading ?? (title && <div>
             <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {(links.find(link => link.href === active)?.label ?? title).toUpperCase()}</p>
             <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>

@@ -1,5 +1,8 @@
 .adminMain.adminMain { max-width:none; }
 .page { width:100%; min-width:0; }
+.profileTop { position:relative; }
+.profileTop > .profileHeading { width:100%; max-width:760px; margin-inline:auto; padding-right:56px; }
+.profileTop > :last-child { position:absolute; top:0; right:0; }
 .accountFilters.accountFilters { grid-template-columns:minmax(240px,2fr) minmax(145px,1fr) minmax(145px,1fr); max-width:1020px; gap:12px; margin-top:0; }
 .accountFilters.accountFilters label { color:#c6c6cf; font-size:12px; }
 .accountFilters.accountFilters input,.accountFilters.accountFilters select { min-height:46px; border-color:#414149; border-radius:10px; background-color:#19191e; }

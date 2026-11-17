@@ -3,10 +3,10 @@ import { PendingSubmit } from "./pending-screen";
 import AccountProfileControls from "./account-profile-controls";
 import styles from "./account-profile.module.css";
 
-export function AccountProfileHeading() {
+export function AccountProfileHeading({ admin = false }: { admin?: boolean }) {
   return <header className={styles.header}>
     <h1>My profile.</h1>
-    <p>Your account details, all in one place.</p>
+    <p>{admin ? "Manage your account and notifications." : "Your account details, all in one place."}</p>
   </header>;
 }
 
@@ -28,17 +28,16 @@ export default function AccountProfile({ user, role, children, showHeading = tru
           <div>
             <div className={styles.identityName}>
               <h2 id="account-heading">{user.name}</h2>
-              {role === "Administrator" && <span className={styles.activeBadge}>Active</span>}
             </div>
-            <p>{role} account</p>
+            <p>{role === "Administrator" ? <>{role} · <span className={styles.identityEmail}>{user.email}</span></> : `${role} account`}</p>
           </div>
         </div>
-        <dl className={styles.details}>
+        {role !== "Administrator" && <dl className={styles.details}>
           <div><dt>Account name</dt><dd>{user.name}</dd></div>
           <div><dt>Email address</dt><dd>{user.email}</dd></div>
           <div><dt>Account type</dt><dd>{role}</dd></div>
-        </dl>
-        <AccountProfileControls name={user.name} canChangePassword={canChangePassword} />
+        </dl>}
+        <AccountProfileControls name={user.name} canChangePassword={canChangePassword} compact={role === "Administrator"} />
       </section>
       {children}
     </div>

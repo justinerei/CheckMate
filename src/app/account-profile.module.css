@@ -1,9 +1,8 @@
 .profile { max-width:760px; }
-.profileWithPreferences { container-type:inline-size; }
+.profileWithPreferences { width:100%; max-width:760px; margin-inline:auto; }
 .profileCards { display:grid; gap:16px; align-items:start; margin-top:36px; }
-@container (min-width:700px) {
-  .profileWithPreferences .profileCards { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
-}
+.profileWithPreferences .identity { padding-bottom:0; border-bottom:0; }
+.identityEmail { overflow-wrap:anywhere; }
 .header h1 { margin:0; font:500 clamp(36px,4vw,52px)/1.15 var(--font-pixel),monospace; }
 .header p { margin:14px 0 0; color:#bcbcc4; line-height:1.5; }
 .card { min-width:0; padding:28px; border:1px solid #42424b; border-radius:var(--card-radius); background:#1b1b20; }

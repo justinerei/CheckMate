@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import styles from "@/app/account-profile.module.css";
+import { mutedNotificationKinds } from "@/lib/admin-notification-preferences";
 
 const options = [
   { kind: "account", title: "New account registrations", description: "When a teacher or student joins CheckMate." },
@@ -24,10 +25,10 @@ function subscribe(callback: () => void) {
 export function useNotificationPreferences(adminId: string) {
   const key = `checkmate:admin-notification-preferences:${adminId}`;
   const value = useSyncExternalStore(subscribe, () => {
-    try { return localStorage.getItem(key) ?? ""; }
-    catch { return ""; }
-  }, () => "");
-  const muted = new Set(value.split(","));
+    try { return localStorage.getItem(key); }
+    catch { return null; }
+  }, () => null);
+  const muted = mutedNotificationKinds(value);
 
   function setEnabled(kind: Preference, enabled: boolean) {
     const next = new Set(muted);

@@ -8,6 +8,7 @@ import { studentName } from "@/lib/student-input";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { studentJoinBack } from "@/lib/student-navigation";
 
 type State = { message: string; ok: boolean };
 
@@ -33,9 +34,9 @@ export async function switchToStudentAccount(form: FormData) {
   await signOut({ redirectTo: "/" });
 }
 
-export async function cancelClassInvite() {
+export async function cancelClassInvite(form: FormData) {
   (await cookies()).delete("class-invite");
-  redirect("/student");
+  redirect(studentJoinBack(form.get("from")));
 }
 
 async function currentUser() {

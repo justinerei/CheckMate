@@ -8,20 +8,21 @@ import StudentShell from "../../student-shell";
 import ConcernForm from "./concern-form";
 import styles from "../../student-workspace.module.css";
 import resultStyles from "./result.module.css";
+import { studentResultBack } from "@/lib/student-navigation";
 
 export const instant = false;
-export default async function StudentResult({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fromClass?: string }> }) {
-  await connection(); const user = await studentUser(); const { id } = await params; const { fromClass } = await searchParams;
+export default async function StudentResult({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fromClass?: string; from?: string }> }) {
+  await connection(); const user = await studentUser(); const { id } = await params; const { fromClass, from } = await searchParams;
   const paper = await db.submission.findFirst({ where: { id, ...releasedStudentResults(user.id) }, include: { student: { select: { id: true } }, concerns: { orderBy: { createdAt: "desc" } }, answers: { include: { assessments: { include: { criterion: true } } } }, quiz: { include: { sections: { orderBy: { position: "asc" }, include: { questions: { orderBy: { position: "asc" }, include: { answerKey: true } } } } } } } });
   if (!paper || !paper.student) notFound();
-  const fromThisClass = !!fromClass && fromClass === paper.classroomId;
+  const back = studentResultBack(from, fromClass, paper.classroomId);
   let continuous = 0;
   const questions = paper.quiz.sections.flatMap(section => section.questions.map((question, index) => ({ ...question, label: paper.quiz.numbering === "CONTINUOUS" ? `Question ${++continuous}` : `${section.title} · Question ${index + 1}` })));
   const max = questions.reduce((sum, question) => sum + Number(question.points), 0);
   const concerns = paper.concerns.filter(concern => concern.studentId === paper.student!.id);
-  return <StudentShell user={user} active={fromThisClass ? "classes" : "results"}>
+  return <StudentShell user={user} active={back.active}>
     <div className={styles.content}>
-      <Link className={resultStyles.back} href={fromThisClass ? `/student/classes/${encodeURIComponent(fromClass!)}` : "/student/results"}>{fromThisClass ? "← Back to class" : "← My results"}</Link>
+      <Link className={resultStyles.back} href={back.href}>← {back.label}</Link>
       <header className={resultStyles.header}>
         <div><p className={resultStyles.eyebrow}>YOUR RESULT <span>✳</span></p><h1>{paper.quiz.title}</h1><p>Released {paper.releasedAt ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeZone: "Asia/Manila" }).format(paper.releasedAt) : ""}</p></div>
         <div className={resultStyles.scoreCard}><span>FINAL SCORE</span><strong>{paper.totalScore?.toString()} <small>/ {Math.round(max * 100) / 100}</small></strong></div>

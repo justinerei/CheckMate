@@ -24,7 +24,7 @@ export default async function StudentHome({ searchParams }: { searchParams: Prom
     {student ? <div className={styles.homeGrid}>
       <section className={styles.homeResults} aria-labelledby="recent-results-heading">
         <div className={styles.sectionHeading}><div><h2 id="recent-results-heading">Recent results</h2><p>{student.results.length} released {student.results.length === 1 ? "result" : "results"}</p></div><Link href="/student/results">View all results <span aria-hidden="true">↗</span></Link></div>
-        <ResultList results={student.results.slice(0, 5)} />
+        <ResultList results={student.results.slice(0, 5)} from="overview" />
       </section>
       <section className={styles.homeClasses} aria-labelledby="home-classes-heading">
         <div className={styles.homeClassHeader}><span className={styles.homeMascot}><Mascot state="ready" width={72} height={72} /></span><div><h2 id="home-classes-heading">Your classes</h2><p>{count ? `${count} ${count === 1 ? "class" : "classes"} joined` : "Join a class to connect with your teacher."}</p></div></div>

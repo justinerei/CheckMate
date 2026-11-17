@@ -10,7 +10,7 @@ export default function StudentShell({ user, active, children }: {
   active: "overview" | "classes" | "results" | "profile";
   children: React.ReactNode;
 }) {
-  const overview = active === "overview" || active === "results";
+  const overview = active === "overview";
   const nav = <nav className={workspace.nav} aria-label="Student workspace">
     <p className={workspace.label}>YOUR WORKSPACE</p>
     <Link href="/student" className={`${workspace.navItem} ${overview ? workspace.active : ""}`} aria-current={overview ? "page" : undefined}>
@@ -19,6 +19,10 @@ export default function StudentShell({ user, active, children }: {
     </Link>
     <Link href="/student/classes" className={`${workspace.navItem} ${active === "classes" ? workspace.active : ""}`} aria-current={active === "classes" ? "page" : undefined}>
       <span aria-hidden="true">▦</span>My classes
+    </Link>
+    <Link href="/student/results" className={`${workspace.navItem} ${active === "results" ? workspace.active : ""}`} aria-current={active === "results" ? "page" : undefined}>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h8l4 4v14H6z M14 3v5h4 M9 12h6 M9 16h6" /></svg>
+      My results
     </Link>
   </nav>;
   const account = <WorkspaceProfileLink name={user.name} email={user.email} role="Student" href="/student/profile">

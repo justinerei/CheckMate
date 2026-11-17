@@ -14,6 +14,15 @@
 .accounts,.activity { list-style:none; margin:0; padding:0; border:1px solid #393940; border-radius:var(--card-radius); background:#17171b; overflow:hidden; }.accounts li,.activity li { display:flex; align-items:center; gap:15px; padding:16px 18px; }.accounts li + li,.activity li + li { border-top:1px solid #393940; }.accountIcon,.activityIcon { display:grid; place-items:center; flex:none; width:38px; height:38px; color:#ff9b63; background:#30231e; border-radius:8px; }.accountInfo { display:grid; gap:4px; flex:1; min-width:0; }.accountInfo strong,.accountInfo span { overflow-wrap:anywhere; }.accountInfo span,.accountInfo small,.activity p,.activity small { color:#bcbcc7; font-size:13px; }.tags { display:flex; gap:7px; flex-wrap:wrap; }.tags span { padding:5px 9px; border:1px solid #46464e; border-radius:20px; color:#dedee4; font-size:12px; }.tags .active { color:#bfe2c8; border-color:#45604c; }.tags .disabled { color:#ffc5aa; border-color:#765143; }
 .accountControl { flex:none; }.accountControl button { min-height:42px; padding:9px 13px; border:1px solid #62626a; border-radius:7px; background:#28282d; color:#f4f4f5; cursor:pointer; font:inherit; font-size:13px; font-weight:600; }.accountControl button:hover { background:#393940; }.accountControl .primary { background:var(--action-primary); border-color:var(--action-primary); color:var(--action-primary-text); }.accountControl .primary:hover { background:var(--action-primary-hover); }.accountControl button:disabled { opacity:.6; cursor:wait; }.error { color:#ffb3a6; font-size:13px; max-width:200px; }
 .accountInfo details { color:#bcbcc7; font-size:13px; }.accountInfo summary { display:flex; align-items:center; cursor:pointer; width:fit-content; }.accountInfo details small { display:block; margin-top:5px; }.accountInfo summary:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.accounts li { align-items:flex-start; gap:14px; padding:18px 20px; }
+.accounts .accountIcon { margin-top:2px; }
+.accounts .accountInfo { gap:3px; }
+.accounts .accountInfo > strong { font-size:15px; line-height:1.35; }
+.accounts .accountInfo > span { line-height:1.4; }
+.accounts .accountInfo details { margin-top:2px; }
+.accounts .accountInfo summary { color:#d5d5dd; font-size:13px; font-weight:500; }
+.accounts .accountInfo summary:hover { color:#ffbd98; }
+.accounts .tags,.accounts .accountControl { align-self:center; }
 .activity li { align-items:flex-start; }.activity p { margin:6px 0; }.empty { padding:27px 20px; border:1px dashed #484850; border-radius:10px; }.empty p { color:#bcbcc7; font-size:14px; margin:8px 0 0; }
 @media(max-width:760px) { .filters { grid-template-columns:1fr 1fr; }.filters label:first-child { grid-column:1 / -1; }.accounts li { flex-wrap:wrap; }.accountInfo { flex-basis:calc(100% - 55px); }.tags { margin-left:53px; }.accountControl { margin-left:auto; } }
 @media(max-width:420px) { .metrics { grid-template-columns:1fr; }.metrics > div + div { border-left:0; border-top:1px solid #393940; }.tags,.accountControl { margin-left:53px; }.accountControl { width:100%; }.filters { grid-template-columns:1fr; }.filters label:first-child { grid-column:auto; } }

@@ -1,7 +1,6 @@
 import { signOut } from "@/auth";
 import { PendingSubmit } from "./pending-screen";
-import AccountProfileEdit from "./account-profile-edit";
-import AccountPasswordForm from "./account-password-form";
+import AccountProfileControls from "./account-profile-controls";
 import styles from "./account-profile.module.css";
 
 export function AccountProfileHeading() {
@@ -39,10 +38,7 @@ export default function AccountProfile({ user, role, children, showHeading = tru
           <div><dt>Email address</dt><dd>{user.email}</dd></div>
           <div><dt>Account type</dt><dd>{role}</dd></div>
         </dl>
-        <div className={styles.profileActions}>
-          <AccountProfileEdit name={user.name} />
-          {canChangePassword && <AccountPasswordForm />}
-        </div>
+        <AccountProfileControls name={user.name} canChangePassword={canChangePassword} />
       </section>
       {children}
     </div>

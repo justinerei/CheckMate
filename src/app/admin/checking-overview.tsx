@@ -20,7 +20,21 @@ export default function CheckingOverview() {
   ];
 
   return <div className={live.checkingGrid}>
-    <section className={styles.overviewPanel} aria-labelledby="checking-activity">
+    <section className={`${styles.overviewPanel} ${live.queuePanel}`} aria-labelledby="checking-queue-title">
+      <h2 id="checking-queue-title" className={live.panelTitle}>Checking at a glance</h2>
+      <p className={live.queueStatus}>
+        <span className={overview?.processing && !unavailable ? live.pulse : live.idleDot} aria-hidden="true" />
+        {unavailable ? "Live updates unavailable" : !overview ? "Loading queue…" :
+          overview.processing ? `${overview.processing} ${overview.processing === 1 ? "page" : "pages"} processing` : "No pages processing"}
+      </p>
+      <div className={styles.overviewRows}>
+        {rows.map(row => <Link key={row.status} className={styles.overviewRow} href={`/admin/queue?status=${row.status}`}>
+          <span>{row.name}</span><strong>{row.count ?? "—"}</strong>
+        </Link>)}
+      </div>
+      <Link className={live.queueLink} href="/admin/queue">Open checking queue <span aria-hidden="true">→</span></Link>
+    </section>
+    <section className={`${styles.overviewPanel} ${live.activityPanel}`} aria-labelledby="checking-activity">
       <h2 id="checking-activity" className={live.panelTitle}>Checking activity</h2>
       <p className={live.caption}>Papers finalized · Last 7 days</p>
       {overview ? <div className={live.chart} role="group" aria-label="Daily finalized papers, Manila time">
@@ -36,20 +50,6 @@ export default function CheckingOverview() {
           })}
         </ul>
       </div> : <p className={live.emptyChart}>{unavailable ? "Checking activity is unavailable." : "Loading checking activity…"}</p>}
-    </section>
-    <section className={styles.overviewPanel} aria-labelledby="checking-queue-title">
-      <h2 id="checking-queue-title" className={live.panelTitle}>Checking at a glance</h2>
-      <p className={live.queueStatus}>
-        <span className={overview?.processing && !unavailable ? live.pulse : live.idleDot} aria-hidden="true" />
-        {unavailable ? "Live updates unavailable" : !overview ? "Loading queue…" :
-          overview.processing ? `${overview.processing} ${overview.processing === 1 ? "page" : "pages"} processing` : "No pages processing"}
-      </p>
-      <div className={styles.overviewRows}>
-        {rows.map(row => <Link key={row.status} className={styles.overviewRow} href={`/admin/queue?status=${row.status}`}>
-          <span>{row.name}</span><strong>{row.count ?? "—"}</strong>
-        </Link>)}
-      </div>
-      <Link className={live.queueLink} href="/admin/queue">Open checking queue <span aria-hidden="true">→</span></Link>
     </section>
   </div>;
 }

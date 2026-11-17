@@ -24,7 +24,8 @@
 .notice { margin:0; padding:14px; }
 .bell:focus-visible,.popover :is(a,button):focus-visible,.queueLink:focus-visible { outline:2px solid #ffad7d; outline-offset:-2px; }
 
-.checkingGrid { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px; margin-top:28px; }
+.checkingGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,2fr); gap:12px; margin-top:28px; }
+.queuePanel { grid-column:1; grid-row:1; }.activityPanel { grid-column:2; grid-row:1; }
 .panelTitle { margin:0; font-size:16px; }
 .caption,.queueStatus { margin:8px 0 16px; color:#bcbcc4; font-size:13px; }
 .queueStatus { display:flex; align-items:center; gap:8px; }
@@ -42,4 +43,4 @@
 .bar { display:block; width:62%; max-width:58px; border-radius:3px 3px 0 0; background:#f97316; }
 .day { position:absolute; top:calc(100% + 7px); color:#bcbcc4; font-size:11px; }
 .emptyChart { min-height:178px; margin:0; display:grid; place-items:center; color:#bcbcc4; font-size:13px; }
-@media(max-width:900px) { .checkingGrid { grid-template-columns:1fr; } }
+@media(max-width:900px) { .checkingGrid { grid-template-columns:1fr; } .queuePanel,.activityPanel { grid-column:auto; grid-row:auto; } .queuePanel { order:-1; } }

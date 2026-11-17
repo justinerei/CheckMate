@@ -17,11 +17,12 @@ const links = [
   { href: "/admin/reports", label: "Reports", path: "M5 20V10h3v10z M10.5 20V4h3v16z M16 20v-7h3v7z" },
 ];
 
-export default function AdminShell({ admin, active, title, description, children }: {
+export default function AdminShell({ admin, active, title, description, heading, children }: {
   admin: { id: string; name: string; email: string };
   active: string;
   title?: string;
   description?: string;
+  heading?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const accountMenu = <WorkspaceProfileLink name={admin.name} email={admin.email} role="Administrator" href="/admin/profile">
@@ -37,10 +38,10 @@ export default function AdminShell({ admin, active, title, description, children
     <main id="admin-content" tabIndex={-1} className={workspace.main}><div className={styles.page}>
       <AdminLiveProvider overview={active === "/admin"}>
         <div className={live.top}>
-          {title && <div>
+          {heading ?? (title && <div>
             <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {links.find(link => link.href === active)?.label.toUpperCase()}</p>
             <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>
-          </div>}
+          </div>)}
           <AdminNotifications adminId={admin.id} />
         </div>
         {children}

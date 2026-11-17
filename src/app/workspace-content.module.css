@@ -130,3 +130,15 @@
 .overview .actionIcon { width:32px; height:32px; }
 
 @media(max-width:760px) { .overview .welcome h1 { font-size:clamp(24px,5vw,32px); } }
+
+/* Dashboard hierarchy: one primary action and meaningful status colors. */
+.overview .homePrimaryAction { background:#38261e; border-color:#a15d39; color:#fff1e7; }
+.overview .homePrimaryAction:hover { background:#4a2e21; border-color:#ffad7d; }
+.overview .metrics,.overview .row,.attentionPanel { background:#1b1b20; border-color:#42424b; }
+.overview .row:hover { background:#25252c; border-color:#777780; }
+.overview .statusFinalized { color:#b4e5c1; border-color:#456c50; background:#21372a; }
+.overview .statusReview { color:#ffd39c; border-color:#80603d; background:#3a2c1c; }
+.overview .statusIssue { color:#ffc2b7; border-color:#885049; background:#3b2423; }
+.attentionMore,.attentionGroupHeading > a { color:#d2c5bd; }
+.attentionList a > span:last-child { color:#c9b6aa; }
+.attentionGroupHeading > .issueCount { color:#ffc2b7; background:#56302d; }

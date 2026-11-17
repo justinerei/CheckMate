@@ -1,5 +1,6 @@
 :root { color-scheme: dark; --background: #0c0c0f; --foreground: #f4f4f5; --field-bg: #222227; --field-text: #f4f4f5; --field-border: #56565f; --accent: #ff6a00; --font-display: var(--font-geist-sans), Arial, sans-serif; --font-pixel: var(--font-geist-pixel-circle), monospace; }
 :root {
+  --card-radius: 15px;
   --action-primary: #ff914d;
   --action-primary-hover: #ffab78;
   --action-primary-text: #20130c;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useAdminLiveData } from "./admin-live-data";
+import { useNotificationPreferences } from "./notification-preferences";
 import styles from "./admin-live.module.css";
 
 const localUpdate = "checkmate-notifications-read";
@@ -42,12 +43,13 @@ function readIds(raw: string): string[] {
 
 export default function AdminNotifications({ adminId }: { adminId: string }) {
   const { data, unavailable } = useAdminLiveData();
+  const { muted } = useNotificationPreferences(adminId);
   const menu = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const key = `checkmate:admin-notifications:${adminId}`;
   const stored = useSyncExternalStore(subscribe, () => snapshot(key), () => "[]");
   const read = new Set(readIds(stored));
-  const notifications = data?.notifications ?? [];
+  const notifications = data?.notifications.filter(item => !muted.has(item.kind)) ?? [];
   const isUnread = (item: (typeof notifications)[number]) => item.kind !== "quiz" && !read.has(item.id);
   const unread = notifications.filter(isUnread);
 

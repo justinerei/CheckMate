@@ -3,9 +3,10 @@ import { PendingSubmit } from "./pending-screen";
 import AccountProfileEdit from "./account-profile-edit";
 import styles from "./account-profile.module.css";
 
-export default function AccountProfile({ user, role }: {
+export default function AccountProfile({ user, role, children }: {
   user: { name: string; email: string };
   role: "Teacher" | "Administrator";
+  children?: React.ReactNode;
 }) {
   const initial = (user.name.trim() || role).charAt(0).toUpperCase();
 
@@ -26,6 +27,7 @@ export default function AccountProfile({ user, role }: {
       </dl>
       <AccountProfileEdit name={user.name} />
     </section>
+    {children}
     <form className={styles.signOutForm} action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
       <PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out</PendingSubmit>
     </form>

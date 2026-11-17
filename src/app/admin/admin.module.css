@@ -38,24 +38,6 @@
 .workspaceCard small { display:block; margin-top:4px; color:#bcbcc4; font-size:11px; }
 .adminNav { display:grid; gap:5px; }
 .navLabel { margin:31px 9px 12px; color:#bcbcc4; font:11px var(--font-geist-mono),monospace; letter-spacing:.11em; }
-.adminProfile { margin-top:auto; padding-top:14px; border-top:1px solid #38383f; }
-.profileAvatar { border-radius:50%; }
-.accountMenu { position:relative; }
-.accountTrigger { display:flex; align-items:center; gap:10px; min-height:52px; padding:8px; border:1px solid transparent; border-radius:9px; color:#f4f4f5; cursor:pointer; list-style:none; }
-.accountTrigger::-webkit-details-marker { display:none; }
-.accountTrigger:hover,.accountMenu[open] .accountTrigger { background:#26262d; border-color:#49454a; }
-.accountTrigger:focus-visible,.accountSignOut:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
-.accountTriggerText { flex:1; min-width:0; font-size:13px; font-weight:600; }
-.accountTriggerText small { display:block; margin-top:4px; color:#bcbcc4; font-size:11px; font-weight:400; }
-.accountChevron { color:#bcbcc4; font-size:17px; transition:transform .18s ease; }
-.accountMenu[open] .accountChevron { transform:rotate(180deg); }
-.accountPopover { position:absolute; z-index:12; left:0; right:0; bottom:calc(100% + 8px); display:grid; gap:6px; padding:14px; border:1px solid #49454a; border-radius:10px; background:#222228; box-shadow:0 14px 35px #0008; }
-.accountPopoverLabel { color:#bcbcc4; font-size:11px; }
-.accountEmail { color:#f4f4f5; font-size:12px; overflow-wrap:anywhere; }
-.accountSignOut { display:flex; align-items:center; justify-content:space-between; width:100%; min-height:42px; margin-top:8px; padding:10px; border:1px solid #60483c; border-radius:7px; background:#382a26; color:#ffd0b4; cursor:pointer; font:600 13px var(--font-geist-sans),Arial,sans-serif; }
-.accountSignOut:hover { background:#4a332a; }
-.accountSignOut:disabled { opacity:.6; cursor:wait; }
-.mobileAccount { margin-top:14px; padding-top:12px; border-top:1px solid #38383f; }
 .heading h1 { font-family:var(--font-geist-sans),Arial,sans-serif; font-weight:650; letter-spacing:-.045em; }
 .metrics { gap:12px; border:0; border-radius:0; background:transparent; overflow:visible; }
 .metrics > a,.metrics > div,.metrics > div + div { gap:8px; border:1px solid #393940; border-radius:11px; background:#1a1a20; }
@@ -76,16 +58,11 @@
 .overviewActivity li { display:grid; gap:5px; padding:13px 0; border-top:1px solid #393940; font-size:13px; }
 .overviewActivity span,.overviewEmpty { color:#bcbcc7; font-size:12px; line-height:1.5; }
 .overviewEmpty { margin:0; padding-top:14px; border-top:1px solid #393940; }
-@media(max-width:760px) { .overviewPanels { grid-template-columns:1fr; } .accountPopover { position:static; margin-top:8px; box-shadow:none; } }
+@media(max-width:760px) { .overviewPanels { grid-template-columns:1fr; } }
 @media(max-width:420px) { .metrics > div + div { border-left:1px solid #393940; border-top:1px solid #393940; } }
 
 /* Match the teacher workspace's typography, surfaces, and navigation rhythm. */
 .heading h1 { font:500 clamp(38px,4.2vw,56px)/1.15 var(--font-pixel),monospace; letter-spacing:0; overflow-wrap:anywhere; }
-.adminProfile { margin: auto 4px 0; padding-top:14px; border-top:1px solid #38383f; }
-.accountTrigger { border-radius:999px; }
-.accountTrigger:hover,.accountMenu[open] .accountTrigger { background:#ffffff0c; border-color:#ffffff14; }
-.accountSignOut { background:#28282d; border-color:#56565e; color:#f4f4f5; }
-.accountSignOut:hover { background:#393940; }
 .metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; margin-top:38px; border:1px solid #323239; border-radius:11px; background:#151518; overflow:hidden; }
 .metrics > a,.metrics > div,.metrics > div + div { display:grid; gap:7px; min-width:0; padding:21px 24px; border:0; border-radius:0; background:transparent; }
 .metrics > * + * { border-left:1px solid #323239 !important; }

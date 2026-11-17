@@ -21,7 +21,7 @@ export default async function QueuePage({ searchParams }: { searchParams: Promis
     quiz: page.submission.quiz.title, teacher: `${page.submission.teacher.name} (${page.submission.teacher.email})`,
     batch: !!page.submission.batchId, inReview: page.submission.status === "IN_REVIEW",
   }));
-  return <AdminShell email={admin.email} active="/admin/queue" title="Checking queue." description="Monitor uploaded pages and retry eligible batch pages.">
+  return <AdminShell admin={admin} active="/admin/queue" title="Checking queue." description="Monitor uploaded pages and retry eligible batch pages.">
     <section className={styles.section}><CheckingQueue key={status} initialStatus={status} pages={pageData} /></section>
   </AdminShell>;
 }

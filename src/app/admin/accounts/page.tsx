@@ -24,7 +24,7 @@ export default async function AccountsPage({ searchParams }: { searchParams: Pro
     lockedUntil: user.lockedUntil && user.lockedUntil > now ? format.format(user.lockedUntil) : null,
     _count: { quizzes: user._count.quizzes, submissions: user.role === "STUDENT" ? user.studentRecord?._count.submissions ?? 0 : user._count.submissions },
   }));
-  return <AdminShell email={admin.email} active="/admin/accounts" title="Accounts." description="Find teachers and students, and manage their access.">
+  return <AdminShell admin={admin} active="/admin/accounts" title="Accounts." description="Find teachers and students, and manage their access.">
     <section className={styles.section}><AccountList key={status} initialStatus={status} users={accounts} /></section>
   </AdminShell>;
 }

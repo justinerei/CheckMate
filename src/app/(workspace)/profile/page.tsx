@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
-import { signOut } from "@/auth";
-import { PendingSubmit } from "@/app/pending-screen";
 import { getTeacher } from "@/lib/teacher";
-import styles from "./profile.module.css";
+import AccountProfile from "@/app/account-profile";
 
 export const instant = false;
 
@@ -14,13 +12,5 @@ export default async function TeacherProfile() {
   if (!teacher) redirect("/");
   const user = await db.user.findUnique({ where: { id: teacher.id }, select: { name: true, email: true } });
   if (!user) redirect("/");
-  const initial = user.name.trim().charAt(0).toUpperCase() || "T";
-  return <div className={styles.profile}>
-    <header className={styles.header}><h1>My profile.</h1><p>Your account details, all in one place.</p></header>
-    <section className={styles.card} aria-labelledby="account-heading">
-      <div className={styles.identity}><span className={styles.avatar} aria-hidden="true">{initial}</span><div><h2 id="account-heading">{user.name}</h2><p>Teacher account</p></div></div>
-      <dl className={styles.details}><div><dt>Account name</dt><dd>{user.name}</dd></div><div><dt>Email address</dt><dd>{user.email}</dd></div><div><dt>Account type</dt><dd>Teacher</dd></div></dl>
-    </section>
-    <form className={styles.signOutForm} action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out</PendingSubmit></form>
-  </div>;
+  return <AccountProfile user={user} role="Teacher" />;
 }

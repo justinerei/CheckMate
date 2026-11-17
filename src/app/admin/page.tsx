@@ -28,7 +28,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const statuses = ["PENDING", "PROCESSING", "COMPLETE", "FAILED"] as const;
   const actionLabels: Record<string, string> = { ACCOUNT_ENABLED: "Access enabled", ACCOUNT_DISABLED: "Access disabled", ACCOUNT_UNLOCKED: "Account unlocked", PAGE_RETRY: "Page queued for retry" };
   const format = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" });
-  return <AdminShell email={admin.email} active="/admin" title="Admin overview." description="Manage access and keep track of your workspace.">
+  return <AdminShell admin={admin} active="/admin" title="Admin overview." description="Manage access and keep track of your workspace.">
     <section className={styles.metrics} aria-label="System overview">
       <Link href="/admin/accounts?status=ACTIVE"><span>Active accounts</span><strong>{active}</strong><small>Teachers and students</small></Link>
       <div><span>Quizzes</span><strong>{quizzes}</strong><small>Created and saved</small></div>

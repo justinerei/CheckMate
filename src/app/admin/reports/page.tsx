@@ -22,7 +22,7 @@ export default async function ReportsPage() {
     ...submissions.flatMap(paper => paper.finalizedAt ? [{ kind: "finalized" as const, date: paper.finalizedAt.toISOString() }] : []),
     ...pages.map(page => ({ kind: page.status === "COMPLETE" ? "complete" as const : "failed" as const, date: page.createdAt.toISOString() })),
   ];
-  return <AdminShell email={admin.email} active="/admin/reports" title="Reports." description="Explore account, quiz and checking activity.">
+  return <AdminShell admin={admin} active="/admin/reports" title="Reports." description="Explore account, quiz and checking activity.">
     <section className={styles.section}><Reports entries={entries} /></section>
   </AdminShell>;
 }

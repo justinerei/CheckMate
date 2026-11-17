@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   });
   if (quizzes) notifications.push({
     id: `quiz:${today}`, kind: "quiz", title: "Daily quiz summary",
-    detail: `${quizzes} new ${quizzes === 1 ? "quiz" : "quizzes"} created today.`, href: "/admin/reports",
+    detail: `${quizzes} new ${quizzes === 1 ? "quiz" : "quizzes"} created today.`, href: "/admin",
   });
 
   const data: AdminLiveData = { notifications };

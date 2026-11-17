@@ -14,7 +14,6 @@ const links = [
   { href: "/admin/accounts", label: "Accounts", path: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M5 20a7 7 0 0 1 14 0" },
   { href: "/admin/queue", label: "Checking queue", path: "M12 3a9 9 0 1 0 9 9 9 9 0 0 0-9-9z M12 7v5l3 2" },
   { href: "/admin/activity", label: "Activity", path: "M4 12h4l2-5 4 10 2-5h4" },
-  { href: "/admin/reports", label: "Reports", path: "M5 20V10h3v10z M10.5 20V4h3v16z M16 20v-7h3v7z" },
 ];
 
 export default function AdminShell({ admin, active, title, description, heading, children }: {
@@ -39,7 +38,7 @@ export default function AdminShell({ admin, active, title, description, heading,
       <AdminLiveProvider overview={active === "/admin"}>
         <div className={live.top}>
           {heading ?? (title && <div>
-            <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {links.find(link => link.href === active)?.label.toUpperCase()}</p>
+            <p className={styles.eyebrow}>ADMIN WORKSPACE <span aria-hidden="true"> / </span> {(links.find(link => link.href === active)?.label ?? title).toUpperCase()}</p>
             <header className={styles.heading}><h1>{title}</h1><p>{description}</p></header>
           </div>)}
           <AdminNotifications adminId={admin.id} />

@@ -71,7 +71,7 @@ export default function ReviewWorkspace({ id, items, pages, name, score, finaliz
       {active && <div className={styles.columns}>
         <aside className={styles.paper}>
           <div className={`${styles.row} ${styles.panelHeader}`}><strong>Original paper</strong>{photo && <select aria-label="Paper page" value={photo.pageNumber} onChange={e => setManualPage({question:active.id,page:Number(e.target.value)})}>{pages.map(page => <option key={page.id} value={page.pageNumber}>Page {page.pageNumber}</option>)}</select>}</div>
-          {photo && <PhotoPreview className={styles.photo} triggerClassName={styles.paperTrigger} triggerLabel="View paper" src={`/api/submissions/${id}/pages/${photo.id}`} alt={`Student paper page ${photo.pageNumber}`} pageOptions={pages.map(page => page.pageNumber)} selectedPage={photo.pageNumber} onPageChange={page => setManualPage({ question: active.id, page })} />}
+          {photo && <PhotoPreview className={styles.photo} triggerClassName={styles.paperTrigger} triggerLabel="Expand paper" src={`/api/submissions/${id}/pages/${photo.id}`} alt={`Student paper page ${photo.pageNumber}`} pageOptions={pages.map(page => page.pageNumber)} selectedPage={photo.pageNumber} onPageChange={page => setManualPage({ question: active.id, page })} />}
           {!active.detected.length && <small>Page unknown. Choose a page to check the answer.</small>}
         </aside>
         <section className={styles.question}>

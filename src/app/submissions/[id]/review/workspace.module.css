@@ -68,3 +68,7 @@
   .paper .paperTrigger { margin:14px 16px; }
   .question article { padding-inline:16px; }
 }
+.paper .paperTrigger { border-radius:0; }
+.paper .paperTrigger span { display:block; width:max-content; margin:12px auto; padding:9px 16px; border:1px solid #625048; border-radius:7px; background:#29221f; color:#ffd2b5; font-size:13px; }
+.paper .paperTrigger:hover span { background:#3b2b22; }
+@media(max-width:800px) { .paper .paperTrigger span { margin:0; padding:0; border:0; background:none; } }

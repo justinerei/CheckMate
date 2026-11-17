@@ -487,3 +487,19 @@ a.checkChoice:focus-visible { outline:2px solid #ff9a63; outline-offset:3px; }
 .documentConfirm a { width:fit-content; color:#ffad7d; font-size:13px; }
 .documentConfirm .check { margin:0; font-size:13px; }
 .documentConfirm button { justify-self:start; }
+
+/* Review answer styling is scoped to the paper review screen. */
+.reviewContent .reviewWarning { padding:14px 16px; border:1px solid #785138; border-radius:9px; background:#30241e; color:#ffe4d3 !important; font-size:14px; line-height:1.5; }
+.reviewContent .scoreAnswers { margin:0; gap:10px; }
+.reviewContent .scoreAnswers p { padding:14px 16px; border:1px solid #48484f; border-radius:9px; background:#202024; }
+.reviewContent .scoreAnswers p:nth-child(2) { border-color:#41604c; background:#1e2b23; }
+.reviewContent .scoreAnswers span { color:#c2c2ca; }
+.reviewContent .scoreAnswers strong { color:#f4f4f5; font-size:17px; font-weight:700; }
+.reviewContent .answerForm { gap:14px; margin-top:4px; }
+.reviewContent .answerForm details { border-bottom:1px solid #39393f; padding-bottom:8px; }
+.reviewContent .instructionChoice { gap:8px; padding:0; border:0; }
+.reviewContent .instructionChoice legend { padding:0 0 10px; font-size:14px; }
+.reviewContent .instructionChoice label { min-height:48px; padding:12px; border:1px solid #505058; border-radius:8px; background:#202024; font-size:14px; line-height:1.4; }
+.reviewContent .instructionChoice label:has(input:checked) { border-color:#ff914d; background:#39271f; }
+.reviewContent .answerForm > .primary { width:100%; min-height:48px; }
+@media(max-width:480px) { .reviewContent .scoreAnswers { grid-template-columns:1fr; } }

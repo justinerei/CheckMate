@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/lib/db";
+import { signOut } from "@/auth";
+import { PendingSubmit } from "@/app/pending-screen";
 import { getTeacher } from "@/lib/teacher";
 import styles from "./profile.module.css";
 
@@ -19,5 +21,6 @@ export default async function TeacherProfile() {
       <div className={styles.identity}><span className={styles.avatar} aria-hidden="true">{initial}</span><div><h2 id="account-heading">{user.name}</h2><p>Teacher account</p></div></div>
       <dl className={styles.details}><div><dt>Account name</dt><dd>{user.name}</dd></div><div><dt>Email address</dt><dd>{user.email}</dd></div><div><dt>Account type</dt><dd>Teacher</dd></div></dl>
     </section>
+    <form className={styles.signOutForm} action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}><PendingSubmit className={styles.signOut} pendingLabel="Signing out…">Sign out</PendingSubmit></form>
   </div>;
 }

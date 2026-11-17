@@ -11,3 +11,7 @@
 .details dt { color:#bcbcc4; font-size:13px; }
 .details dd { margin:0; color:#f4f4f5; font-size:15px; overflow-wrap:anywhere; }
 @media(max-width:480px) { .card { padding:20px; }.header h1 { font-size:36px; } }
+.signOutForm { margin-top:20px; }
+.signOut { min-height:44px; padding:10px 16px; border:1px solid #80564c; border-radius:8px; background:#302220; color:#ffd1c6; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.signOut:hover { background:#462a25; border-color:#bd8274; }
+.signOut:focus-visible { outline:2px solid #ffad7d; outline-offset:3px; }

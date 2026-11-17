@@ -25,3 +25,14 @@
 @media(min-width:1500px) { .main:has([data-dashboard]) { max-width:none; } }
 @media(min-width:1500px) { .main:has([data-quiz-library]) { max-width:none; } }
 @media(min-width:1200px) { .main:has([data-classes-page]) { max-width:none; } }
+/* Account access stays at the bottom of the workspace navigation. */
+.railBottom { margin:auto 0 0; }
+.profileLink { display:flex; align-items:center; gap:10px; min-width:0; padding:11px 10px; border:1px solid transparent; border-radius:10px; color:#f4f4f5; text-decoration:none; }
+.profileLink:hover,.profileLinkActive { background:#25252a; border-color:#45454c; }
+.profileLink:focus-visible { outline:2px solid #ffad7d; outline-offset:2px; }
+.profileIcon { display:grid; place-items:center; flex:none; width:34px; height:34px; border-radius:9px; background:#38271f; color:#ffad7d; }
+.profileText { display:grid; gap:4px; min-width:0; flex:1; }
+.profileText strong { font-size:13px; }
+.profileText small { overflow-wrap:anywhere; color:#c3c3ca; font-size:12px; line-height:1.3; }
+.profileChevron { color:#c3c3ca; font-size:20px; }
+.mobileProfile { margin-top:12px; padding-top:12px; border-top:1px solid #35353c; }

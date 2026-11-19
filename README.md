@@ -14,6 +14,15 @@ CheckMate is a prototype web application for teachers who work with printed quiz
 
 AI output can be inaccurate. Teachers remain responsible for checking readings, answers, and scores against the original work.
 
+## How it works
+
+1. **Prepare a quiz.** Create questions in CheckMate, import a quiz, or add an answer key for a quiz made elsewhere.
+2. **Upload paper photos.** Add one to three photos per paper and check their order before starting a reading.
+3. **Review the results.** Compare detected answers with the original paper, resolve flagged items, and score essays using a rubric.
+4. **Finalize and share.** Save the score, link the paper to a student when needed, and release the result or export finalized scores.
+
+Teachers can also revise correct answers and reopen finalized papers for correction. CheckMate records score revisions so changes can be reviewed later.
+
 ## See CheckMate in action
 
 ### Create a quiz
@@ -78,6 +87,19 @@ See the score breakdown and question-by-question results after finalizing a pape
 
 See the [local setup and usage guide](docs/LOCAL_SETUP.md) for Google OAuth configuration, demo accounts, feature details, and troubleshooting.
 
+### Environment variables
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `AUTH_SECRET` | Secret used to secure authentication sessions |
+| `AUTH_URL` | App origin; use `http://localhost:3000` locally |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in credentials, when using Google OAuth |
+| `GROQ_API_KEY`, `GEMINI_API_KEY` | Credentials for the AI providers used by enabled features |
+| `GROQ_VISION_MODEL`, `GEMINI_TEXT_MODEL` | Optional model overrides |
+
+Keep credentials in your local environment file and never commit them. See `.env.example` and the [setup guide](docs/LOCAL_SETUP.md) for provider setup and feature requirements.
+
 ## Tech stack
 
 - [Next.js](https://nextjs.org/) and [React](https://react.dev/)
@@ -99,3 +121,15 @@ See the [local setup and usage guide](docs/LOCAL_SETUP.md) for Google OAuth conf
 ## Project status and data
 
 CheckMate is a prototype. Use sample data while evaluating it, and review AI-assisted results before relying on them. Uploaded paper photos are stored in `.private/uploads/`, separately from PostgreSQL; back up both together. Files and extracted content sent to AI features are processed by the configured providers, so avoid uploading sensitive information without considering their data policies.
+
+## Developers
+
+Built by:
+
+- **Justine Rei SA. Janolino** — [@justinerei](https://github.com/justinerei)
+- **John Harold P. Beladas** — [@ryionaes](https://github.com/ryionaes)
+- **Mark Kenneth V. Franciso** — [@0324-0537-png](https://github.com/0324-0537-png)
+
+## License
+
+No project license has been specified yet.

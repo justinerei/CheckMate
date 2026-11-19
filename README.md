@@ -14,6 +14,26 @@ CheckMate is a prototype web application for teachers who work with printed quiz
 
 AI output can be inaccurate. Teachers remain responsible for checking readings, answers, and scores against the original work.
 
+## See CheckMate in action
+
+### Create a quiz
+
+Organize questions into sections, set points and answers, and prepare a quiz for printing.
+
+![Quiz editor showing question types, answer choices, and quiz tools](docs/screenshots/quiz-editor.png)
+
+### Review a paper
+
+Compare the original paper with detected answers and use a rubric to review essay responses.
+
+![Paper review showing a photographed quiz and an essay scoring rubric](docs/screenshots/paper-review.png)
+
+### Review the score
+
+See the score breakdown and question-by-question results after finalizing a paper.
+
+![Finalized paper showing its score and answer breakdown](docs/screenshots/score-breakdown.png)
+
 ## Getting started
 
 ### Requirements

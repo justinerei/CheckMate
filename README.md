@@ -132,4 +132,4 @@ Built by:
 
 ## License
 
-No project license has been specified yet.
+Copyright © 2026 Justine Rei SA. Janolino, John Harold P. Beladas, and Mark Kenneth V. Franciso. All rights reserved. See [LICENSE](LICENSE) for details.
